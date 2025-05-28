@@ -1,8 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Text;
-using LeakChecker.EncodingDetector;
+using LeakChecker.EncodingDetection;
 using LeakChecker.Tests;
 using LeakChecker.Utilities;
+using EncodingDetector = LeakChecker.EncodingDetection.EncodingDetector;    // TODO naming and register AppConfig in DI
 
 namespace LeakChecker;
 
@@ -12,16 +13,14 @@ public class Program
 
     public static async Task Main()
     {
-        Config = AppConfig.ParseAppConfiguration();
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        Config = AppConfig.ParseAppConfig();
+        EncodingDetector.VerifySupportedEncodings();
         int success = 0;
         
         bool showEncsAndExit = false;
         if (showEncsAndExit)
         {
-            Console.WriteLine("List of supported encodings after provide " +
-                              "Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);");
-            PrintSupportedEncodings();
+            EncodingDetector.PrintSupportedEncodings();
             Environment.Exit(0);
         }
         
@@ -43,7 +42,7 @@ public class Program
                 string normalizedEnc = NormalizePythonEncoding(pythonEnc);
                 Encoding encoding = MapNormalizedEncoding(normalizedEnc);
                 if (pythonEnc == FilesEncodings.FilesEncodingsDictionary[filePath] &&
-                    EncodingMaper.EncodingMap.ContainsKey(normalizedEnc))
+                    EncodingMapper.EncodingMap.ContainsKey(normalizedEnc))
                 {
                     success++;
                     Logger.LogSuccess($"[MATCH] {filePath} [{pythonEnc}]");
@@ -70,7 +69,7 @@ public class Program
         Logger.LogInfo($"Success rate with {Config.EncodingDetector.AccuracyPercent}% accuracy is " +
                                $"{success}/{FilesEncodings.FilesEncodingsDictionary.Keys.Count - 2}");
         Logger.LogInfo($"Time taken {sw.Elapsed}");
-        Logger.LogInfo("Program successfully finished with exit code 0");
+        Logger.LogSuccess("Program successfully finished with exit code 0");
     }
 
     
@@ -129,7 +128,7 @@ public class Program
 
         if (fileSize > SizeEnum.Gigabyte)
         {
-            Logger.LogWarning("File is larger than [1GB]. It may take a long time" +
+            Logger.LogWarning("File is larger than [1GB]. It may take a long time " +
                                    $"and cause performance issues when parsing large files. File '{filePath}'");
         }
         if (accuracyPercent >= 100)
@@ -170,7 +169,7 @@ public class Program
         if (string.IsNullOrWhiteSpace(normalizedEncoding))
             return Encoding.Default;
 
-        if (EncodingMaper.EncodingMap.TryGetValue(normalizedEncoding, out var dotNetName))
+        if (EncodingMapper.EncodingMap.TryGetValue(normalizedEncoding, out var dotNetName))
         {
             try { return Encoding.GetEncoding(dotNetName); }
             catch { Logger.LogWarning($"Encoding '{normalizedEncoding}' not supported" +
@@ -180,34 +179,5 @@ public class Program
         Logger.LogWarning($"Encoding '{normalizedEncoding}' not found in EncodingMap, " +
                                $"falling back to Encoding.Default - " + Encoding.Default.EncodingName);
         return Encoding.Default;
-    }
-
-    // Source https://learn.microsoft.com/en-us/dotnet/api/system.text.encodinginfo.codepage?view=net-10.0
-    private static void PrintSupportedEncodings()
-    {
-        // Print the header.
-        Console.Write( "Info.CodePage      " );
-        Console.Write( "Info.Name                    " );
-        Console.Write( "Info.DisplayName" );
-        Console.WriteLine();
-
-        // Display the EncodingInfo names for every encoding, and compare with the equivalent Encoding names.
-        var sortedEncodings = Encoding.GetEncodings()
-            .OrderBy(ei => ei.Name);
-        
-        foreach( EncodingInfo ei in sortedEncodings)  {
-            Encoding e = ei.GetEncoding();
-
-            Console.Write( "{0,-15}", ei.CodePage );
-            Console.Write(ei.CodePage == e.CodePage ? "    " : "*** ");
-
-            Console.Write( "{0,-25}", ei.Name );
-            Console.Write(ei.CodePage == e.CodePage ? "    " : "*** ");
-
-            Console.Write( "{0,-25}", ei.DisplayName );
-            Console.Write(ei.CodePage == e.CodePage ? "    " : "*** ");
-
-            Console.WriteLine();
-        }
     }
 }
