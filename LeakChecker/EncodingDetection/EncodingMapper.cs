@@ -1,6 +1,6 @@
-namespace LeakChecker.EncodingDetector;
+namespace LeakChecker.EncodingDetection;
 
-public static class EncodingMaper
+public static class EncodingMapper
 {
     // source https://www.iana.org/assignments/character-sets/character-sets.xhtml
     // source https://learn.microsoft.com/en-us/dotnet/fundamentals/runtime-libraries/system-text-encoding
@@ -14,7 +14,7 @@ public static class EncodingMaper
         ["ascii"] = "us-ascii",
         
         // Unicode Encodings
-        ["utf7"] = "utf-7",
+        // ["utf7"] = "utf-7",  // TODO C# Not supported
         ["utf8"] = "utf-8",
         ["utf16"] = "utf-16",
         ["utf16le"] = "utf-16",
@@ -22,8 +22,6 @@ public static class EncodingMaper
         ["utf32"] = "utf-32",
         ["utf32le"] = "utf-32",
         ["utf32be"] = "utf-32BE",
-        // This is not possible output of charset-normalizer
-        // ["utf8sig"] = "utf-8",
 
         // ISO 8859 Family
         ["latin1"] = "iso-8859-1",
@@ -45,7 +43,7 @@ public static class EncodingMaper
         ["iso88598"] = "iso-8859-8",
         ["iso88599"] = "iso-8859-9",
         ["iso885913"] = "iso-8859-13",
-        ["iso885914"] = "iso-8859-14",
+        // ["iso885914"] = "iso-8859-14",   // TODO C# Not supported
         ["iso885915"] = "iso-8859-15",
         // ["iso885916"] = "iso-8859-16",   // TODO C# Not supported
 
@@ -66,20 +64,20 @@ public static class EncodingMaper
         ["cp424"] = "IBM424",
         ["cp437"] = "IBM437",
         ["cp500"] = "IBM500",
-        ["cp775"] = "IBM775",
-        ["cp850"] = "IBM850",
-        ["cp852"] = "IBM852",
+        ["cp775"] = "ibm775",
+        ["cp850"] = "ibm850",
+        ["cp852"] = "ibm852",
         ["cp855"] = "IBM855",
-        ["cp857"] = "IBM857",
+        ["cp857"] = "ibm857",
         ["cp858"] = "IBM00858",
         ["cp860"] = "IBM860",
-        ["cp861"] = "IBM861",
+        ["cp861"] = "ibm861",
         ["cp862"] = "DOS-862",
         ["cp863"] = "IBM863",
         ["cp864"] = "IBM864",
         ["cp865"] = "IBM865",
-        ["cp866"] = "IBM866",
-        ["cp869"] = "IBM869",
+        ["cp866"] = "cp866",
+        ["cp869"] = "ibm869",
         ["cp875"] = "cp875",
         ["cp1025"] = "cp1025",
         ["cp1026"] = "IBM1026",
@@ -111,9 +109,9 @@ public static class EncodingMaper
         ["big5hkscs"] = "big5", // Partially supported
         ["gb2312"] = "gb2312",
         // ["gb18030"] = "GB18030", // TODO C# Not supported
-        ["gbk"] = "x-cp936", // Partially supported
+        // ["gbk"] = "x-cp936", // Partially supported  // TODO C# Not supported
         ["eucjp"] = "EUC-JP",
-        ["iso2022jp"] = "iso-2022-jp",
+        // ["iso2022jp"] = "iso-2022-jp",   // TODO C# Not supported
         ["cp932"] = "shift_jis",
         ["shiftjis"] = "shift_jis",
         ["cp950"] = "big5",
@@ -123,14 +121,14 @@ public static class EncodingMaper
         ["eucjisx0213"] = "EUC-JP", // Partially supported
         ["shiftjis2004"] = "shift_jis", // Partially supported
         ["shiftjisx0213"] = "shift_jis", // Partially supported
-        ["iso2022jp1"] = "iso-2022-jp", // Partially supported
-        ["iso2022jp2"] = "iso-2022-jp", // Partially supported
-        ["iso2022jp2004"] = "iso-2022-jp", // Partially supported
-        ["iso2022jp3"] = "iso-2022-jp", // Partially supported
-        ["iso2022jpext"] = "iso-2022-jp", // Partially supported
+        // ["iso2022jp1"] = "iso-2022-jp", // Partially supported       // TODO C# Not supported
+        // ["iso2022jp2"] = "iso-2022-jp", // Partially supported       // TODO C# Not supported
+        // ["iso2022jp2004"] = "iso-2022-jp", // Partially supported    // TODO C# Not supported
+        // ["iso2022jp3"] = "iso-2022-jp", // Partially supported       // TODO C# Not supported
+        // ["iso2022jpext"] = "iso-2022-jp", // Partially supported     // TODO C# Not supported
         
         // Korean
-        ["euckr"] = "euc-kr",
+        // ["euckr"] = "euc-kr",    // TODO C# Not supported
         // ["cp949"] = "ks_c_5601-1987",   // TODO Not valid
         ["johab"] = "Johab",
 
