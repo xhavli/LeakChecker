@@ -1,9 +1,9 @@
 namespace LeakChecker.Utilities;
-public static class NicePrint
+public static class Logger
 {
     private static readonly object ConsoleLock = new();
 
-    public static void PrintSuccess(string message)
+    public static void LogSuccess(string message)
     {
         lock (ConsoleLock)
         {
@@ -13,7 +13,7 @@ public static class NicePrint
         }
     }
 
-    public static void PrintWarning(string message)
+    public static void LogWarning(string message)
     {
         lock (ConsoleLock)
         {
@@ -23,7 +23,7 @@ public static class NicePrint
         }
     }
 
-    public static void PrintError(string message)
+    public static void LogError(string message)
     {
         lock (ConsoleLock)
         {
@@ -33,7 +33,7 @@ public static class NicePrint
         }
     }
     
-    public static void PrintInfo(string message)
+    public static void LogInfo(string message)
     {
         lock (ConsoleLock)
         {

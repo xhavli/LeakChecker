@@ -25,7 +25,7 @@ public class Program
             Environment.Exit(0);
         }
         
-        NicePrint.PrintInfo("Program started at: " + DateTime.Now.ToString("HH:mm:ss"));
+        Logger.LogInfo("Program started at: " + DateTime.Now.ToString("HH:mm:ss"));
         Stopwatch sw = Stopwatch.StartNew();
 
         var filePaths = FilesEncodings.FilesEncodingsDictionary.Keys.ToList();
@@ -33,7 +33,7 @@ public class Program
         {
             if (!File.Exists(filePath))
             {
-                NicePrint.PrintWarning($"[MISSING] {filePath}");
+                Logger.LogWarning($"[MISSING] {filePath}");
                 return;
             }
 
@@ -46,11 +46,11 @@ public class Program
                     EncodingMaper.EncodingMap.ContainsKey(normalizedEnc))
                 {
                     success++;
-                    NicePrint.PrintSuccess($"[MATCH] {filePath} [{pythonEnc}]");
+                    Logger.LogSuccess($"[MATCH] {filePath} [{pythonEnc}]");
                 }
                 else
                 {
-                    NicePrint.PrintWarning($"[MISMATCH] {filePath} detected [{pythonEnc}] " +
+                    Logger.LogWarning($"[MISMATCH] {filePath} detected [{pythonEnc}] " +
                                            $"correct [{FilesEncodings.FilesEncodingsDictionary[filePath]}]");
                 }
                 
@@ -60,17 +60,17 @@ public class Program
             }
             catch (Exception ex)
             {
-                NicePrint.PrintError($"[EXCEPTION] {filePath}: {ex.Message}");
+                Logger.LogError($"[EXCEPTION] {filePath}: {ex.Message}");
             }
         });
 
         await Task.WhenAll(tasks);
         sw.Stop();
 
-        NicePrint.PrintInfo($"Success rate with {Config.EncodingDetector.AccuracyPercent}% accuracy is " +
+        Logger.LogInfo($"Success rate with {Config.EncodingDetector.AccuracyPercent}% accuracy is " +
                                $"{success}/{FilesEncodings.FilesEncodingsDictionary.Keys.Count - 2}");
-        NicePrint.PrintInfo($"Time taken {sw.Elapsed}");
-        NicePrint.PrintInfo("Program successfully finished with exit code 0");
+        Logger.LogInfo($"Time taken {sw.Elapsed}");
+        Logger.LogInfo("Program successfully finished with exit code 0");
     }
 
     
@@ -107,11 +107,11 @@ public class Program
             await process.WaitForExitAsync();
 
             if (!string.IsNullOrWhiteSpace(stderr))
-                NicePrint.PrintError($"[PYTHON] {filePath}: {stderr.Trim()}");
+                Logger.LogError($"[PYTHON] {filePath}: {stderr.Trim()}");
         }
         catch (Exception ex)
         {
-            NicePrint.PrintError($"[EXCEPTION] {filePath}: {ex.Message}");
+            Logger.LogError($"[EXCEPTION] {filePath}: {ex.Message}");
         }
         finally
         {
@@ -129,7 +129,7 @@ public class Program
 
         if (fileSize > SizeEnum.Gigabyte)
         {
-            NicePrint.PrintWarning("File is larger than [1GB]. It may take a long time" +
+            Logger.LogWarning("File is larger than [1GB]. It may take a long time" +
                                    $"and cause performance issues when parsing large files. File '{filePath}'");
         }
         if (accuracyPercent >= 100)
@@ -173,11 +173,11 @@ public class Program
         if (EncodingMaper.EncodingMap.TryGetValue(normalizedEncoding, out var dotNetName))
         {
             try { return Encoding.GetEncoding(dotNetName); }
-            catch { NicePrint.PrintWarning($"Encoding '{normalizedEncoding}' not supported" +
+            catch { Logger.LogWarning($"Encoding '{normalizedEncoding}' not supported" +
                                            $"in Encoding.GetEncodings()"); }
         }
 
-        NicePrint.PrintWarning($"Encoding '{normalizedEncoding}' not found in EncodingMap, " +
+        Logger.LogWarning($"Encoding '{normalizedEncoding}' not found in EncodingMap, " +
                                $"falling back to Encoding.Default - " + Encoding.Default.EncodingName);
         return Encoding.Default;
     }

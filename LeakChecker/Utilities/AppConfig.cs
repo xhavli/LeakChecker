@@ -32,7 +32,7 @@ public record AppConfig
 
         if (!File.Exists(jsonPath))
         {
-            NicePrint.PrintError($"AppConfig file not found in {jsonPath}. " +
+            Logger.LogError($"AppConfig file not found in {jsonPath}. " +
                                  "Program terminate with exit code 1");
             Environment.Exit(1);
         }
@@ -42,32 +42,32 @@ public record AppConfig
 
         if (config == null)
         {
-            NicePrint.PrintError("Configuration file is missing or failed to parse. " +
+            Logger.LogError("Configuration file is missing or failed to parse. " +
                                  "Program terminate with exit code 1");
             Environment.Exit(1);
         }
 
         if (string.IsNullOrEmpty(config.InputDirectory) || !Directory.Exists(config.InputDirectory))
         {
-            NicePrint.PrintError("Input directory is missing. Program terminate with exit code 1");
+            Logger.LogError("Input directory is missing. Program terminate with exit code 1");
             Environment.Exit(1);
         }
 
         if (string.IsNullOrEmpty(config.OutputDirectory) || !Directory.Exists(config.OutputDirectory))
         {
-            NicePrint.PrintError("Output directory is missing. Program terminate with exit code 1");
+            Logger.LogError("Output directory is missing. Program terminate with exit code 1");
             Environment.Exit(1);
         }
 
         switch (config.EncodingDetector.AccuracyPercent)
         {
             case <= 0:
-                NicePrint.PrintWarning("Accuracy percent is 0% or negative. " +
+                Logger.LogWarning("Accuracy percent is 0% or negative. " +
                                        "Program terminate without doing anything with exit code 0");
                 Environment.Exit(0);
                 break;
             case >= 100:
-                NicePrint.PrintWarning("Accuracy percent is 100% or higher. It may take a long time " +
+                Logger.LogWarning("Accuracy percent is 100% or higher. It may take a long time " +
                                        "and cause performance issues when parsing large files");
                 config.EncodingDetector.AccuracyPercent = 100;
                 break;
@@ -76,7 +76,7 @@ public record AppConfig
         if (string.IsNullOrEmpty(config.EncodingDetector.ScriptPath) ||
             !File.Exists(config.EncodingDetector.ScriptPath))
         {
-            NicePrint.PrintError("Encoding detector python script is missing or file doesn't exist. " +
+            Logger.LogError("Encoding detector python script is missing or file doesn't exist. " +
                                  "Program terminate with exit code 1");
             Environment.Exit(1);
         }
