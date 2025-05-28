@@ -2,13 +2,13 @@ using System.Text.Json;
 
 namespace LeakChecker.Utilities;
 
-public record EncodingDetectorConfig
+public record EncodingDetector
 {
     public required int AccuracyPercent { get; set; }
     public required string ScriptPath { get; init; }
 }
 
-public record ContentDetectorConfig
+public record ContentDetector
 {
     public required string ScriptPath { get; init; }
 }
@@ -17,10 +17,10 @@ public record AppConfig
 {
     public required string InputDirectory { get; init; }
     public required string OutputDirectory { get; init; }
-    public required EncodingDetectorConfig EncodingDetector { get; init; }
-    public required ContentDetectorConfig ContentDetector { get; init; }
+    public required EncodingDetector EncodingDetector { get; init; }
+    public required ContentDetector ContentDetector { get; init; }
 
-    public static AppConfig ParseAppConfiguration()
+    public static AppConfig ParseAppConfig()
     {
         var currentDir = Directory.GetCurrentDirectory();
 
