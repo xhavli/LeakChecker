@@ -1,12 +1,12 @@
 {
-  "InputDirectory": "D:/Bc",
-  "OutputDirectory": "D:/Bc",
+  "InputDirectory": "",
+  "OutputDirectory": "",
   
   "EncodingDetector": {
     "AccuracyPercent": 100,
-    "ScriptPath": "D:/Bc/CharsetDetector.py"
+    "ScriptPath": ""
   },
   "ContentDetector": {
-    "ScriptPath": "D:/Bc/ContentDetector.py"
+    "ScriptPath": ""
   }
 }
