@@ -366,4 +366,5 @@ FodyWeavers.xsd
 .idea/
 *.sln.iml
 
+# AppConfig.json
 LeakChecker/AppConfig.json
