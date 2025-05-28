@@ -365,3 +365,5 @@ FodyWeavers.xsd
 # Rider and IDE
 .idea/
 *.sln.iml
+
+LeakChecker/AppConfig.json
