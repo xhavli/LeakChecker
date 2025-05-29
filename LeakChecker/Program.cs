@@ -15,14 +15,9 @@ public class Program
     {
         Config = AppConfig.ParseAppConfig();
         EncodingDetector.VerifySupportedEncodings();
+        // EncodingDetector.PrintSupportedEncodings(); Environment.Exit(0);
         int success = 0;
         
-        bool showEncsAndExit = false;
-        if (showEncsAndExit)
-        {
-            EncodingDetector.PrintSupportedEncodings();
-            Environment.Exit(0);
-        }
         
         Logger.LogInfo("Program started at: " + DateTime.Now.ToString("HH:mm:ss"));
         Stopwatch sw = Stopwatch.StartNew();
