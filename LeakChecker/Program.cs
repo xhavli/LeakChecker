@@ -77,8 +77,8 @@ public class Program
         
         try
         {
-            tmpPath = Path.GetTempFileName();   // Windows C:\Users\<USER-NICKNAME>\AppData\Local\Temp\tmp*.tmp
-            byte[] sample = SampleFileChunksByAccuracy(filePath);
+            tmpPath = Config.OutputDirectory + "/" + Guid.NewGuid();
+            byte[] sample = await SampleFileChunksByAccuracy(filePath);
             await File.WriteAllBytesAsync(tmpPath, sample);
 
             var psi = new ProcessStartInfo
@@ -115,44 +115,35 @@ public class Program
         return string.IsNullOrWhiteSpace(result) ? "unknown" : result.Trim();
     }
     
-    private static byte[] SampleFileChunksByAccuracy(string filePath)
+    private static async Task<byte[]> SampleFileChunksByAccuracy(string filePath)
     {
         int accuracyPercent = Config.EncodingDetector.AccuracyPercent;
-        using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        await using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         long fileSize = fs.Length;
 
-        if (fileSize > SizeEnum.Gigabyte)
-        {
-            Logger.LogWarning("File is larger than [1GB]. It may take a long time " +
-                                   $"and cause performance issues when parsing large files. File '{filePath}'");
-        }
-        if (accuracyPercent >= 100)
-        {
-            // Full file
-            byte[] all = new byte[fileSize];    //TODO C# limit 2gb
-            fs.ReadExactly(all, 0, (int)fileSize);
-            return all;
-        }
-        long totalSampleBytes = (long)(fileSize * (accuracyPercent / 100.0));
-        int chunkSize = 4096; // Recommended min size per chunk for encoding detection
-        int chunkCount = Math.Max(1, (int)(totalSampleBytes / chunkSize));
-        chunkSize = (int)(totalSampleBytes / chunkCount);
-        byte[] sample = new byte[chunkCount * chunkSize];
-        long spacing = fileSize / chunkCount;
+        double spacing = 100.0 / accuracyPercent;
+        long chunkSize = (long)Math.Ceiling(fileSize * (accuracyPercent / 100.0));
 
-        for (int i = 0; i < chunkCount; i++)
+        List<byte> sample = new List<byte>();
+
+        for (int i = 0; i < accuracyPercent; i++)
         {
-            long position = spacing * i;
-            fs.Seek(position, SeekOrigin.Begin);
-            int bytesRead = fs.Read(sample, i * chunkSize, chunkSize);
-            if (bytesRead < chunkSize)
-            {
-                Array.Clear(sample, i * chunkSize + bytesRead, chunkSize - bytesRead);
-            }
+            long offset = (long)Math.Round(i * spacing * chunkSize);
+            if (offset >= fileSize) break; // Prevent reading past EOF
+
+            fs.Seek(offset, SeekOrigin.Begin);
+
+            int bytesToRead = (int)Math.Min(chunkSize, fileSize - offset);
+            byte[] buffer = new byte[bytesToRead];
+            int bytesRead = await fs.ReadAsync(buffer, 0, bytesToRead);
+
+            if (bytesRead > 0)
+                sample.AddRange(buffer.Take(bytesRead));
         }
 
-        return sample;
+        return sample.ToArray();
     }
+
 
     private static string NormalizePythonEncoding(string pythonEncoding)
     {
