@@ -14,6 +14,7 @@ This is changelog of LeakChecker tool
 - Divide files into smaller samples and test each other to avoid memory overflow
   - test the accuracy in context of smaller samples
 - Implement sample size limits because of C# byte[] array limit is 2GB to be able parse large files
+- Implement proper paralization
 - Avoid naming conflict with EncodingDetector
 - Implement DI
 - Implement propper AppSettings
