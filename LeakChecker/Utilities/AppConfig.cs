@@ -17,6 +17,7 @@ public record AppConfig
 {
     public required string InputDirectory { get; init; }
     public required string OutputDirectory { get; init; }
+    public required string TemporaryDirectory { get; init; }
     public required EncodingDetector EncodingDetector { get; init; }
     public required ContentDetector ContentDetector { get; init; }
 
@@ -32,8 +33,7 @@ public record AppConfig
 
         if (!File.Exists(jsonPath))
         {
-            Logger.LogError($"AppConfig file not found in {jsonPath}. " +
-                                 "Program terminate with exit code 1");
+            Logger.LogError($"AppConfig file not found in {jsonPath}. Program terminate with exit code 1");
             Environment.Exit(1);
         }
 
@@ -42,20 +42,26 @@ public record AppConfig
 
         if (config == null)
         {
-            Logger.LogError("Configuration file is missing or failed to parse. " +
-                                 "Program terminate with exit code 1");
+            Logger.LogError("Configuration file is missing or failed to parse. Program terminate with exit code 1");
             Environment.Exit(1);
         }
 
         if (string.IsNullOrEmpty(config.InputDirectory) || !Directory.Exists(config.InputDirectory))
         {
-            Logger.LogError("Input directory is missing. Program terminate with exit code 1");
+            Logger.LogError($"Input directory '{config.InputDirectory}' is missing. Program terminate with exit code 1");
             Environment.Exit(1);
         }
 
         if (string.IsNullOrEmpty(config.OutputDirectory) || !Directory.Exists(config.OutputDirectory))
         {
-            Logger.LogError("Output directory is missing. Program terminate with exit code 1");
+            Logger.LogError($"Output directory '{config.OutputDirectory}' is missing. Program terminate with exit code 1");
+            Environment.Exit(1);
+        }
+        
+        if (string.IsNullOrEmpty(config.TemporaryDirectory) || !Directory.Exists(config.TemporaryDirectory))
+        {
+            Logger.LogError($"Temporary directory '{config.TemporaryDirectory}' is missing. " +
+                            $"Program terminate with exit code 1");
             Environment.Exit(1);
         }
 
@@ -63,12 +69,12 @@ public record AppConfig
         {
             case <= 0:
                 Logger.LogWarning("Accuracy percent is 0% or negative. " +
-                                       "Program terminate without doing anything with exit code 0");
+                                  "Program terminate without doing anything with exit code 0");
                 Environment.Exit(0);
                 break;
             case >= 100:
-                Logger.LogWarning("Accuracy percent is 100% or higher. It may take a long time " +
-                                       "and cause performance issues when parsing large files");
+                Logger.LogWarning("Accuracy percent is 100% or higher. It may take a long time and " +
+                                  "cause performance issues when parsing large files");
                 config.EncodingDetector.AccuracyPercent = 100;
                 break;
         }
@@ -76,8 +82,8 @@ public record AppConfig
         if (string.IsNullOrEmpty(config.EncodingDetector.ScriptPath) ||
             !File.Exists(config.EncodingDetector.ScriptPath))
         {
-            Logger.LogError("Encoding detector python script is missing or file doesn't exist. " +
-                                 "Program terminate with exit code 1");
+            Logger.LogError("Encoding detector python script is missing or file on path " +
+                            $"'{config.EncodingDetector.ScriptPath}' doesn't exist. Program terminate with exit code 1");
             Environment.Exit(1);
         }
 
