@@ -160,37 +160,6 @@ public class Program
         return best;
     }
 
-    
-    private static async Task<byte[]> SampleFileChunksByAccuracy(string filePath)
-    {
-        int accuracyPercent = Config.EncodingDetector.AccuracyPercent;
-        await using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        long fileSize = fs.Length;
-
-        double spacing = 100.0 / accuracyPercent;
-        long chunkSize = (long)Math.Ceiling(fileSize * (accuracyPercent / 100.0));
-
-        List<byte> sample = new List<byte>();
-
-        for (int i = 0; i < accuracyPercent; i++)
-        {
-            long offset = (long)Math.Round(i * spacing * chunkSize);
-            if (offset >= fileSize) break; // Prevent reading past EOF
-
-            fs.Seek(offset, SeekOrigin.Begin);
-
-            int bytesToRead = (int)Math.Min(chunkSize, fileSize - offset);
-            byte[] buffer = new byte[bytesToRead];
-            int bytesRead = await fs.ReadAsync(buffer, 0, bytesToRead);
-
-            if (bytesRead > 0)
-                sample.AddRange(buffer.Take(bytesRead));
-        }
-
-        return sample.ToArray();
-    }
-
-
     private static string NormalizePythonEncoding(string pythonEncoding)
     {
         return pythonEncoding.Trim().ToLowerInvariant().Replace("_", "").Replace("-", "");
