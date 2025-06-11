@@ -71,49 +71,95 @@ public class Program
     
     private static async Task<string> DetectEncodingFromPython(string filePath)
     {
+        string temporaryDirectory = Config.TemporaryDirectory;
         string pythonScriptPath = Config.EncodingDetector.ScriptPath;
-        string tmpPath = String.Empty;
-        string? result = String.Empty;
+        int accuracyPercent = Config.EncodingDetector.AccuracyPercent;
+        string fileName = Path.GetFileName(filePath);
+        List<string> detectedEncodings = new List<string>();
         
         try
         {
-            tmpPath = Config.OutputDirectory + "/" + Guid.NewGuid();
-            byte[] sample = await SampleFileChunksByAccuracy(filePath);
-            await File.WriteAllBytesAsync(tmpPath, sample);
+            // 1. Open the file
+            await using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            long fileSize = fs.Length;
 
-            var psi = new ProcessStartInfo
+            // 2. Calculate sampling positions and chunk size
+            double spacing = 100.0 / accuracyPercent;
+            long chunkSize = (long)Math.Ceiling(fileSize * (accuracyPercent / 100.0) / accuracyPercent);
+            chunkSize = Math.Min(chunkSize, 2 * SizeEnum.Gigabyte - 1);
+            chunkSize = Math.Max(chunkSize, SizeEnum.Megabyte);
+
+            for (int i = 0; i < accuracyPercent; i++)
             {
-                FileName = "python",
-                Arguments = $"\"{pythonScriptPath}\" detect \"{tmpPath}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
+                long offset = (long)Math.Round(i * spacing * chunkSize);
+                if (offset >= fileSize) break; // Don't read past EOF
 
-            using var process = new Process();
-            process.StartInfo = psi;
-            process.EnableRaisingEvents = true;
-            process.Start();
+                fs.Seek(offset, SeekOrigin.Begin);
+                int bytesToRead = (int)Math.Min(chunkSize, fileSize - offset);
+                byte[] buffer = new byte[bytesToRead];
+                int bytesRead = await fs.ReadAsync(buffer, 0, bytesToRead);
 
-            result = await process.StandardOutput.ReadLineAsync();
-            string stderr = await process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
+                if (bytesRead == 0) continue;
 
-            if (!string.IsNullOrWhiteSpace(stderr))
-                Logger.LogError($"[PYTHON] {filePath}: {stderr.Trim()}");
+                // 3. Write this chunk to a temporary file
+                string tmpPath = Path.Combine(temporaryDirectory, fileName + "_" + i + "_" + Guid.NewGuid());
+                await File.WriteAllBytesAsync(tmpPath, buffer.Take(bytesRead).ToArray());
+
+                try
+                {
+                    // 4. Detect encoding for this chunk using Python
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = "python",
+                        Arguments = $"\"{pythonScriptPath}\" detect \"{tmpPath}\"",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    using var process = new Process();
+                    process.StartInfo = psi;
+                    process.EnableRaisingEvents = false;
+                    process.Start();
+
+                    string? result = await process.StandardOutput.ReadLineAsync();
+                    string stderr = await process.StandardError.ReadToEndAsync();
+                    await process.WaitForExitAsync();
+
+                    if (!string.IsNullOrWhiteSpace(stderr))
+                        Logger.LogError($"[PYTHON] {filePath}: {stderr.Trim()}");
+
+                    if (!string.IsNullOrWhiteSpace(result))
+                        detectedEncodings.Add(result.Trim());
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"[CHUNK EXCEPTION] '{filePath}': {ex.Message}");
+                }
+                finally
+                {
+                    File.Delete(tmpPath);
+                }
+            }
         }
         catch (Exception ex)
         {
             Logger.LogError($"[EXCEPTION] {filePath}: {ex.Message}");
         }
-        finally
-        {
-            File.Delete(tmpPath);
-        }
-        
-        return string.IsNullOrWhiteSpace(result) ? "unknown" : result.Trim();
+
+        // 5. Pick the most common detected encoding, or "unknown"
+        if (detectedEncodings.Count == 0)
+            return "Unknown";
+
+        var best = detectedEncodings
+            .GroupBy(s => s)
+            .OrderByDescending(g => g.Count())
+            .First().Key;
+
+        return best;
     }
+
     
     private static async Task<byte[]> SampleFileChunksByAccuracy(string filePath)
     {
