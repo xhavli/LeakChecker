@@ -8,13 +8,13 @@ This is changelog of LeakChecker tool
 
 - `27.5.2025` - EncodingMap verified to IANA, Learn.Microsoft, Wikipedia and also ChatGPT
 - `28.5.2025` - Initial commit
+- `17.6.2025` - Convert from pythons charset-normalizer to .net UtfUnknown encoding detector nuget
 
 ## TODO
 
-- Divide files into smaller samples and test each other to avoid memory overflow
-  - test the accuracy in context of smaller samples
+- Detect concatenation border of different encodings in same file
+- Test the accuracy of UtfUnknown
 - Implement sample size limits because of C# byte[] array limit is 2GB to be able parse large files
 - Implement proper paralization
-- Avoid naming conflict with EncodingDetector
 - Implement DI
 - Implement propper AppSettings
