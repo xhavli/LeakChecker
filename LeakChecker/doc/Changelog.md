@@ -8,7 +8,7 @@ This is changelog of LeakChecker tool
 
 - `27.5.2025` - EncodingMap verified to IANA, Learn.Microsoft, Wikipedia and also ChatGPT
 - `28.5.2025` - Initial commit
-- `17.6.2025` - Convert from pythons charset-normalizer to .net UtfUnknown encoding detector nuget
+- `17.6.2025` - Convert from pythons charset-normalizer to .net [UtfUnknown](https://github.com/CharsetDetector/UTF-unknown) encoding detector nuget
 
 ## TODO
 
