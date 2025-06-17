@@ -1,27 +1,30 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using LeakChecker.Utilities;
+using UtfUnknown;
 
 namespace LeakChecker.EncodingDetection;
 
 public class EncodingDetector
 {
-    public static void VerifySupportedEncodings()
+    public static async Task<string> DetectEncoding(string filePath)
     {
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-        var mappedEncodings = EncodingMapper.EncodingMap.Values;
-        var supportedEncodings = Encoding.GetEncodings().Select(ei => ei.Name).ToList();
-        var unsupportedEncodings = mappedEncodings.Except(supportedEncodings).ToList();
-        if (unsupportedEncodings.Any())
+        await using Stream fileStream = File.OpenRead(filePath);
+        var result = CharsetDetector.DetectFromStream(fileStream, long.MaxValue);
+        
+        if (result.Detected == null)
         {
-            Logger.LogWarning("List of encodings mapped from charset-normalizer but not supported in C# on your machine");
-            PrintMachineInfo();
-            foreach (var unsupportedEncoding in unsupportedEncodings)
-            {
-                Logger.LogWarning($"Encoding {unsupportedEncoding} is not supported on current machine");
-            }
+            Logger.LogError($"Failed to detect encoding from file {filePath}");
+            return "Unknown";
         }
+        
+        if (result.Detected.Confidence < 1)
+        {
+            Logger.LogWarning($"Detected encoding [{result.Detected.EncodingName}] with confidence " +
+                           $"[{result.Detected.Confidence}] for file {filePath}.");
+        }
+        
+        return result.Detected.EncodingName;
     }
 
     private static void PrintMachineInfo()

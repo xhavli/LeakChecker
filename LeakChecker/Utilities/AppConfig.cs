@@ -4,7 +4,6 @@ namespace LeakChecker.Utilities;
 
 public record EncodingDetector
 {
-    public required int AccuracyPercent { get; set; }
     public required string ScriptPath { get; init; }
 }
 
@@ -63,20 +62,6 @@ public record AppConfig
             Logger.LogError($"Temporary directory '{config.TemporaryDirectory}' is missing. " +
                             $"Program terminate with exit code 1");
             Environment.Exit(1);
-        }
-
-        switch (config.EncodingDetector.AccuracyPercent)
-        {
-            case <= 0:
-                Logger.LogWarning("Accuracy percent is 0% or negative. " +
-                                  "Program terminate without doing anything with exit code 0");
-                Environment.Exit(0);
-                break;
-            case >= 100:
-                Logger.LogWarning("Accuracy percent is 100% or higher. It may take a long time and " +
-                                  "cause performance issues when parsing large files");
-                config.EncodingDetector.AccuracyPercent = 100;
-                break;
         }
 
         if (string.IsNullOrEmpty(config.EncodingDetector.ScriptPath) ||
