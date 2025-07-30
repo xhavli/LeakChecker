@@ -2,11 +2,6 @@ using System.Text.Json;
 
 namespace LeakChecker.Utilities;
 
-public record EncodingDetector
-{
-    public required string ScriptPath { get; init; }
-}
-
 public record ContentDetector
 {
     public required string ScriptPath { get; init; }
@@ -15,9 +10,9 @@ public record ContentDetector
 public record AppConfig
 {
     public required string InputDirectory { get; init; }
+    public required string LogDirectory { get; init; }
     public required string OutputDirectory { get; init; }
     public required string TemporaryDirectory { get; init; }
-    public required EncodingDetector EncodingDetector { get; init; }
     public required ContentDetector ContentDetector { get; init; }
 
     public static AppConfig ParseAppConfig()
@@ -28,7 +23,7 @@ public record AppConfig
         var projectDir = Directory.GetParent(currentDir)?.Parent?.Parent?.FullName;
 
         // Build path to AppConfig.json
-        var jsonPath = Path.Combine(projectDir ?? string.Empty, "AppConfig.json");
+        var jsonPath = Path.Combine(projectDir ?? string.Empty, "appConfig.json");
 
         if (!File.Exists(jsonPath))
         {
@@ -50,6 +45,21 @@ public record AppConfig
             Logger.LogError($"Input directory '{config.InputDirectory}' is missing. Program terminate with exit code 1");
             Environment.Exit(1);
         }
+        
+        if (string.IsNullOrEmpty(config.LogDirectory) || !Directory.Exists(config.LogDirectory))
+        {
+            Logger.LogError($"{nameof(config.LogDirectory)} is missing in AppConfig.json or does not exists on current machine. " +
+                            $"Trying to create a new directory at '{config.LogDirectory}'.");
+            try
+            {
+                Directory.CreateDirectory(config.LogDirectory);
+            }
+            catch (Exception e)
+            {
+                Logger.LogError($"[EXCEPTION] Could not create {nameof(config.LogDirectory)}. {e.Message}. Program terminate with exit code 1");
+                Environment.Exit(1);
+            }
+        }
 
         if (string.IsNullOrEmpty(config.OutputDirectory) || !Directory.Exists(config.OutputDirectory))
         {
@@ -61,14 +71,6 @@ public record AppConfig
         {
             Logger.LogError($"Temporary directory '{config.TemporaryDirectory}' is missing. " +
                             $"Program terminate with exit code 1");
-            Environment.Exit(1);
-        }
-
-        if (string.IsNullOrEmpty(config.EncodingDetector.ScriptPath) ||
-            !File.Exists(config.EncodingDetector.ScriptPath))
-        {
-            Logger.LogError("Encoding detector python script is missing or file on path " +
-                            $"'{config.EncodingDetector.ScriptPath}' doesn't exist. Program terminate with exit code 1");
             Environment.Exit(1);
         }
 
