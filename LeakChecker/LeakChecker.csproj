@@ -8,10 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="ContentDetector\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <PackageReference Include="UTF.Unknown" Version="2.5.1" />
     </ItemGroup>
 
