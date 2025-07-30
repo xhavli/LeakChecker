@@ -19,9 +19,9 @@ Author: Adam Havlík
 - `17.7.2025` - Zero-shot model [facebook/bart-large-mnli](https://huggingface.co/facebook/bart-large-mnli) was tested with satisfying results. There is need to know delimiters in data, process it by commonly know regexes and at the end tokens which are still unknown send to Zero-shot recognizer for categorization.  
   [NOTE] This model is 10x faster on Nvidia 1650Ti than on Intel 10300H. There is need to reinstall python torch from CPU to GPU.
 
-  ### Utilities
+### Utilities
 
-  - `30.7.2025` - Added some logging tools to log processing details and statistics to log file
+- `30.7.2025` - Added some logging tools to log processing details and statistics to log file
 
 ## TODO
 
