@@ -19,9 +19,9 @@ Author: Adam Havlík
 - `17.7.2025` - Zero-shot model [facebook/bart-large-mnli](https://huggingface.co/facebook/bart-large-mnli) was tested with satisfying results. There is need to know delimiters in data, process it by commonly know regexes and at the end tokens which are still unknown send to Zero-shot recognizer for categorization.  
   [NOTE] This model is 10x faster on Nvidia 1650Ti than on Intel 10300H. There is need to reinstall python torch from CPU to GPU.
 - `3.8.2025` - Content detections  
-  - C# - MailAddress.TryCreate() is good enough
-  - C# - DateTime.TryParse() good for now, maybe replaced in the future
-  - C# - IPAddress.TryParse() good for now, it can parse wide scale of formats, also hexadecimal, then IPv4 need extra validation if contains 3x '.' , IPv6 not properly tested
+  - C# - [MailAddress.TryCreate()](https://learn.microsoft.com/en-us/dotnet/api/system.net.mail.mailaddress.trycreate?view=net-10.0) is good enough
+  - C# - [DateTime.TryParse()](https://learn.microsoft.com/en-us/dotnet/api/system.datetime.tryparse?view=net-10.0) good for now, maybe replaced in the future
+  - C# - [IPAddress.TryParse()](https://learn.microsoft.com/en-us/dotnet/api/system.net.ipaddress.tryparse?view=net-10.0) good for now, it can parse wide scale of formats, also hexadecimal, then IPv4 need extra validation if contains 3x '.' , IPv6 not properly tested
   - NuGet - [PhoneNumbers](https://github.com/google/libphonenumber) for phone number detection
 - `4.8.2025` - Hash identification  
   - [www.hashes.com](https://hashes.com/en/tools/hash_identifier) - Tools - Hash Identifier do proper validation and return most successful results, have demo its web application with well documented [api](https://hashes.com/en/docs)
