@@ -23,6 +23,12 @@ Author: Adam Havlík
   - C# - DateTime.TryParse() good for now, maybe replaced in the future
   - C# - IPAddress.TryParse() good for now, it can parse wide scale of formats, also hexadecimal, then IPv4 need extra validation if contains 3x '.' , IPv6 not properly tested
   - NuGet - [PhoneNumbers](https://github.com/google/libphonenumber) for phone number detection
+- `4.8.2025` - Hash identification  
+  - [www.hashes.com](https://hashes.com/en/tools/hash_identifier) - Tools - Hash Identifier do proper validation and return most successful results, have demo its web application with well documented [api](https://hashes.com/en/docs)
+  - Hash Identification applications were manually tested with dataset from [onlinehashcrack](https://www.onlinehashcrack.com/hash-acceptance.php)
+  - [HAITI](https://github.com/noraj/haiti) - Wide scale of supported hash types (600+) but do not validation, match everything including mobile number, don't have a demo
+  - [CyberChef](https://github.com/gchq/CyberChef) - Do validation, have demo, do not support hashes with salt
+  - [Name That Hash](https://github.com/bee-san/Name-That-Hash) - Wide scale of supported hash types (300+), have demo, do some validation but not 100% correct, most of unknown hash fall in "default" BigCrypt hash type
 
 ### Utilities
 
@@ -32,9 +38,10 @@ Author: Adam Havlík
 
 - Search for delimiters properly
 - Create a pattern of content from given format
-- Process tokens from a single line
-- Detect content
-- Hash identification - [HAITI](https://github.com/noraj/haiti)
+- Detect Location
+- Detect Name
+- Detect Username and plaintext Password
+- Detect other content
 - IPv6 validation can be done by regex from [Vladimir Vesely - IPK2024-06-IPv6](https://moodle.vut.cz/pluginfile.php/823898/mod_folder/content/0/IPK2023-24L-09-IPv6.pdf)
 
 ```bash
