@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using LeakChecker.FileTracking;
 using LeakChecker.Utilities;
@@ -28,12 +29,11 @@ public class EncodingDetector
         }
 
         if (result == null)
-            await file.Log(LogLevel.Warning, "[ENCODING] Consistent encoding detection failed.");
+            await file.Log("Consistent encoding detection failed.", LogLevel.Warning, LogContext.Encoding);
         
         if (result != null)
-            await file.Log(LogLevel.Warning,
-                $"[ENCODING] Consistent encoding detection not satisfied [{result.Detected?.EncodingName}] " +
-                $"with low confidence [{result.Detected?.Confidence:F2}]");
+            await file.Log($"Consistent encoding detection not satisfied [{result.Detected?.EncodingName}] " +
+                           $"with low confidence [{result.Detected?.Confidence:F2}]", LogLevel.Warning, LogContext.Encoding);
         
         return segments;
     }
@@ -161,9 +161,10 @@ public class EncodingDetector
 
         merged.Add(current); // Add last segment
         
-        await file.Log(LogLevel.Info, "Encoding processing complete");
+        await file.Log($"Encoding processing finished successfully. Current DateTime: " +
+                       $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Encoding);
         await file.LogEncodingStats(merged);
-        await file.LogEncodingDetail(merged);
+        await file.LogEncodingDetails(merged);
         
         return merged;
     }
@@ -204,7 +205,7 @@ public class EncodingDetector
         }
     }
     
-    //TODO tmp bypass to detect encoding segments preciously
+    //TODO tmp bypass to avoid encoding detection with segments
     public async Task<Encoding> DetectEncodingFromOneStream(FileContext file)
     {
         await using var stream = File.OpenRead(file.Path);
@@ -217,16 +218,15 @@ public class EncodingDetector
                 float confidence = result.Detected?.Confidence ?? 0f;
                 if (!string.IsNullOrEmpty(encoding) || confidence > 0f)
                 {
-                    await file.Log(LogLevel.Info, $"Encoding detected [{encoding}] with confidence [{confidence}]");
-                    await file.Log(LogLevel.Info, "Encoding processing complete");
+                    await file.Log($"Encoding detected [{encoding}] with confidence [{confidence}]");
                 }
-                return Encoding.GetEncoding(result.Detected.EncodingName);
+                return Encoding.GetEncoding(encoding);
             }
-            catch (ArgumentException)
+            catch (Exception e)
             {
                 
-                await file.Log(LogLevel.Warning, $"Encoding detection failed. Fallback to [{Encoding.UTF8.WebName}]");
-                await file.Log(LogLevel.Warning, "Encoding processing complete");
+                await file.Log($"Encoding detection failed. {e.Message} Fallback to [{Encoding.UTF8.WebName}]", LogLevel.Exception);
+                await file.Log("Encoding processing complete");
                 return Encoding.UTF8;
             }
         }
