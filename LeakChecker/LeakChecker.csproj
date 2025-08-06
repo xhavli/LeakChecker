@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="libphonenumber-csharp" Version="9.0.10" />
       <PackageReference Include="UTF.Unknown" Version="2.5.1" />
     </ItemGroup>
 
