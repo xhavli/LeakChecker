@@ -1,24 +1,24 @@
 using System.Globalization;
 using System.Text;
-using LeakChecker.ContentDetector;
+using LeakChecker.ContentDetection;
 using LeakChecker.EncodingDetection;
 
-namespace LeakChecker.FileTracking;
+namespace LeakChecker.Logging.FileLogging;
 
-public class FileContext : IDisposable
+public class FileLogger : IDisposable
 {
-    public string Path { get; }
+    public string FilePath { get; }
     private readonly DateTime _startTime;
     private StreamWriter Writer { get; set; }
 
-    public FileContext(string originFilePath, string logDirectory)
+    public FileLogger(string originFilePath, string logDirectory)
     {
         _startTime = DateTime.Now;
-        Path = originFilePath;
+        FilePath = originFilePath;
         
         string nameTimeStamp = $"{_startTime:yyyy-M-dTHH-mm-ss}";
-        string reportFileName = $"{nameTimeStamp}_{System.IO.Path.GetFileName(Path)}.txt";
-        string reportFilePath = System.IO.Path.Combine(logDirectory, reportFileName);
+        string reportFileName = $"{nameTimeStamp}_{Path.GetFileName(FilePath)}.txt";
+        string reportFilePath = Path.Combine(logDirectory, reportFileName);
 
         Writer = new StreamWriter(reportFilePath, append: true, encoding: Encoding.UTF8);
         Writer.AutoFlush = true;
@@ -57,14 +57,14 @@ public class FileContext : IDisposable
                                      : $"[{DateTime.Now:T}] {level.GetString()} {context.Value.GetString()} {message}";
         await LogAsync(log);
         Console.ForegroundColor = consoleColor;
-        Console.WriteLine($"'{Path}' {log}");
+        Console.WriteLine($"'{FilePath}' {log}");
         Console.ResetColor();
     }
 
     private void CreateReportHeader()
     {
         string timeStamp = _startTime.ToString("F", CultureInfo.InvariantCulture);
-        FileInfo fileInfo = new FileInfo(Path);
+        FileInfo fileInfo = new FileInfo(FilePath);
         long sizeInBytes = fileInfo.Length;
         double sizeMB = sizeInBytes / (1024.0 * 1024);
         double sizeGB = sizeInBytes / (1024.0 * 1024 * 1024);
@@ -72,7 +72,7 @@ public class FileContext : IDisposable
         Writer.WriteLine($"File processing start at: {timeStamp}");
         Writer.WriteLine($"File name: {fileInfo.Name}");
         Writer.WriteLine($"File path: {fileInfo.FullName}");
-        Writer.WriteLine($"File size: {sizeGB:F2} GB / {sizeMB:F2} MB / {sizeInBytes} bytes ");
+        Writer.WriteLine($"File size: {sizeGB:F2} GB / {sizeMB:F2} MB / {sizeInBytes:N0} bytes ");
     }
     
     public async Task LogEncodingProcessingStart()
@@ -139,6 +139,15 @@ public class FileContext : IDisposable
         }
     }
     
+    public async Task LogFormatProcessingStart()
+    {
+        await LogAsync("");
+        await LogAsync("---------------------------");
+        await LogAsync("[X] FORMAT PROCESSING [X]");
+        await LogAsync("---------------------------");
+        await Log("Format processing started");
+    }
+    
     public async Task LogContentProcessingStart()
     {
         await LogAsync("");
@@ -148,7 +157,7 @@ public class FileContext : IDisposable
         await Log("Content processing started");
     }
     
-    public async Task LogContentStats(Dictionary<RecordAttribute, int> contentResults)
+    public async Task LogContentStats(Dictionary<RecordAttributeEnum, int> contentResults)
     {
         await LogAsync("");
         await LogAsync("-------------------------------------");
@@ -157,10 +166,9 @@ public class FileContext : IDisposable
         
         await LogAsync("Content attributes found:");
         var contentStats = contentResults.OrderByDescending(x => x.Value);
-        string log;
         foreach (var kvp in contentStats)
         {
-            log = $"{kvp.Key}: {kvp.Value}";
+            string log = $"{kvp.Key}: {kvp.Value}";
             await LogAsync(log);
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine(log);
