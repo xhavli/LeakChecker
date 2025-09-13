@@ -1,10 +1,10 @@
-namespace LeakChecker.FileTracking;
+namespace LeakChecker.Logging;
 
 public enum LogLevel
 {
     Info,
-    Warning,
     Success,
+    Warning,
     Exception
 }
 
@@ -13,8 +13,8 @@ public static class LogLevelStrings
     private static readonly Dictionary<LogLevel, string> Map = new()
     {
         { LogLevel.Info, "[INFO]" },
-        { LogLevel.Warning, "[WARNING]" },
         { LogLevel.Success, "[SUCCESS]" },
+        { LogLevel.Warning, "[WARNING]" },
         { LogLevel.Exception, "[EXCEPTION]" }
     };
 
