@@ -1,21 +1,22 @@
-namespace LeakChecker.ContentDetector;
+namespace LeakChecker.ContentDetection;
 
-public enum RecordAttribute
+public enum RecordAttributeEnum
 {
     IpV4Address,
     IpV6Address,
-    Status,
-    Gender,
-    Timestamp,
+    TimeStamp,
     Location,
     Organization,
     PhoneNumber,
+    Gender,
     Email,
     Name,
     Nickname,
     Password,
     SaltedHash,
     Hash,
-    Domain,
+    Web,
+    MaritalStatus,
+    Id,
     Other
 }
