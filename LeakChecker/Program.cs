@@ -1,46 +1,50 @@
-﻿using System.Diagnostics;
+﻿using System.Buffers.Text;
+using System.Diagnostics;
+using System.Globalization;
+using System.Runtime.Intrinsics.Arm;
 using System.Text;
 using System.Text.Json;
-using LeakChecker.ContentDetector;
 using LeakChecker.EncodingDetection;
-using LeakChecker.FileTracking;
+using LeakChecker.ContentDetection;
+using LeakChecker.ContentDetection.RecognitionService;
 using LeakChecker.FormatDetection;
-using LeakChecker.Tests;
+using LeakChecker.Logging;
+using LeakChecker.Logging.ExecutionLogging;
+using LeakChecker.Logging.FileLogging;
 using LeakChecker.Utilities;
+using LeakChecker.Tests;
 
 namespace LeakChecker;
 
 public class Program
 {
-    private static AppConfig Config { get; set; } = null!;
-    private static readonly object ConsoleLock = new();
-
     public static async Task Main()
     {
-        Config = AppConfig.ParseAppConfig();
+        Stopwatch sw = Stopwatch.StartNew();
+        
+        AppConfig config = AppConfig.ParseAppConfig();
+        ExecutionLogger logger = new ExecutionLogger(config);
+        
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        // EncodingDetector.PrintSupportedEncodings(); Environment.Exit(0);
-        EncodingDetector encodingDetector = new EncodingDetector();
-        FormatDetector formatDetector = new FormatDetector();
-        ContentDetector.ContentDetector contentDetector = new ContentDetector.ContentDetector();
+        
+        PythonService pythonService = new PythonService(logger);
+        // await pythonService.Start();
         
         int success = 0;
-        
-        Logger.LogInfo("Program started at: " + DateTime.Now.ToString("HH:mm:ss"));
-        Stopwatch sw = Stopwatch.StartNew();
 
         var filePaths = FilesDelimiters.FilesEncodingsDictionary.Keys.ToList();
         var tasks = filePaths.Select(async filePath =>
         {
             if (!File.Exists(filePath))
             {
-                Logger.LogWarning($"[MISSING] {filePath}");
+                await logger.Log($"File not found: {filePath}", LogLevel.Warning);
                 return;
             }
 
+            
             try
             {
-                FileContext file = new FileContext(filePath, Config.LogDirectory);
+                FileLogger file = new FileLogger(filePath, config.LogDirectory);
                 // TODO tmp unused, this is correct way which will be developed later
                 // var encodingSegments = await encodingDetector.DetectEncodingFromFilePath(file);
                 // foreach (var segment in encodingSegments.OrderBy(s => s.StartOffset))
@@ -79,12 +83,12 @@ public class Program
                 
                 
                 // TODO tmp used, for experimental purposes
-                Encoding encoding = await encodingDetector.DetectEncodingFromOneStream(file);   // TODO delete this method
+                Encoding encoding = await EncodingDetector.DetectEncodingFromStream(file);   // TODO delete this method
                 
                 // TODO format detector will detect pattern of content with delimiters
                 // TODO detect format like first line starts with INSERT INTO...
                 // TODO create a pattern how content looks like
-                string delimiter = await formatDetector.DetectDelimiter(file);
+                string delimiter = await FormatDetector.DetectDelimiterFromFile(file);
                 if (delimiter == FilesDelimiters.FilesEncodingsDictionary[filePath])
                 {
                     success++;
@@ -92,70 +96,24 @@ public class Program
                 else
                 {
                     await file.Log("Detected delimiter not match", LogLevel.Warning, LogContext.Delimiter);
+                    delimiter = FilesDelimiters.FilesEncodingsDictionary[filePath];
                 }
                 
-                await contentDetector.ProcessFile(file, delimiter, encoding);
-                return;
-
-
-                string firstLine = string.Empty;
-                var url = $"http://localhost:8000/?text={Uri.EscapeDataString(firstLine)}";
-                using HttpClient client = new HttpClient();
-                try
-                {
-                    HttpResponseMessage response = await client.GetAsync(url);
-                    response.EnsureSuccessStatusCode();
-                    string result = await response.Content.ReadAsStringAsync();
-                    
-                    List<PresidioEntity>? entities = JsonSerializer.Deserialize<List<PresidioEntity>>(result);
-                    // Sort by score DESC, then start ASC, then end ASC
-                    var sorted = entities
-                        .OrderByDescending(e => e.Score)
-                        .ThenBy(e => e.Start)
-                        .ThenBy(e => e.End)
-                        .ToList();
-                    
-                    var filtered = new List<PresidioEntity>();
-
-                    lock (ConsoleLock)
-                    {
-                        // Print with text fragment from firstLine
-                        Logger.LogInfo($"[OUTPUT] {filePath} -> \"{firstLine?.Trim()}\"");
-                        foreach (var current in sorted)
-                        {
-                            bool overlaps = filtered.Any(existing =>
-                                current.Start < existing.End && existing.Start < current.End);
-
-                            if (!overlaps)
-                            {
-                                filtered.Add(current);
-                            }
-                        }
-
-                        // Print filtered results
-                        foreach (var entity in sorted)
-                        {
-                            string fragment = firstLine.Substring(entity.Start, entity.End - entity.Start);
-                            Console.WriteLine($"{entity.EntityType} [{entity.Start}-{entity.End}], {fragment}, score={entity.Score:F2}");
-                        }
-                    }
-                }
-                catch (HttpRequestException e)
-                {
-                    Logger.LogError($"[EXCEPTION] response error from FastAPI: " + e.Message);
-                }
+                await ContentDetector.ProcessFile(file, encoding, delimiter);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Logger.LogError($"[EXCEPTION] [MAIN] '{filePath}': {ex.Message}");
+                await logger.Log($"{filePath}: {e.Message}", LogLevel.Exception, LogContext.Main);
             }
         });
 
         await Task.WhenAll(tasks);
         
-        sw.Stop();
-        Logger.LogInfo($"Success rate is {success}/{FilesDelimiters.FilesEncodingsDictionary.Keys.Count}");
-        Logger.LogInfo($"Time taken {sw.Elapsed}, current time is {DateTime.Now:T}");
-        Logger.LogSuccess("Program successfully finished with exit code 0");
+        // pythonService.Stop();
+        
+        await logger.Log($"Delimiter success rate is {success}/{FilesDelimiters.FilesEncodingsDictionary.Keys.Count}");
+        await logger.Log($"Execution finished successfully. Time taken {sw.Elapsed}, current DateTime is " +
+                         $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Main);
+        await logger.Log("Program exit with code 0");
     }
 }
