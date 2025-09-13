@@ -1,19 +1,14 @@
 using System.Text.Json;
+using LeakChecker.Logging;
 
 namespace LeakChecker.Utilities;
-
-public record ContentDetector
-{
-    public required string ScriptPath { get; init; }
-}
 
 public record AppConfig
 {
     public required string InputDirectory { get; init; }
     public required string LogDirectory { get; init; }
     public required string OutputDirectory { get; init; }
-    public required string TemporaryDirectory { get; init; }
-    public required ContentDetector ContentDetector { get; init; }
+    public required string TmpDirectory { get; init; }
 
     public static AppConfig ParseAppConfig()
     {
@@ -23,11 +18,11 @@ public record AppConfig
         var projectDir = Directory.GetParent(currentDir)?.Parent?.Parent?.FullName;
 
         // Build path to AppConfig.json
-        var jsonPath = Path.Combine(projectDir ?? string.Empty, "appConfig.json");
+        var jsonPath = Path.Combine(projectDir ?? string.Empty, "appsettings.json");
 
         if (!File.Exists(jsonPath))
         {
-            Logger.LogError($"AppConfig file not found in {jsonPath}. Program terminate with exit code 1");
+            Console.Error.WriteLine($"appsettings file not found in {jsonPath}. Program terminate with exit code 1");
             Environment.Exit(1);
         }
 
@@ -36,44 +31,37 @@ public record AppConfig
 
         if (config == null)
         {
-            Logger.LogError("Configuration file is missing or failed to parse. Program terminate with exit code 1");
+            Console.Error.WriteLine("Configuration file is missing or failed to parse. Program terminate with exit code 1");
             Environment.Exit(1);
         }
 
         if (string.IsNullOrEmpty(config.InputDirectory) || !Directory.Exists(config.InputDirectory))
         {
-            Logger.LogError($"Input directory '{config.InputDirectory}' is missing. Program terminate with exit code 1");
+            Console.Error.WriteLine($"Input directory '{config.InputDirectory}' is missing. Program terminate with exit code 1");
             Environment.Exit(1);
         }
         
         if (string.IsNullOrEmpty(config.LogDirectory) || !Directory.Exists(config.LogDirectory))
         {
-            Logger.LogError($"{nameof(config.LogDirectory)} is missing in AppConfig.json or does not exists on current machine. " +
-                            $"Trying to create a new directory at '{config.LogDirectory}'.");
+            Console.Error.WriteLine($"{nameof(config.LogDirectory)} is missing in appsettings.json or does not exists on current machine. " +
+                                    $"Trying to create a new directory at '{config.LogDirectory}'.");
             try
             {
                 Directory.CreateDirectory(config.LogDirectory);
             }
             catch (Exception e)
             {
-                Logger.LogError($"[EXCEPTION] Could not create {nameof(config.LogDirectory)}. {e.Message}. Program terminate with exit code 1");
+                Console.Error.WriteLine($"[EXCEPTION] Could not create {nameof(config.LogDirectory)}. {e.Message}. Program terminate with exit code 1");
                 Environment.Exit(1);
             }
         }
 
         if (string.IsNullOrEmpty(config.OutputDirectory) || !Directory.Exists(config.OutputDirectory))
         {
-            Logger.LogError($"Output directory '{config.OutputDirectory}' is missing. Program terminate with exit code 1");
+            Console.Error.WriteLine($"Output directory '{config.OutputDirectory}' is missing. Program terminate with exit code 1");
             Environment.Exit(1);
         }
         
-        if (string.IsNullOrEmpty(config.TemporaryDirectory) || !Directory.Exists(config.TemporaryDirectory))
-        {
-            Logger.LogError($"Temporary directory '{config.TemporaryDirectory}' is missing. " +
-                            $"Program terminate with exit code 1");
-            Environment.Exit(1);
-        }
-
         return config;
     }
 }
