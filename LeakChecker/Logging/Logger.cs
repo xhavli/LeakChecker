@@ -1,4 +1,4 @@
-namespace LeakChecker.Utilities;
+namespace LeakChecker.Logging;
 public static class Logger
 {
     private static readonly object ConsoleLock = new();
