@@ -1,95 +1,85 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
-using LeakChecker.FileTracking;
+using LeakChecker.Logging;
+using LeakChecker.Logging.FileLogging;
 using LeakChecker.Utilities;
 using UtfUnknown;
 
 namespace LeakChecker.EncodingDetection;
 
-public class EncodingDetector
+public static class EncodingDetector
 {
-    private async Task<List<EncodingSegment>> ProcessFileAsConsistentEncoding(FileContext file)
+    // Read & process each segment with correct encoding, improve and use
+    public static async Task ReadAndProcessWithDynamicEncodings(string filePath, List<EncodingSegment> segments)
     {
-        var segments = new List<EncodingSegment>();
-        await using var stream = File.OpenRead(file.Path);
-
-        // Ensure detector will read all file
-        var result = CharsetDetector.DetectFromStream(stream, stream.Length);
-        if (result is { Detected.Confidence: > 0.99f })
-        {
-            segments.Add(new EncodingSegment
-            {
-                StartOffset = 0,
-                Length = stream.Length,
-                EncodingName = result.Detected.EncodingName,
-                Confidence = result.Detected.Confidence
-            });
-            
-            return segments;
-        }
-
-        if (result == null)
-            await file.Log("Consistent encoding detection failed.", LogLevel.Warning, LogContext.Encoding);
-        
-        if (result != null)
-            await file.Log($"Consistent encoding detection not satisfied [{result.Detected?.EncodingName}] " +
-                           $"with low confidence [{result.Detected?.Confidence:F2}]", LogLevel.Warning, LogContext.Encoding);
-        
-        return segments;
-    }
-
-    private async Task<List<EncodingSegment>> ProcessFileAsConcatenatedEncoding(string filePath, int sampleSize = 4 * 1024 )
-    {
-        int bytesRead;
-        long offset = 0;
-        var buffer = new byte[sampleSize];
-        var segments = new List<EncodingSegment>();
-
         await using var stream = File.OpenRead(filePath);
 
-        while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
+        Console.WriteLine(filePath);
+        Console.WriteLine("seg count: " + segments.Count);
+        foreach (var segment in segments)
         {
-            var result = CharsetDetector.DetectFromBytes(buffer, 0, bytesRead);
-            float confidence = result.Detected?.Confidence ?? 0f;
-            string encodingName = result.Detected?.Encoding?.WebName ?? "[unknown]";
+            Console.WriteLine("enc name:" + segment.EncodingName);
+            Console.WriteLine("seg start: " + segment.StartOffset);
+            Console.WriteLine("seg len: " + segment.Length);
+            Console.WriteLine("seg end: " + (segment.StartOffset + segment.Length));
+        }
 
-            if (confidence >= 0.99f)
+        foreach (var segment in segments)
+        {
+            var encoding = Encoding.GetEncoding(segment.EncodingName);
+
+            stream.Seek(segment.StartOffset, SeekOrigin.Begin);
+            byte[] buffer = new byte[segment.Length];
+            await stream.ReadAsync(buffer, 0, buffer.Length);
+
+            string decoded = encoding.GetString(buffer);
+            using var reader = new StringReader(decoded);
+
+            string? line;
+            while ((line = await reader.ReadLineAsync()) != null)
             {
-                segments.Add(new EncodingSegment
-                {
-                    StartOffset = offset,
-                    Length = bytesRead,
-                    EncodingName = encodingName,
-                    Confidence = confidence
-                });
+                // 🧪 Replace with your own processing
+                Console.WriteLine($"[{segment.EncodingName}] {line}");
+                return;
+            }
+        }
+    }
+    
+    private static async Task<List<EncodingSegment>> MergeSequenceOfSameEncodingSegments(FileLogger logger, List<EncodingSegment> segments, Stopwatch sw)
+    {
+        if (segments.Count == 0) return segments;
+        var merged = new List<EncodingSegment>();
+
+        var current = segments[0];
+
+        for (int i = 1; i < segments.Count; i++)
+        {
+            var next = segments[i];
+
+            if (next.EncodingName == current.EncodingName)
+            {
+                // Extend current
+                current.Length += next.Length;
             }
             else
             {
-                // Precise fallback detection
-                var preciseSegments = await DetectEncodingsWithPrecision(filePath, offset, bytesRead);
-                segments.AddRange(preciseSegments);
+                merged.Add(current);
+                current = next;
             }
-
-            offset += bytesRead;
         }
-
-        return segments;
-    }
-
-
-    public async Task<List<EncodingSegment>> DetectEncodingFromFilePath(FileContext file)
-    {
-        List<EncodingSegment> result;
-        await file.LogEncodingProcessingStart();
-
-        result = await ProcessFileAsConsistentEncoding(file);
-        if (result.Count == 1) return await MergeSequenceOfSameEncodingSegments(result, file);
-
-        result = await ProcessFileAsConcatenatedEncoding(file.Path);
-        return await MergeSequenceOfSameEncodingSegments(result, file);
+        
+        merged.Add(current); // Add last segment
+        
+        await logger.Log($"Encoding processing finished successfully. Time taken: {sw.Elapsed}, current DateTime: " +
+                       $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Encoding);
+        await logger.LogEncodingStats(merged);
+        await logger.LogEncodingDetails(merged);
+        
+        return merged;
     }
     
-    private async Task<List<EncodingSegment>> DetectEncodingsWithPrecision(string filePath, long startOffset, long length, int minBlockSize = 1)
+    private static async Task<List<EncodingSegment>> RecursiveDetectEncodingBoundaries(string filePath, long startOffset, long length, int minBlockSize = 1)
     {
         var segments = new List<EncodingSegment>();
 
@@ -136,80 +126,94 @@ public class EncodingDetector
         return segments;
     }
 
-    private async Task<List<EncodingSegment>> MergeSequenceOfSameEncodingSegments(List<EncodingSegment> segments, FileContext file)
+    private static async Task<List<EncodingSegment>> ProcessFileAsConcatenatedEncoding(FileLogger logger, int sampleSize = 4 * 1024 )
     {
-        if (segments.Count == 0) return segments;
-        var merged = new List<EncodingSegment>();
+        int bytesRead;
+        long offset = 0;
+        var buffer = new byte[sampleSize];
+        var segments = new List<EncodingSegment>();
 
-        var current = segments[0];
+        await using var stream = File.OpenRead(logger.FilePath);
 
-        for (int i = 1; i < segments.Count; i++)
+        while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
         {
-            var next = segments[i];
+            var result = CharsetDetector.DetectFromBytes(buffer, 0, bytesRead);
+            float confidence = result.Detected?.Confidence ?? 0f;
+            string encodingName = result.Detected?.Encoding?.WebName ?? "[unknown]";
 
-            if (next.EncodingName == current.EncodingName)
+            if (confidence >= 0.99f)
             {
-                // Extend current
-                current.Length += next.Length;
+                segments.Add(new EncodingSegment
+                {
+                    StartOffset = offset,
+                    Length = bytesRead,
+                    EncodingName = encodingName,
+                    Confidence = confidence
+                });
             }
             else
             {
-                merged.Add(current);
-                current = next;
+                // Precise fallback detection
+                var preciseSegments = await RecursiveDetectEncodingBoundaries(logger.FilePath, offset, bytesRead);
+                segments.AddRange(preciseSegments);
             }
+
+            offset += bytesRead;
         }
 
-        merged.Add(current); // Add last segment
-        
-        await file.Log($"Encoding processing finished successfully. Current DateTime: " +
-                       $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Encoding);
-        await file.LogEncodingStats(merged);
-        await file.LogEncodingDetails(merged);
-        
-        return merged;
+        return segments;
     }
     
-    // Read & process each segment with correct encoding
-    public async Task ReadAndProcessWithDynamicEncodings(string filePath, List<EncodingSegment> segments)
+    private static async Task<List<EncodingSegment>> ProcessFileAsConsistentEncoding(FileLogger logger)
     {
-        await using var stream = File.OpenRead(filePath);
+        var segments = new List<EncodingSegment>();
+        await using var stream = File.OpenRead(logger.FilePath);
 
-        Logger.LogInfo(filePath);
-        Console.WriteLine("seg count: " + segments.Count);
-        foreach (var segment in segments)
+        // Ensure detector will read all logger
+        var result = CharsetDetector.DetectFromStream(stream, stream.Length);
+        if (result is { Detected.Confidence: > 0.99f })
         {
-            Logger.LogInfo("enc name:" + segment.EncodingName);
-            Console.WriteLine("seg start: " + segment.StartOffset);
-            Console.WriteLine("seg len: " + segment.Length);
-            Console.WriteLine("seg end: " + (segment.StartOffset + segment.Length));
-        }
-
-        foreach (var segment in segments)
-        {
-            var encoding = Encoding.GetEncoding(segment.EncodingName);
-
-            stream.Seek(segment.StartOffset, SeekOrigin.Begin);
-            byte[] buffer = new byte[segment.Length];
-            await stream.ReadAsync(buffer, 0, buffer.Length);
-
-            string decoded = encoding.GetString(buffer);
-            using var reader = new StringReader(decoded);
-
-            string? line;
-            while ((line = await reader.ReadLineAsync()) != null)
+            segments.Add(new EncodingSegment
             {
-                // 🧪 Replace with your own processing
-                Console.WriteLine($"[{segment.EncodingName}] {line}");
-                return;
-            }
+                StartOffset = 0,
+                Length = stream.Length,
+                EncodingName = result.Detected.EncodingName,
+                Confidence = result.Detected.Confidence
+            });
+            
+            return segments;
         }
+
+        if (result == null)
+            await logger.Log("Consistent encoding detection failed.", LogLevel.Warning, LogContext.Encoding);
+        
+        if (result != null)
+            await logger.Log($"Consistent encoding detection not satisfied [{result.Detected?.EncodingName}] " +
+                           $"with low confidence [{result.Detected?.Confidence:F2}]", LogLevel.Warning, LogContext.Encoding);
+        
+        return segments;
     }
+
+    public static async Task<List<EncodingSegment>> DetectEncodingFromFile(FileLogger logger)
+    {
+        Stopwatch sw = Stopwatch.StartNew();
+        await logger.LogEncodingProcessingStart();
+
+        List<EncodingSegment> result = await ProcessFileAsConsistentEncoding(logger);
+        if (result.Any()) return await MergeSequenceOfSameEncodingSegments(logger, result, sw);
+
+        result = await ProcessFileAsConcatenatedEncoding(logger);
+        return await MergeSequenceOfSameEncodingSegments(logger, result, sw);
+    }
+    
     
     //TODO tmp bypass to avoid encoding detection with segments
-    public async Task<Encoding> DetectEncodingFromOneStream(FileContext file)
+    public static async Task<Encoding> DetectEncodingFromStream(FileLogger logger)
     {
-        await using var stream = File.OpenRead(file.Path);
-        await file.LogEncodingProcessingStart();
+        Stopwatch sw = Stopwatch.StartNew();
+        await logger.LogEncodingProcessingStart();
+        
+        await using var stream = File.OpenRead(logger.FilePath);
         var result = CharsetDetector.DetectFromStream(stream);
         {
             try
@@ -218,15 +222,18 @@ public class EncodingDetector
                 float confidence = result.Detected?.Confidence ?? 0f;
                 if (!string.IsNullOrEmpty(encoding) || confidence > 0f)
                 {
-                    await file.Log($"Encoding detected [{encoding}] with confidence [{confidence}]");
+                    await logger.Log($"Encoding detected [{encoding}] with confidence [{confidence}]", LogLevel.Success, LogContext.Encoding);
+                    await logger.Log($"Encoding processing finished successfully. Time taken: {sw.Elapsed}, current DateTime: " +
+                                   $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}");
                 }
                 return Encoding.GetEncoding(encoding);
             }
             catch (Exception e)
             {
                 
-                await file.Log($"Encoding detection failed. {e.Message} Fallback to [{Encoding.UTF8.WebName}]", LogLevel.Exception);
-                await file.Log("Encoding processing complete");
+                await logger.Log($"Encoding detection failed. {e.Message} Fallback to [{Encoding.UTF8.WebName}]", LogLevel.Exception);
+                await logger.Log($"Encoding processing failed. Time taken: {sw.Elapsed}, current DateTime: " +
+                               $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Warning, LogContext.Encoding);
                 return Encoding.UTF8;
             }
         }
