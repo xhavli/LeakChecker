@@ -1,41 +1,45 @@
-using System.Text.RegularExpressions;
-using LeakChecker.FileTracking;
+using LeakChecker.Logging;
+using LeakChecker.Logging.FileLogging;
 
 namespace LeakChecker.FormatDetection;
 
-public class FormatDetector
+public static class FormatDetector
 {
-    private readonly HttpClient _client = new HttpClient();
 
-    public async Task<string> DetectDelimiter(FileContext file)
+    public static async Task<string> DetectDelimiterFromFile(FileLogger file)
     {
-        string encodedFilePath = Uri.EscapeDataString(file.Path);
-        string url = $"http://localhost:8000/delimiter?filepath={encodedFilePath}";
+        await file.LogFormatProcessingStart();
+        
         string? delimiter;
+        using HttpClient client = new HttpClient();
+        string encodedFilePath = Uri.EscapeDataString(file.FilePath);
+        string url = $"http://localhost:8000/delimiter?filepath={encodedFilePath}";
 
         try
         {
-            HttpResponseMessage response = await _client.GetAsync(url);
+            HttpResponseMessage response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
 
-            delimiter = await _client.GetStringAsync(url);
+            delimiter = await client.GetStringAsync(url);
 
             if (string.IsNullOrEmpty(delimiter) || delimiter.Length != 1)
             {
-                await file.Log($"Wrong delimiter found. Falling back to default delimiter ':'.", LogLevel.Warning, LogContext.Delimiter);
+                await file.Log("Delimiter detection failure. Falling back to default delimiter ':'.", LogLevel.Warning, LogContext.Delimiter);
                 delimiter = ":";
             }
             else
             {
-                await file.Log($"Detected delimiter is: '{delimiter}'", LogLevel.Info, LogContext.Delimiter);
+                await file.Log($"Delimiter detected [{delimiter}]", LogLevel.Success, LogContext.Delimiter);
             }
         }
         catch (Exception e)
         {
-            await file.Log($"Delimiter not found. {e.Message} Falling back to default delimiter ':'.", LogLevel.Exception, LogContext.Delimiter);
+            await file.Log($"Delimiter detection communication. {e.Message} Falling back to default delimiter ':'.", LogLevel.Exception, LogContext.Delimiter);
             delimiter = ":";
         }
-
+        
+        await file.Log("Delimiter detection finished successfully.", LogLevel.Info, LogContext.Delimiter);
+        
         return delimiter;
     }
 }
