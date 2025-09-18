@@ -5,59 +5,48 @@ namespace LeakChecker.ContentDetection.ItemParsing;
 
 public static class HashParser
 {
-    private const string BaseUrl = $"https://hashes.com/en/api/identifier?hash=";
     private static readonly HttpClient Client = new();
+    private const string BaseUrl = "https://hashes.com/en/api/identifier?hash=";
 
     public static async Task<(bool isHash, bool isSalted, string hashType)> TryParse(string token)
     {
-        string hashType = string.Empty;
         bool isSalted = false;
-        bool isHash = false;
+        string hashType = string.Empty;
         
-        string requestUrl = BaseUrl + Uri.EscapeDataString(token);
-        string requestUrlExtended = requestUrl + "&extended=true";
-        try
+        string requestUrl = BaseUrl + Uri.EscapeDataString(token);  //Ready for simple use
+        string requestUrlExtended = requestUrl + "&extended=true";  //'Expert mode' offers more possible algorithms sorted by its popularity
+
+        var response = await Client.GetStringAsync(requestUrlExtended);
+
+        var jsonDoc = JsonDocument.Parse(response);
+        var root = jsonDoc.RootElement;
+
+        bool isHash = root.GetProperty("success").GetBoolean();
+        if (isHash)
         {
-            var response = await Client.GetStringAsync(requestUrlExtended);
-
-            var jsonDoc = JsonDocument.Parse(response);
-            var root = jsonDoc.RootElement;
-
-            isHash = root.GetProperty("success").GetBoolean();
-            if (isHash)
+            var algorithms = root.GetProperty("algorithms").EnumerateArray();
+            
+            hashType = algorithms.First().ToString();
+            isSalted = hashType.Contains("salt", StringComparison.InvariantCultureIgnoreCase);
+            
+            if (hashType.Replace(" ", "").Contains("Base64", StringComparison.InvariantCultureIgnoreCase))
             {
-                var algorithms = root.GetProperty("algorithms").EnumerateArray();
-                Console.WriteLine($"Possible hash algorithms for '{token}' :");
-                foreach (var algor in algorithms)
+                if (!Base64.IsValid(token, out _))
                 {
-                    Console.WriteLine($"- {algor.GetString()}");
-                }
-                
-                string algorithm = algorithms.First().ToString();
-
-                hashType = algorithm;
-                isSalted = algorithm.ToLower().Contains("salt");
-                
-                if (algorithm.ToUpperInvariant().Contains("BASE64"))
-                {
-                    if (!Base64.IsValid(token, out _))
-                    {
-                        isHash = false;
-                        isSalted = false;
-                        algorithm = string.Empty;
-                    }
+                    return (false, false, string.Empty);
                 }
             }
-            else
+            
+            Console.WriteLine($"Possible hash algorithms for '{token}':");
+            foreach (var algorithm in algorithms)
             {
-                // string? message = root.GetProperty("message").GetString();
-                // Console.WriteLine($"Token is not hash, token: '{token}'");
+                Console.WriteLine($"- {algorithm.GetString()}");
             }
         }
-        catch (Exception e)
+        else
         {
-            Console.WriteLine($"[EXCEPTION]: {e.Message}"); //TODO log properly
-            isHash = false;
+            // string? message = root.GetProperty("message").GetString();
+            // Console.WriteLine($"Token is not hash, token: '{token}'");
         }
         
         return (isHash, isSalted, hashType);
