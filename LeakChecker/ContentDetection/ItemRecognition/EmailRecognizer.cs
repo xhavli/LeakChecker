@@ -21,9 +21,6 @@ public static class EmailRecognizer
                 stringEmails.Add(result.Text);
                 emails.Add(email);
                 found = true;
-            // Console.WriteLine(email.Address);    // Full address
-            // Console.WriteLine(email.Host);   // Domain / Mail gate
-            // Console.WriteLine(email.User);   // Username
             }
         }
 
