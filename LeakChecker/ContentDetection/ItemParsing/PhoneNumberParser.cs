@@ -5,7 +5,6 @@ namespace LeakChecker.ContentDetection.ItemParsing;
 public static class PhoneNumberParser
 {
     private static readonly PhoneNumberUtil PhoneUtil = PhoneNumberUtil.GetInstance();
-
     
     public static bool TryParse(string token, out string phoneNumber)
     {
@@ -37,8 +36,4 @@ public static class PhoneNumberParser
         
         return false;
     }
-}
-
-public class PhoneUtil
-{
 }
