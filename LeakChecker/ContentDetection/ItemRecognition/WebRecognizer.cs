@@ -20,7 +20,6 @@ public static class WebRecognizer
                 stringUris.Add(result.Text);
                 uris.Add(uri);
                 found = true;
-                // Console.WriteLine(uri.Host);   // Do not work for uris without www.
             }
         }
 
