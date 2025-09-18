@@ -17,9 +17,12 @@ public static class TimeStampRecognizer
         {
             dynamic resolution = result.Resolution;
 
-            // foreach (var value in resolution["values"])  // when value < 12h offer alternatives like AM/PM, [0] is original value
+            // foreach (var value in resolution["values"])  // When value < 12h offer alternatives like AM/PM, [0] is original value
+            if (resolution == null) continue;
             var value = resolution["values"][0];
-            string dateTimeString = value["value"]; // <-- ISO 8601 string
+            if (!value.ContainsKey("value")) continue;  // If result.Type is timerange or datetimerange, value["value"] not present in dictionary
+            string dateTimeString = value["value"]; // ISO 8601 string
+            
             if (DateTime.TryParse(dateTimeString, out DateTime timeStamp))
             {
                 stringTimeStamps.Add(result.Text);
