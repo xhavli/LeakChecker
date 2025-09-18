@@ -1,11 +1,9 @@
-﻿using System.Buffers.Text;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Globalization;
-using System.Runtime.Intrinsics.Arm;
 using System.Text;
-using System.Text.Json;
 using LeakChecker.EncodingDetection;
 using LeakChecker.ContentDetection;
+using LeakChecker.ContentDetection.ItemRecognition;
 using LeakChecker.ContentDetection.RecognitionService;
 using LeakChecker.FormatDetection;
 using LeakChecker.Logging;
@@ -13,10 +11,11 @@ using LeakChecker.Logging.ExecutionLogging;
 using LeakChecker.Logging.FileLogging;
 using LeakChecker.Utilities;
 using LeakChecker.Tests;
+using Microsoft.Recognizers.Text.DateTime;
 
 namespace LeakChecker;
 
-public class Program
+public static class Program
 {
     public static async Task Main()
     {
@@ -25,11 +24,11 @@ public class Program
         AppConfig config = AppConfig.ParseAppConfig();
         ExecutionLogger logger = new ExecutionLogger(config);
         
+        PythonNerService pythonNerService = new PythonNerService(logger);
+        // await pythonNerService.Start();
+        await pythonNerService.WaitForStart();
+        
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        
-        PythonService pythonService = new PythonService(logger);
-        // await pythonService.Start();
-        
         int success = 0;
 
         var filePaths = FilesDelimiters.FilesEncodingsDictionary.Keys.ToList();
@@ -40,7 +39,6 @@ public class Program
                 await logger.Log($"File not found: {filePath}", LogLevel.Warning);
                 return;
             }
-
             
             try
             {
@@ -109,11 +107,12 @@ public class Program
 
         await Task.WhenAll(tasks);
         
-        // pythonService.Stop();
+        // pythonNerService.Stop();
         
         await logger.Log($"Delimiter success rate is {success}/{FilesDelimiters.FilesEncodingsDictionary.Keys.Count}");
         await logger.Log($"Execution finished successfully. Time taken {sw.Elapsed}, current DateTime is " +
                          $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Main);
-        await logger.Log("Program exit with code 0");
+        await logger.Log("Program will exit with code 0");
+        Environment.Exit(0);
     }
 }
