@@ -36,26 +36,31 @@ public class PythonNerService(ExecutionLogger logger)
         await logger.Log("PythonNerService: Started");
     }
 
-    public async Task WaitForStart()
+    public async Task WaitForStart(int attempts = 10, int timeout = 5_000)
     {
         using HttpClient client = new();
-        try
+        while (attempts > 0)
         {
-            while (true)
+            try
             {
-
-                string statusUri = "http://localhost:8000/status";
-                string status = await client.GetStringAsync(statusUri);
-                if (status.Equals("ready", StringComparison.OrdinalIgnoreCase)) break;
-                    
-                await logger.Log($"PythonNerService: Waiting. Status: {status}", LogLevel.Warning);
-                await Task.Delay(5_000);    //5 sec
+                    string statusUri = "http://localhost:8000/status";
+                    string status = await client.GetStringAsync(statusUri);
+                    if (status.Equals("ready", StringComparison.OrdinalIgnoreCase)) break;
+                        
+            }
+            catch (Exception e)
+            {
+                    await logger.Log($"PythonNerService: Waiting. Attempts remaining {attempts}, timeout {timeout} milliseconds", LogLevel.Warning);
+                    await Task.Delay(timeout);
+                    attempts--;
             }
         }
-        catch (Exception e)
+
+        if (attempts == 0)
         {
-            Console.WriteLine(e);
-            throw;
+            string exMessage = "PythonNerService: Failed on startup";
+            await logger.Log(exMessage, LogLevel.Exception, LogContext.PythonNerService);
+            throw new Exception(exMessage);
         }
         
         await logger.Log("PythonNerService: Ready", LogLevel.Success, LogContext.PythonNerService);
