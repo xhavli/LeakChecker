@@ -86,6 +86,30 @@ public class HeuristicAnalyzer
 
                 schema[kvp.Key] = ((ItemEnum)maxIndex, span);
             }
+            else
+            {
+                //TODO
+                //Sql Insert processing: ('2741', '', 'S14DJ90B321353', 'HABCEGDA', '', '0', '0', 'SI', '????? ?????? 3.3', '1306677462', '300', '', 'Unknown', '1306695600', 'Bantime expired', 'OVERPRO AUTOUNBAN', '55386', '')
+                // [0] Other = 2741
+                // [1] Other =
+                // [2] Other = S14DJ90B321353
+                // [3] Other = HABCEGDA
+                // [4] IpV4 =
+                // [5] Other = 0
+                // [6] Other = 0
+                // [7] Other = SI
+                // [8] Location = ????? ?????? 3.3
+                // [9] TimeStamp = 1306677462
+                // [10] Other = 300
+                // [11] IpV4 =
+                // '1353316_1358895' [0:41:56] [WARNING] [PROCESSING] Unmapped field[12] = Unknown
+                // [13] TimeStamp = 1306695600
+                // [14] Other = Bantime expired
+                // [15] Other = OVERPRO AUTOUNBAN
+                // [16] TimeStamp = 55386
+                // [17] Web =
+                schema[kvp.Key] = ((ItemEnum.Other), 0);
+            }
         }
 
         return schema;
