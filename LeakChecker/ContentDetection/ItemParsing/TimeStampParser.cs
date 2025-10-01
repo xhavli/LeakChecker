@@ -2,24 +2,21 @@ namespace LeakChecker.ContentDetection.ItemParsing;
 
 public static class TimeStampParser
 {
+    // Set valid range
+    private static readonly DateTime MinDate = new DateTime(2000, 1, 1);
+    private static readonly DateTime MaxDate = DateTime.UtcNow.AddYears(10);
+    
     public static bool TryParse(string token, out DateTime dateTime)
     {
         dateTime = default;
-
+        
         if (!long.TryParse(token, out long raw) || raw < 0)
             return false;
-
-        // Set valid range
-        DateTime minDate = new DateTime(2000, 1, 1);
-        DateTime maxDate = DateTime.UtcNow;
-
-        bool IsInRange(DateTime dt) =>
-            dt >= minDate && dt <= maxDate;
 
         try
         {
             var dt = DateTimeOffset.FromUnixTimeSeconds(raw).UtcDateTime;
-            if (IsInRange(dt)) { dateTime = dt; return true; }
+            if (IsInRange(dt)) { dateTime = dt; return true; }  // MinDate = 946684800
         }
         catch
         {
@@ -29,7 +26,7 @@ public static class TimeStampParser
         try
         {
             var dt = DateTimeOffset.FromUnixTimeMilliseconds(raw).UtcDateTime;
-            if (IsInRange(dt)) { dateTime = dt; return true; }
+            if (IsInRange(dt)) { dateTime = dt; return true; }  // MinDate = 946684800000
         }
         catch
         {
@@ -40,7 +37,7 @@ public static class TimeStampParser
         {
             // Try Windows FILETIME
             var dt = DateTime.FromFileTimeUtc(raw);
-            if (IsInRange(dt)) { dateTime = dt; return true; }
+            if (IsInRange(dt)) { dateTime = dt; return true; }  // MinDate = 125911584000000000
         }
         catch
         {
@@ -51,7 +48,7 @@ public static class TimeStampParser
         {
             // Try .NET ticks
             var dt = new DateTime(raw, DateTimeKind.Utc);
-            if (IsInRange(dt)) { dateTime = dt; return true; }
+            if (IsInRange(dt)) { dateTime = dt; return true; }  // MinDate = 630822816000000000
         }
         catch
         {
@@ -63,7 +60,7 @@ public static class TimeStampParser
             // Try Excel serial date (days since 1899-12-30)
             DateTime excelEpoch = new DateTime(1899, 12, 30);
             var dt = excelEpoch.AddDays(raw);
-            if (IsInRange(dt)) { dateTime = dt; return true; }
+            if (IsInRange(dt)) { dateTime = dt; return true; }  // MinDate = 36526
         }
         catch
         {
@@ -72,4 +69,7 @@ public static class TimeStampParser
 
         return false;
     }
+    
+    private static bool IsInRange(DateTime dt) =>
+        dt >= MinDate && dt <= MaxDate;
 }
