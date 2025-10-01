@@ -6,7 +6,7 @@ public enum LogContext
     Encoding,
     Format,
     Content,
-    Parsing,
+    Processing,
     PythonNerService,
     ExternalService,
 }
@@ -19,7 +19,7 @@ public static class LogContextStrings
         { LogContext.Encoding, "[ENCODING]" },
         { LogContext.Format, "[FORMAT]" },
         { LogContext.Content, "[CONTENT]" },
-        { LogContext.Parsing, "[PARSING]" },
+        { LogContext.Processing, "[PROCESSING]" },
         { LogContext.PythonNerService, "[PYTHON-NER-SERVICE]" },
         { LogContext.ExternalService, "[EXTERNAL-SERVICE]" },
     };
