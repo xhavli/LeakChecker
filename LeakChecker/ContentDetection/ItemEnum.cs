@@ -20,5 +20,6 @@ public enum ItemEnum
     MaritalStatus,
     Id,
     Other,
-    None,
+    Empty,
+    Null,
 }
