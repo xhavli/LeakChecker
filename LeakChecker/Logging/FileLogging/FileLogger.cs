@@ -2,22 +2,25 @@ using System.Globalization;
 using System.Text;
 using LeakChecker.ContentDetection;
 using LeakChecker.EncodingDetection;
+using LeakChecker.FormatDetection;
 
 namespace LeakChecker.Logging.FileLogging;
 
 public class FileLogger : IDisposable
 {
-    public string FilePath { get; }
-    private readonly DateTime _startTime;
-    private StreamWriter Writer { get; set; }
+    public string SubjectFilePath { get; }
+    public string SubjectFileName { get; }
+    public long SubjectFileBytes { get; private set; }
+    public readonly DateTime ProcessingStart = DateTime.Now;
+    private StreamWriter Writer { get; }
 
-    public FileLogger(string originFilePath, string logDirectory)
+    public FileLogger(string subjectFilePath, string logDirectory)
     {
-        _startTime = DateTime.Now;
-        FilePath = originFilePath;
+        SubjectFilePath = subjectFilePath;
+        SubjectFileName = Path.GetFileName(SubjectFilePath);
         
-        string nameTimeStamp = $"{_startTime:yyyy-M-dTHH-mm-ss}";
-        string reportFileName = $"{nameTimeStamp}_{Path.GetFileName(FilePath)}.txt";
+        string nameTimeStamp = $"{ProcessingStart:yyyy-M-dTHH-mm-ss}";
+        string reportFileName = $"{nameTimeStamp}_{SubjectFileName}.txt";
         string reportFilePath = Path.Combine(logDirectory, reportFileName);
 
         Writer = new StreamWriter(reportFilePath, append: true, encoding: Encoding.UTF8);
@@ -31,7 +34,7 @@ public class FileLogger : IDisposable
         await Writer.WriteLineAsync(message);
     }
     
-    public async Task Log(string message, LogLevel level = LogLevel.Info, LogContext? context = null )
+    public async Task Log(string? message, LogLevel level = LogLevel.Info, LogContext? context = null )
     {
         ConsoleColor consoleColor = Console.ForegroundColor;
         switch (level)
@@ -57,22 +60,22 @@ public class FileLogger : IDisposable
                                      : $"[{DateTime.Now:T}] {level.GetString()} {context.Value.GetString()} {message}";
         await LogAsync(log);
         Console.ForegroundColor = consoleColor;
-        Console.WriteLine($"'{FilePath}' {log}");
+        Console.WriteLine($"'{SubjectFilePath}' {log}");
         Console.ResetColor();
     }
 
     private void CreateReportHeader()
     {
-        string timeStamp = _startTime.ToString("F", CultureInfo.InvariantCulture);
-        FileInfo fileInfo = new FileInfo(FilePath);
-        long sizeInBytes = fileInfo.Length;
-        double sizeMB = sizeInBytes / (1024.0 * 1024);
-        double sizeGB = sizeInBytes / (1024.0 * 1024 * 1024);
+        string timeStamp = ProcessingStart.ToString("F", CultureInfo.InvariantCulture);
+        FileInfo fileInfo = new FileInfo(SubjectFilePath);
+        SubjectFileBytes = fileInfo.Length;
+        double sizeMB = SubjectFileBytes / (1024.0 * 1024);
+        double sizeGB = SubjectFileBytes / (1024.0 * 1024 * 1024);
 
         Writer.WriteLine($"File processing start at: {timeStamp}");
         Writer.WriteLine($"File name: {fileInfo.Name}");
         Writer.WriteLine($"File path: {fileInfo.FullName}");
-        Writer.WriteLine($"File size: {sizeGB:F2} GB / {sizeMB:F2} MB / {sizeInBytes:N0} bytes ");
+        Writer.WriteLine($"File size: {sizeGB:F2} GB / {sizeMB:F2} MB / {SubjectFileBytes:N0} bytes ");
     }
     
     public async Task LogEncodingProcessingStart()
@@ -93,7 +96,7 @@ public class FileLogger : IDisposable
         
         await LogAsync($"Encoding segments count: {segments.Count}");
         int distinctEncodingCount = segments
-            .Select(s => s.EncodingName)
+            .Select(s => s.Encoded)
             .Distinct()
             .Count();
         await LogAsync($"Different encodings count: {distinctEncodingCount}");
@@ -105,7 +108,7 @@ public class FileLogger : IDisposable
         await LogAsync("-");
         await LogAsync("Encodings by segment count:");
         var encodingCounts = segments
-            .GroupBy(s => s.EncodingName)
+            .GroupBy(s => s.Encoded)
             .OrderByDescending(g => g.Count());
         
         foreach (var group in encodingCounts)
@@ -116,7 +119,7 @@ public class FileLogger : IDisposable
         await LogAsync("-");
         await LogAsync("Encodings by total size in bytes:");
         var encodingSizes = segments
-            .GroupBy(s => s.EncodingName)
+            .GroupBy(s => s.Encoded)
             .OrderByDescending(g => g.Sum(s => s.Length));
         
         foreach (var group in encodingSizes)
@@ -157,7 +160,7 @@ public class FileLogger : IDisposable
         await Log("Content processing started");
     }
     
-    public async Task LogContentStats(Dictionary<RecordAttributeEnum, int> contentResults)
+    public async Task LogContentStats(Dictionary<ItemEnum, int> contentResults)
     {
         await LogAsync("");
         await LogAsync("-------------------------------------");
@@ -176,6 +179,73 @@ public class FileLogger : IDisposable
         }
     }
 
+    public async Task LogSqlInsertHeader(string subject, string columnList, string fullHeader)
+    {
+        await Log(fullHeader);
+        await LogAsync($"Sql Insert subject = {subject}");
+        var columnNames = columnList.Split(',');
+        for (int i = 0; i < columnNames.Length; i++)
+        {
+            await LogAsync($"[{i}] {columnNames[i].Trim()}");
+        }
+
+        await LogAsync("");
+    }
+    
+    public async Task LogContentHeuristic(HeuristicAnalyzer analyzer, double threshold = 50.0)
+    {
+        await LogAsync("Heuristic data stats:");
+        Console.WriteLine("Heuristic data stats:");
+        foreach (var kvp in analyzer.PositionCounts.OrderBy(x => x.Key))
+        {
+            int totalAtPosition = kvp.Value.Sum();
+            await LogAsync($"   Position {kvp.Key}: (total {totalAtPosition})");
+            Console.WriteLine($"   Position {kvp.Key}: (total {totalAtPosition})");
+
+            var records = Enumerable.Range(0, analyzer.AttributeCount)
+                .Where(i => kvp.Value[i] > 0)
+                .Select(i => new
+                {
+                    Attribute = (ItemEnum)i,
+                    Count = kvp.Value[i]
+                })
+                .OrderByDescending(r => r.Count);
+
+            foreach (var rec in records)
+            {
+                double percent = (double)rec.Count / totalAtPosition * 100.0;
+                string log = $"      {rec.Attribute} = {rec.Count} ({percent:0.##}%)";
+                await LogAsync(log);
+                Console.WriteLine($"      {rec.Attribute} = {rec.Count} ({percent:0.##}%)");
+            }
+
+        }
+
+        await LogAsync("");
+        Console.WriteLine();
+        await LogAsync($"Likely schema (SuccessRate => {threshold}%):");
+        Console.WriteLine($"Likely schema (SuccessRate => {threshold}%):");
+        
+        foreach (var kvp in analyzer.PositionCounts.OrderBy(x => x.Key))
+        {
+            int totalAtPosition = kvp.Value.Sum();
+            if (totalAtPosition == 0) continue;
+
+            int maxCount = kvp.Value.Max();
+            int maxIndex = Array.IndexOf(kvp.Value, maxCount);
+            double percent = (double)maxCount / totalAtPosition * 100.0;
+
+            if (percent >= threshold)
+            {
+                string log = $"   Position {kvp.Key} = ({(ItemEnum)maxIndex}, {percent:0.##}%)";
+                await LogAsync(log);
+                Console.WriteLine(log);
+            }
+        }
+
+        await LogAsync("");
+    }
+    
     public void Dispose()
     {
         Writer.Flush();
