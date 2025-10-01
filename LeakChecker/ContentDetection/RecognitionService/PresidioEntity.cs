@@ -1,7 +1,6 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace LeakChecker.ContentDetection;
+namespace LeakChecker.ContentDetection.RecognitionService;
 
 public class PresidioEntity
 {
