@@ -1,7 +1,7 @@
 using System.Buffers.Text;
 using System.Text.Json;
 
-namespace LeakChecker.ContentDetection.ItemParsing;
+namespace LeakChecker.Content.Detection.ItemParsing;
 
 public static class HashParser
 {
@@ -13,8 +13,10 @@ public static class HashParser
         bool isSalted = false;
         string hashType = string.Empty;
         
+        if (Base64.IsValid(token)) {}   //TODO mark Base64 and decode
+        
         string requestUrl = BaseUrl + Uri.EscapeDataString(token);  //Ready for simple use
-        string requestUrlExtended = requestUrl + "&extended=true";  //'Expert mode' offers more possible algorithms sorted by its popularity
+        string requestUrlExtended = requestUrl + "&extended=true";  //Offers more possible algorithms sorted by its popularity
 
         var response = await Client.GetStringAsync(requestUrlExtended);
 

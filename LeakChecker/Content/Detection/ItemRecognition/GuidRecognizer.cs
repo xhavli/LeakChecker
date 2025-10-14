@@ -1,6 +1,6 @@
 using Microsoft.Recognizers.Text.Sequence;
 
-namespace LeakChecker.ContentDetection.ItemRecognition;
+namespace LeakChecker.Content.Detection.ItemRecognition;
 
 public static class GuidRecognizer
 {

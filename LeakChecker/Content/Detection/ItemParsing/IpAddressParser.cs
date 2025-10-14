@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 
-namespace LeakChecker.ContentDetection.ItemParsing;
+namespace LeakChecker.Content.Detection.ItemParsing;
 
 public static class IpAddressParser
 {

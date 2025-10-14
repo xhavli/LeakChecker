@@ -1,4 +1,4 @@
-namespace LeakChecker.ContentDetection.ItemParsing;
+namespace LeakChecker.Content.Detection.ItemParsing;
 
 public static class TimeStampParser
 {
@@ -16,7 +16,7 @@ public static class TimeStampParser
         try
         {
             var dt = DateTimeOffset.FromUnixTimeSeconds(raw).UtcDateTime;
-            if (IsInRange(dt)) { dateTime = dt; return true; }  // MinDate = 946684800
+            if (IsInRange(dt)) { dateTime = dt; Console.WriteLine("UnixSeconds"); return true; }  // MinDate = 946684800
         }
         catch
         {
@@ -26,7 +26,7 @@ public static class TimeStampParser
         try
         {
             var dt = DateTimeOffset.FromUnixTimeMilliseconds(raw).UtcDateTime;
-            if (IsInRange(dt)) { dateTime = dt; return true; }  // MinDate = 946684800000
+            if (IsInRange(dt)) { dateTime = dt; Console.WriteLine("UnixMilliseconds"); return true; }  // MinDate = 946684800000
         }
         catch
         {
@@ -37,7 +37,7 @@ public static class TimeStampParser
         {
             // Try Windows FILETIME
             var dt = DateTime.FromFileTimeUtc(raw);
-            if (IsInRange(dt)) { dateTime = dt; return true; }  // MinDate = 125911584000000000
+            if (IsInRange(dt)) { dateTime = dt; Console.WriteLine("FileTime"); return true; }  // MinDate = 125911584000000000
         }
         catch
         {
@@ -48,19 +48,20 @@ public static class TimeStampParser
         {
             // Try .NET ticks
             var dt = new DateTime(raw, DateTimeKind.Utc);
-            if (IsInRange(dt)) { dateTime = dt; return true; }  // MinDate = 630822816000000000
+            if (IsInRange(dt)) { dateTime = dt; Console.WriteLine(".Net ticks"); return true; }  // MinDate = 630822816000000000
         }
         catch
         {
             // ignored
         }
 
+        return false; //TODO
         try
         {
             // Try Excel serial date (days since 1899-12-30)
             DateTime excelEpoch = new DateTime(1899, 12, 30);
             var dt = excelEpoch.AddDays(raw);
-            if (IsInRange(dt)) { dateTime = dt; return true; }  // MinDate = 36526
+            if (IsInRange(dt)) { dateTime = dt; Console.WriteLine("Excel"); return true; }  // MinDate = 36526
         }
         catch
         {

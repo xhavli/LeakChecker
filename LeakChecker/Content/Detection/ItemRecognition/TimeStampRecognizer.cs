@@ -1,15 +1,11 @@
 using Microsoft.Recognizers.Text.DateTime;
 
-namespace LeakChecker.ContentDetection.ItemRecognition;
+namespace LeakChecker.Content.Detection.ItemRecognition;
 
 public static class TimeStampRecognizer
 {
     private const string Culture = Microsoft.Recognizers.Text.Culture.English; // or Culture.EnglishOthers
     
-    // Set valid range
-    private static readonly DateTime MinDate = new DateTime(2000, 1, 1);
-    private static readonly DateTime MaxDate = DateTime.UtcNow.AddYears(10);
-
     public static Boolean TryRecognize(string line, out List<string> stringTimeStamps, out List<DateTime> timeStamps)
     {
         stringTimeStamps = new List<string>();
@@ -27,7 +23,7 @@ public static class TimeStampRecognizer
             if (!value.ContainsKey("value")) continue;  // If result.Type is timerange or datetimerange, value["value"] not present in dictionary
             string dateTimeString = value["value"]; // ISO 8601 string
             
-            if (DateTime.TryParse(dateTimeString, out DateTime timeStamp) && IsInRange(timeStamp))
+            if (DateTime.TryParse(dateTimeString, out DateTime timeStamp))
             {
                 stringTimeStamps.Add(result.Text);
                 timeStamps.Add(timeStamp);
@@ -37,7 +33,4 @@ public static class TimeStampRecognizer
 
         return found;
     }
-    
-    private static bool IsInRange(DateTime dt) =>
-        dt >= MinDate && dt <= MaxDate;
 }

@@ -1,6 +1,6 @@
 using PhoneNumbers;
 
-namespace LeakChecker.ContentDetection.ItemParsing;
+namespace LeakChecker.Content.Detection.ItemParsing;
 
 public static class PhoneNumberParser
 {
