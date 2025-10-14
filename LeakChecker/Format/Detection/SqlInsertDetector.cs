@@ -1,16 +1,17 @@
 using System.Text;
-using LeakChecker.FormatDetection;
+using LeakChecker.Content;
+using LeakChecker.Content.Detection;
 using LeakChecker.Logging;
 using LeakChecker.Logging.FileLogging;
 
-namespace LeakChecker.ContentDetection;
+namespace LeakChecker.Format.Detection;
 
 public static class SqlInsertDetector
 {
     private const char Delimiter = ',';
 
     public static async Task<Dictionary<int, (ItemEnum Attribute, int DelimiterSpan)>> DetectFormat(
-        StreamReader reader, FileLogger logger, int detectSamples = 17)
+        StreamReader reader, FileLogger logger, int detectSamples = 23)
     {
         bool inInsert = false;
         int parenDepth = 0;
@@ -18,7 +19,7 @@ public static class SqlInsertDetector
         StringBuilder stringBuilder = new();
 
         int samplesCount = 0;
-        var analyzer = new HeuristicAnalyzer();
+        var analyzer = new SchemaHeuristic();
 
         while (await reader.ReadLineAsync() is { } line)
         {
@@ -38,23 +39,21 @@ public static class SqlInsertDetector
 
                     if (openParen > 0 && closeParen > openParen)
                     {
-                        // Extract subject
-                        string context = string.Empty;
+                        // Extract SQL Insert subject
+                        string subject = string.Empty;
                         int insertIntoPos = trimmed.IndexOf("INSERT INTO", StringComparison.OrdinalIgnoreCase);
                         if (insertIntoPos >= 0 && openParen > insertIntoPos)
                         {
-                            context = trimmed.Substring(insertIntoPos + "INSERT INTO".Length,
+                            subject = trimmed.Substring(insertIntoPos + "INSERT INTO".Length,
                                     openParen - (insertIntoPos + "INSERT INTO".Length))
                                 .Trim(' ', '`', '"');
                         }
 
                         // Extract column list
                         string columnList = trimmed.Substring(openParen + 1, closeParen - openParen - 1);
-                        expectedColumns = columnList.Split(Delimiter)
-                            .Select(c => c.Trim())
-                            .Count();
+                        expectedColumns = columnList.Split(Delimiter).Select(c => c.Trim()).Count();
 
-                        await logger.LogSqlInsertHeader(context, columnList, trimmed);
+                        await logger.LogSqlInsertHeader(subject, columnList, trimmed);
                     }
 
 
@@ -101,7 +100,8 @@ public static class SqlInsertDetector
                         parenDepth++;
                         continue;
                     }
-                    else if (c == ')')
+
+                    if (c == ')')
                     {
                         stringBuilder.Append(c);
                         parenDepth--;
@@ -117,26 +117,24 @@ public static class SqlInsertDetector
                             {
                                 await logger.Log(
                                     $"Incorrect Sql Insert: Columns count mismatch. Expected {expectedColumns}, got {record.Length}. Sql Insert = {tuple}",
-                                    LogLevel.Warning,
-                                    LogContext.Content
-                                );
+                                    LogLevel.Warning, LogContext.Content);
                             }
 
                             samplesCount++;
 
-                            List<HeuristicRecord> linePatterns = new();
-                            Console.WriteLine($"Sql Insert sample: {tuple}");
-
+                            List<SchemaHeuristicRecord> linePatterns = new();
+                            
+                            Console.WriteLine($"SQL insert sample {samplesCount}: {tuple}");
                             for (int j = 0; j < record.Length; j++)
                             {
                                 ItemEnum item = await ContentDetector.DetectToken(record[j], logger);
                                 Console.WriteLine($"[{j}] {item} = {record[j]}");
 
-                                linePatterns.Add(new HeuristicRecord
+                                linePatterns.Add(new SchemaHeuristicRecord
                                 {
                                     Attribute = item,
-                                    TokenStart = j,
-                                    DelimiterCountInside = record[j].Count(ch => ch == Delimiter)
+                                    Position = j,
+                                    DelimitersInside = record[j].Count(ch => ch == Delimiter)
                                 });
                             }
 
