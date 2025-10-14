@@ -1,28 +1,30 @@
-namespace LeakChecker.EncodingDetection;
+using System.Text;
+
+namespace LeakChecker.Encodings;
 
 public class EncodingSegment
 {
     public long StartOffset { get; init; }
     public long Length { get; set; }
     public long EndOffset => StartOffset + Length;
-    public string EncodingName { get; init; } = string.Empty;
+    public Encoding? Encoding { get; set; }
     public float Confidence { get; init; }
 
-    public string ShowMegaByte()
+    public string ToMegabyteString()
     {
         string range = $"{StartOffset / 1024 / 1024,4} MB - {EndOffset / 1024 / 1024,4} MB";
-        return $"{range} : {EncodingName,-20} confidence: {Confidence:F2}";
+        return $"{range} : {Encoding?.WebName,-20} confidence: {Confidence:F2}";
     }
     
-    public string ShowKiloByte()
+    public string ToKilobyteString()
     {
         string range = $"{StartOffset / 1024:N0} KB - {EndOffset / 1024:N0} KB";
-        return $"{range} : {EncodingName,-20} confidence: {Confidence:F2}";
+        return $"{range} : {Encoding?.WebName,-20} confidence: {Confidence:F2}";
     }
     
-    public string ShowByte()
+    public string ToByteString()
     {
         string range = $"{StartOffset:N0} B - {EndOffset:N0} B";
-        return $"{range} : {EncodingName,-20} confidence: {Confidence:F2}";
+        return $"{range} : {Encoding?.WebName,-20} confidence: {Confidence:F2}";
     }
 }
