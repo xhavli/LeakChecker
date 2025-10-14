@@ -1,37 +1,56 @@
 using System.Globalization;
 using System.Text;
-using LeakChecker.ContentDetection;
-using LeakChecker.EncodingDetection;
-using LeakChecker.FormatDetection;
+using LeakChecker.Content;
+using LeakChecker.Encodings;
+using LeakChecker.Format;
+using LeakChecker.Utilities;
 
 namespace LeakChecker.Logging.FileLogging;
 
 public class FileLogger : IDisposable
 {
-    public string SubjectFilePath { get; }
     public string SubjectFileName { get; }
+    public string SubjectFilePath { get; }
+    public string SubjectTmpFilePath { get; }
     public long SubjectFileBytes { get; private set; }
     public readonly DateTime ProcessingStart = DateTime.Now;
-    private StreamWriter Writer { get; }
+    private readonly StreamWriter _writer;
 
-    public FileLogger(string subjectFilePath, string logDirectory)
+    private FileLogger(string subjectFilePath, string tmpFilePath, StreamWriter writer)
     {
         SubjectFilePath = subjectFilePath;
-        SubjectFileName = Path.GetFileName(SubjectFilePath);
-        
-        string nameTimeStamp = $"{ProcessingStart:yyyy-M-dTHH-mm-ss}";
-        string reportFileName = $"{nameTimeStamp}_{SubjectFileName}.txt";
-        string reportFilePath = Path.Combine(logDirectory, reportFileName);
-
-        Writer = new StreamWriter(reportFilePath, append: true, encoding: Encoding.UTF8);
-        Writer.AutoFlush = true;
-        
-        CreateReportHeader();
+        SubjectFileName = Path.GetFileName(subjectFilePath);
+        SubjectTmpFilePath = tmpFilePath;
+        _writer = writer;
     }
 
+    public static async Task<FileLogger> CreateAsync(string subjectFilePath, AppConfig config)
+    {
+        string subjectFileName = Path.GetFileName(subjectFilePath);
+        DateTime processingStart = DateTime.Now;
+
+        string nameTimeStamp = $"{processingStart:yyyy-M-dTHH-mm-ss}";
+        string logFileName = $"{nameTimeStamp}_{subjectFileName}.txt";
+        string logFilePath = Path.Combine(config.LogDirectory, logFileName);
+        string tmpFilePath = Path.Combine(config.TmpDirectory, logFileName);
+
+        var writer = new StreamWriter(logFilePath, append: true,
+            encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
+        {
+            AutoFlush = true
+        };
+
+        var logger = new FileLogger(subjectFilePath, tmpFilePath, writer);
+
+        await logger.CreateHeaderAsync();
+
+        return logger;
+    }
+
+    
     private async Task LogAsync(string message)
     {
-        await Writer.WriteLineAsync(message);
+        await _writer.WriteLineAsync(message);
     }
     
     public async Task Log(string? message, LogLevel level = LogLevel.Info, LogContext? context = null )
@@ -64,21 +83,21 @@ public class FileLogger : IDisposable
         Console.ResetColor();
     }
 
-    private void CreateReportHeader()
+    private async Task CreateHeaderAsync()
     {
         string timeStamp = ProcessingStart.ToString("F", CultureInfo.InvariantCulture);
         FileInfo fileInfo = new FileInfo(SubjectFilePath);
         SubjectFileBytes = fileInfo.Length;
-        double sizeMB = SubjectFileBytes / (1024.0 * 1024);
-        double sizeGB = SubjectFileBytes / (1024.0 * 1024 * 1024);
+        double sizeMb = SubjectFileBytes / (1024.0 * 1024);
+        double sizeGb = SubjectFileBytes / (1024.0 * 1024 * 1024);
 
-        Writer.WriteLine($"File processing start at: {timeStamp}");
-        Writer.WriteLine($"File name: {fileInfo.Name}");
-        Writer.WriteLine($"File path: {fileInfo.FullName}");
-        Writer.WriteLine($"File size: {sizeGB:F2} GB / {sizeMB:F2} MB / {SubjectFileBytes:N0} bytes ");
+        await LogAsync($"File processing start at: {timeStamp}");
+        await LogAsync($"File path: {fileInfo.FullName}");
+        await LogAsync($"File name: {fileInfo.Name}");
+        await LogAsync($"File size: {sizeGb:F2} GB / {sizeMb:F2} MB / {SubjectFileBytes:N0} bytes ");
     }
     
-    public async Task LogEncodingProcessingStart()
+    public async Task LogEncodingHeader()
     {
         await LogAsync("");
         await LogAsync("---------------------------");
@@ -96,19 +115,19 @@ public class FileLogger : IDisposable
         
         await LogAsync($"Encoding segments count: {segments.Count}");
         int distinctEncodingCount = segments
-            .Select(s => s.Encoded)
+            .Select(s => s.Encoding?.WebName)
             .Distinct()
             .Count();
         await LogAsync($"Different encodings count: {distinctEncodingCount}");
         
         var largestSegment = segments
             .MaxBy(s => s.Length);
-        await LogAsync($"Largest encoding segment: {largestSegment!.ShowByte()}");
+        await LogAsync($"Largest encoding segment: {largestSegment!.ToByteString()}");
         
         await LogAsync("-");
         await LogAsync("Encodings by segment count:");
         var encodingCounts = segments
-            .GroupBy(s => s.Encoded)
+            .GroupBy(s => s.Encoding?.WebName)
             .OrderByDescending(g => g.Count());
         
         foreach (var group in encodingCounts)
@@ -117,9 +136,9 @@ public class FileLogger : IDisposable
         }
         
         await LogAsync("-");
-        await LogAsync("Encodings by total size in bytes:");
+        await LogAsync("Encodings by total size:");
         var encodingSizes = segments
-            .GroupBy(s => s.Encoded)
+            .GroupBy(s => s.Encoding?.WebName)
             .OrderByDescending(g => g.Sum(s => s.Length));
         
         foreach (var group in encodingSizes)
@@ -138,11 +157,11 @@ public class FileLogger : IDisposable
         
         foreach (var segment in segments)
         {
-            await LogAsync(segment.ShowByte());
+            await LogAsync(segment.ToByteString());
         }
     }
     
-    public async Task LogFormatProcessingStart()
+    public async Task LogFormatHeader()
     {
         await LogAsync("");
         await LogAsync("---------------------------");
@@ -151,7 +170,7 @@ public class FileLogger : IDisposable
         await Log("Format processing started");
     }
     
-    public async Task LogContentProcessingStart()
+    public async Task LogContentHeader()
     {
         await LogAsync("");
         await LogAsync("--------------------------");
@@ -182,7 +201,7 @@ public class FileLogger : IDisposable
     public async Task LogSqlInsertHeader(string subject, string columnList, string fullHeader)
     {
         await Log(fullHeader);
-        await LogAsync($"Sql Insert subject = {subject}");
+        await Log($"SQL Insert subject: {subject}");
         var columnNames = columnList.Split(',');
         for (int i = 0; i < columnNames.Length; i++)
         {
@@ -192,7 +211,7 @@ public class FileLogger : IDisposable
         await LogAsync("");
     }
     
-    public async Task LogContentHeuristic(HeuristicAnalyzer analyzer, double threshold = 50.0)
+    public async Task LogContentHeuristic(SchemaHeuristic analyzer, double threshold = 50.0)
     {
         await LogAsync("Heuristic data stats:");
         Console.WriteLine("Heuristic data stats:");
@@ -245,11 +264,11 @@ public class FileLogger : IDisposable
 
         await LogAsync("");
     }
-    
+
     public void Dispose()
     {
-        Writer.Flush();
-        Writer.Close();
-        Writer.Dispose();
+        _writer.Flush();
+        _writer.Close();
+        _writer.Dispose();
     }
 }
