@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace LeakChecker.ContentDetection.RecognitionService;
+namespace LeakChecker.Content.Detection.RecognitionService;
 
 public static class PythonNerServiceRecognizer
 {

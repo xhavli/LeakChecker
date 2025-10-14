@@ -2,7 +2,7 @@ using System.Diagnostics;
 using LeakChecker.Logging;
 using LeakChecker.Logging.ExecutionLogging;
 
-namespace LeakChecker.ContentDetection.RecognitionService;
+namespace LeakChecker.Content.Detection.RecognitionService;
 
 public class PythonNerService(ExecutionLogger logger)
 {
