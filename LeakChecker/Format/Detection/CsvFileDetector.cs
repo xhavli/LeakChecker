@@ -1,0 +1,31 @@
+using LeakChecker.Content;
+using LeakChecker.Content.Detection;
+using LeakChecker.Logging.FileLogging;
+using LeakChecker.Utilities.Extensions;
+
+namespace LeakChecker.Format.Detection;
+
+public static class CsvFileDetector
+{
+    public static async Task<Dictionary<int, (ItemEnum Attribute, int DelimiterSpan)>> DetectFormat(
+        char delimiter, StreamReader reader, FileLogger logger, int detectSamples = 47)
+    {
+        int samplesCount = 0;
+        SchemaHeuristic analyzer = new();
+
+        while (await reader.ReadLineAsync() is { } line)
+        {
+            samplesCount++;
+            if (samplesCount == detectSamples) break;
+
+            line = line.Trim().TrimOuterParenthesesAndComma();
+            Console.WriteLine();
+            Console.WriteLine($"CSV file sample {samplesCount}: {line}");
+            if (string.IsNullOrWhiteSpace(line) || string.IsNullOrEmpty(line)) { continue; }
+            analyzer.AddLinePatterns(await ContentDetector.DetectLine(line, delimiter, logger));
+        }
+        
+        await logger.LogContentHeuristic(analyzer);
+        return analyzer.GetSchemaWithSpans();
+    }
+}
