@@ -1,8 +1,8 @@
-using LeakChecker.ContentDetection;
+using LeakChecker.Content;
 
-namespace LeakChecker.FormatDetection;
+namespace LeakChecker.Format;
 
-public class HeuristicAnalyzer
+public class SchemaHeuristic
 {
     // Instead of storing every line, keep direct tallies:
     // Position -> counts array (indexed by ItemEnum)
@@ -14,21 +14,21 @@ public class HeuristicAnalyzer
     /// <summary>
     /// Add recognized patterns from a single line (streaming aggregation).
     /// </summary>
-    public void AddLinePatterns(List<HeuristicRecord> linePatterns)
+    public void AddLinePatterns(List<SchemaHeuristicRecord> linePatterns)
     {
         foreach (var pat in linePatterns)
         {
-            if (!PositionCounts.TryGetValue(pat.TokenStart, out var counts))
+            if (!PositionCounts.TryGetValue(pat.Position, out var counts))
             {
                 counts = new int[AttributeCount];
-                PositionCounts[pat.TokenStart] = counts;
+                PositionCounts[pat.Position] = counts;
             }
             counts[(int)pat.Attribute]++;
 
-            if (!_delimiterSpans.ContainsKey(pat.TokenStart))
-                _delimiterSpans[pat.TokenStart] = new List<int>();
+            if (!_delimiterSpans.ContainsKey(pat.Position))
+                _delimiterSpans[pat.Position] = new List<int>();
 
-            _delimiterSpans[pat.TokenStart].Add(pat.DelimiterCountInside);
+            _delimiterSpans[pat.Position].Add(pat.DelimitersInside);
         }
     }
 
@@ -88,26 +88,6 @@ public class HeuristicAnalyzer
             }
             else
             {
-                //TODO
-                //Sql Insert processing: ('2741', '', 'S14DJ90B321353', 'HABCEGDA', '', '0', '0', 'SI', '????? ?????? 3.3', '1306677462', '300', '', 'Unknown', '1306695600', 'Bantime expired', 'OVERPRO AUTOUNBAN', '55386', '')
-                // [0] Other = 2741
-                // [1] Other =
-                // [2] Other = S14DJ90B321353
-                // [3] Other = HABCEGDA
-                // [4] IpV4 =
-                // [5] Other = 0
-                // [6] Other = 0
-                // [7] Other = SI
-                // [8] Location = ????? ?????? 3.3
-                // [9] TimeStamp = 1306677462
-                // [10] Other = 300
-                // [11] IpV4 =
-                // '1353316_1358895' [0:41:56] [WARNING] [PROCESSING] Unmapped field[12] = Unknown
-                // [13] TimeStamp = 1306695600
-                // [14] Other = Bantime expired
-                // [15] Other = OVERPRO AUTOUNBAN
-                // [16] TimeStamp = 55386
-                // [17] Web =
                 schema[kvp.Key] = ((ItemEnum.Other), 0);
             }
         }
