@@ -1,4 +1,4 @@
-namespace LeakChecker.ContentDetection;
+namespace LeakChecker.Content;
 
 public enum ItemEnum
 {
