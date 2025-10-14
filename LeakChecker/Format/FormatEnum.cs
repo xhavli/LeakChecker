@@ -1,4 +1,4 @@
-namespace LeakChecker.FormatDetection;
+namespace LeakChecker.Format;
 
 public enum FormatEnum
 {
@@ -6,5 +6,4 @@ public enum FormatEnum
     Csv,
     Json,
     Html,
-    Other,
 }
