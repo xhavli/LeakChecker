@@ -8,7 +8,7 @@ public static class StreamReaderExtensions
     /// Reads a line from the current stream asynchronously, 
     /// including the newline characters (\r, \n, or \r\n) if present.
     /// </summary>
-    public static async ValueTask<string?> ReadLineWithEndingAsync(this StreamReader reader)
+    public static async ValueTask<string?> ReadLineWithEndingAsync(this StreamReader? reader)
     {
         if (reader is null)
             throw new ArgumentNullException(nameof(reader));
