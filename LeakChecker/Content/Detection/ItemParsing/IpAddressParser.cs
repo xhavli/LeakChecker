@@ -11,7 +11,7 @@ public static class IpAddressParser
 
     public static bool TryParse(string token, out ItemEnum ipAddressType, out IPAddress ipAddress)
     {
-        ipAddressType = ItemEnum.Null;
+        ipAddressType = ItemEnum.Other;
         ipAddress = IPAddress.None;
         
         string addressPart = token;
@@ -26,8 +26,21 @@ public static class IpAddressParser
             if (endBracket == -1) return false;
 
             addressPart = token.Substring(1, endBracket - 1);
-            if (endBracket + 1 < token.Length && token[endBracket + 1] == ':')
-                portPart = token.Substring(endBracket + 2);
+
+            // Reject anything after ']' that isn't a port
+            if (endBracket + 1 < token.Length)
+            {
+                if (token[endBracket + 1] == ':')
+                {
+                    portPart = token.Substring(endBracket + 2);
+                }
+                else
+                {
+                    // Extra characters after IPv6 bracket — invalid
+                    return false;
+                }
+            }
+
             ipV6InBrackets = true;
         }
         else
