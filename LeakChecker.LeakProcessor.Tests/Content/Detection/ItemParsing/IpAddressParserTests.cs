@@ -10,38 +10,40 @@ public class IpAddressParserTests
     // Pure IPv4
     [InlineData("8.8.8.8", true, ItemEnum.IpV4)]        // Google DNS
     [InlineData("1.1.1.1", true, ItemEnum.IpV4)]        // Cloudflare DNS
-    [InlineData("192.168.0.1", true, ItemEnum.IpV4)]    // Common private network gateway
     [InlineData("10.0.0.1", true, ItemEnum.IpV4)]       // Private network address
     [InlineData("172.16.0.5", true, ItemEnum.IpV4)]     // Private network address
+    [InlineData("192.168.0.1", true, ItemEnum.IpV4)]    // Common private network gateway
     [InlineData("0x7F.0x00.0x00.0x01", true, ItemEnum.IpV4)]  // Hex format
 
     // IPv4 with ports
+    [InlineData("10.0.0.1:22", true, ItemEnum.IpV4)]
     [InlineData("8.8.8.8:53", true, ItemEnum.IpV4)]
+    [InlineData("1.1.1.1:65535", true, ItemEnum.IpV4)]
     [InlineData("127.0.0.1:8080", true, ItemEnum.IpV4)]
     [InlineData("192.168.1.10:443", true, ItemEnum.IpV4)]
-    [InlineData("10.0.0.1:22", true, ItemEnum.IpV4)]
-    [InlineData("1.1.1.1:65535", true, ItemEnum.IpV4)]
         
     // Pure IPv6
-    [InlineData("2001:4860:4860::8888", true, ItemEnum.IpV6)]   // Google DNS
-    [InlineData("2606:4700:4700::1111", true, ItemEnum.IpV6)]   // Cloudflare
     [InlineData("fe80::1", true, ItemEnum.IpV6)]                // Link-local
     [InlineData("2001:db8::", true, ItemEnum.IpV6)]             // Documentation prefix
+    [InlineData("2001:4860:4860::8888", true, ItemEnum.IpV6)]   // Google DNS
+    [InlineData("2606:4700:4700::1111", true, ItemEnum.IpV6)]   // Cloudflare
     [InlineData("2001:0db8:85a3:0000:0000:8a2e:0370:7334", true, ItemEnum.IpV6)]    // Full IpV6
 
 
     // IPv6 with brackets
-    [InlineData("[2001:4860:4860::8888]", true, ItemEnum.IpV6)]
-    [InlineData("[2606:4700:4700::1111]", true, ItemEnum.IpV6)]
     [InlineData("[fe80::1]", true, ItemEnum.IpV6)]
     [InlineData("[2001:db8::]", true, ItemEnum.IpV6)]
+    [InlineData("[2001:4860:4860::8888]", true, ItemEnum.IpV6)]
+    [InlineData("[2606:4700:4700::1111]", true, ItemEnum.IpV6)]
+    [InlineData("[2001:0db8:85a3:0000:0000:8a2e:0370:7334]", true, ItemEnum.IpV6)]
+
 
     // IPv6 with brackets and ports
+    [InlineData("[::1]:12345", true, ItemEnum.IpV6)]
+    [InlineData("[fe80::1]:8080", true, ItemEnum.IpV6)]
+    [InlineData("[2001:db8::]:65535", true, ItemEnum.IpV6)]
     [InlineData("[2001:4860:4860::8888]:53", true, ItemEnum.IpV6)]
     [InlineData("[2606:4700:4700::1111]:443", true, ItemEnum.IpV6)]
-    [InlineData("[fe80::1]:8080", true, ItemEnum.IpV6)]
-    [InlineData("[::1]:12345", true, ItemEnum.IpV6)]
-    [InlineData("[2001:db8::]:65535", true, ItemEnum.IpV6)]
 
     // Localhost variants
     [InlineData("127.0.0.1", true, ItemEnum.IpV4)]
@@ -56,10 +58,10 @@ public class IpAddressParserTests
 
     // IPv6 shortcuts and minimal valid addresses
     [InlineData("::", true, ItemEnum.IpV6)]                    // Unspecified   //TODO can match a delimiters in CSV file
-    [InlineData("::ffff:192.168.1.1", true, ItemEnum.IpV6)]    // IPv4-mapped IPv6
     [InlineData("::2", true, ItemEnum.IpV6)]                   // Loopback-ish
     [InlineData("2001::1", true, ItemEnum.IpV6)]               // Simplified
     [InlineData("fd00::", true, ItemEnum.IpV6)]                // Unique local address
+    [InlineData("::ffff:192.168.1.1", true, ItemEnum.IpV6)]    // IPv4-mapped IPv6
 
     // Negative test cases
     [InlineData("192.168.1", false, ItemEnum.Other)]            // IpV4 Missing octet
@@ -87,8 +89,7 @@ public class IpAddressParserTests
     [InlineData("localhost:abc", false, ItemEnum.Other)]        // IpV4 Invalid port
     [InlineData("[localhost]:abc", false, ItemEnum.Other)]      // IpV6 Invalid port
     [InlineData("2614784", false, ItemEnum.Other)]              // Random number
-    [InlineData("3232235521", false, ItemEnum.Other)]             // Decimal 192.168.0.1 without '.'
-
+    [InlineData("3232235521", false, ItemEnum.Other)]           // Decimal 192.168.0.1 without '.'
     [InlineData("", false, ItemEnum.Other)]                     // Empty string
     public void TryParse_ShouldDetectIpAddresses(string input, bool expected, ItemEnum expectedType)
     {
