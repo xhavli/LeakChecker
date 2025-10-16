@@ -2,7 +2,25 @@
 
 Author: Adam Havlík
 
-## Changes
+## Table of Contents
+
+- [Encoding](#encoding)
+  - [Encoding Detection](#encoding-detection)
+  - [Encoding Conversion](#encoding-conversion)
+- [Format](#format)
+  - [Format Detection](#format-detection)
+- [Content](#content)
+  - [Content Detection](#content-detection)
+  - [Content Procession](#content-procession)
+- [Utilities](#utilities)
+- [Tests](#tests)
+  - [Unit Tests](#unit-tests)
+  - [Module Tests](#module-tests)
+  - [Integration Tests](#integration-tests)
+- [TODOs](#todos)
+- [Notes](#notes)
+
+## Encoding
 
 ### Encoding Detection
 
@@ -10,7 +28,7 @@ Author: Adam Havlík
   Map between pythons [charset-normalizer](https://pypi.org/project/charset-normalizer/) and .NET supported encodings been created and verified to [IANA](https://www.iana.org/assignments/character-sets/character-sets.xhtml), [Learn.Microsoft](https://learn.microsoft.com/en-us/dotnet/fundamentals/runtime-libraries/system-text-encoding), Wikipedia...
 - `17.6.2025` - Encoding detection convert to .NET NuGet [UtfUnknown](https://github.com/CharsetDetector/UTF-unknown)  
   Due to performance issue with pythons charset-normalizer.  
-  [NOTE] UtfUnknown can read stream and is pure C# tool based on Mozilla’s Universal Charset Detector used in Firefox. According to some officials charset-normalizer is more accurate but i find it slower and have big performance issue in my use-case because it loads all file to a memory.
+  [NOTE] UtfUnknown can read stream and is pure C# tool based on Mozilla’s Universal Charset Detector used in Firefox. According to some officials charset-normalizer is more accurate, but I find it slower and have big performance issue in my use-case because it loads all file to a memory.
 - `30.7.2025` - Encoding detection done precisely  
   Detection of concatenated files with various encodings and its segments.
 
@@ -19,6 +37,8 @@ Author: Adam Havlík
 - `3.10.2025` - Encoding Conversion  
   EncodingConverter converting file to UTF-8 in stream according to given EncodingSegments
 
+## Format
+
 ### Format Detection
 
 - `21.9.2025` - HeuristicAnalyzer  
@@ -26,6 +46,8 @@ Author: Adam Havlík
 - `29.9.2025` - Sql Insert detector  
   SqlInsertDetector read and detect predefined number (17) of Sql Insert records, and return back heuristic schema.
 - `XX.XX.2025` - Sql Insert header guesser
+
+## Content
 
 ### Content Detection
 
@@ -49,8 +71,9 @@ Author: Adam Havlík
     ```
     IPv6 was not properly tested. This can also parse IpV4 mapped to IpV6 - 192.168.1.1 = ::ffff:192.168.1.1 .
  = ::ffff:c0a8:0101.
-  - NuGet - [PhoneNumbers](https://github.com/google/libphonenumber) for phone number validation and optional localization.
-- `4.8.2025` - Hash identification  
+  - NuGet - [PhoneNumbers](https://github.com/google/libphonenumber) validation  
+    [NOTE] It can do also optional localization. It cant process local number formats like 055 234 5678 from the United Arab Emirates.
+- `4.8.2025` - Hash identification
   - Hash Identification applications were manually tested with dataset from [onlinehashcrack](https://www.onlinehashcrack.com/hash-acceptance.php).
   - [www.hashes.com](https://hashes.com/en/tools/hash_identifier) - Tools - Hash Identifier do proper validation and return most successful results, have demo its web application with well documented [api](https://hashes.com/en/docs). Chosen solution.  
     [NOTE] It can misinterpret 2), 5)... as Base64 encoded text of plaintext ''. Then we need additional validation.
@@ -59,12 +82,12 @@ Author: Adam Havlík
     ```
   - [HAITI](https://github.com/noraj/haiti) - Wide scale of supported hash types (600+) but do not validation, match everything including mobile number, don't have a demo.
   - [CyberChef](https://github.com/gchq/CyberChef) - Do validation, have demo, do not support hashes with salt.
-  - [Name That Hash](https://github.com/bee-san/Name-That-Hash) - Wide scale of supported hash types (300+), have demo, do some validation but not 100% correct, most of unknown hash fall in "default" BigCrypt hash type.
+  - [Name That Hash](https://github.com/bee-san/Name-That-Hash) - Wide scale of supported hash types (300+), have demo, do some validation but not 100% correct, most unknown hashes fall in "default" BigCrypt hash type.
 - `18.8.2025` - Named Entity Recognition of Name, Location and Organization  
   - [Microsoft Presidio](https://microsoft.github.io/presidio/) with [flair/ner-english-large](https://huggingface.co/flair/ner-english-large) model integrated after google close issue with sentencepiece used by flair.
 - `11.9.2025` - Automated recognition from text where item may contain delimiter 
   - NuGet - [Microsoft.Recognizers.Text.DateTime](https://github.com/microsoft/Recognizers-Text) integrated for recognition of wide scale of TimeStamps in text and conversion to C# DateTime format.  
-    [NOTE] It can detect and convert 4/15/2018 12:00:00 AM from Facebook leak and also natural language like first of October 2018 15:32:18. It also detect a time range what we dont want to.
+    [NOTE] It can detect and convert 4/15/2018 12:00:00 AM from Facebook leak and also natural language like first of October 2018 15:32:18. It also detects a time range what we don't want to.
   - NuGet - [Microsoft.Recognizers.Text.Sequence](https://github.com/microsoft/Recognizers-Text) for recognition and conversion to C# structures  
     - Email + [MailAddress.TryCreate()](https://learn.microsoft.com/en-us/dotnet/api/system.net.mail.mailaddress.trycreate?view=net-10.0) for extra validation
     - Guid
@@ -83,7 +106,7 @@ Author: Adam Havlík
   - Windows FileTime - 100-nanosecond intervals since 1601-01-01 00:00:00 UTC
   - .Net ticks - 100-nanoseconds = 1 tic, tics since 0001-01-01 00:00:00 UTC
   - Excel serial date - days since 1899-12-30  
-  [NOTE] As it could be almost every bigger number, we need additional validation and Excel serials might be removed in future according to possible mismatch with one of IDs.
+  [NOTE] As it could be almost every bigger number, we need additional validation and Excel serials might be removed in future according to possible mismatch with one of IDs. Also, UnixSeconds but that's quite common in logs.
   ```csharp
   // Date of birth can be 100 years ago, games with big impact as Counter Strike and Mario cart were released after 2000
   DateTime minDate = new DateTime(2000, 1, 1);
@@ -114,12 +137,14 @@ Author: Adam Havlík
   - [Microsoft Presidio](https://microsoft.github.io/presidio/) tested as orchestrator of previously used model and models from `2.10.2025` with no relevant results.  
   [NOTE] - Most models can recognize contextual data like "User login info: username: alice, password: p@ssW0rd123".  Pure credentials as content-free data are hard to recognize, detect and validate.
 
-### Content Processor
+### Content Procession
 
 - `30.9.2025` Sql Insert processor  
   SqlInsertProcessor added for processing Sql Insert records with given schema
+- `10.10.2025` Csv file processor  
+  CsvFileProcessor added for processing Csv file lines with given schema
 
-### Utilities
+## Utilities
 
 - `30.7.2025` - Added some logging tools to log processing details and statistics to log file.
 - `6.8.2025` - Logging utilities improvement.
@@ -128,20 +153,37 @@ Author: Adam Havlík
 - `19.9.2025` - StringExtension added for custom and performance trimming of quoted text `content`` / 'content' / "content" or SQL line (content),
 - `28.9.2025` - StreamReaderExtensions added for custom ReadLineWithEndingAsync return line with newline to measure of read bytes
 
-## TODO
+## Tests
+
+### Unit tests
+
+- `14.10.2025` - Content.Detection.ItemParsing tests
+- `15.10.2025` - Content.Detection.ItemRecognition tests
+- `XX.10.2025` - Encodings.Detection tests
+- `XX.10.2025` - Encodings.Conversion tests
+- `XX.10.2025` - Format.Delimiter tests
+- `XX.10.2025` - Format.Schema tests
+
+### Module tests
+
+- `XX.10.2025` - Format.Detection
+
+### Integration tests
+
+- `XX.10.2025` - Whole system tests
+
+## TODOs
 
 - Search for delimiters properly [python CSV sniffer](https://docs.python.org/3/library/csv.html#csv.Sniffer) cant parse files where lot of attributes are missing as Facebook leak.
-- Create a pattern of content from given format.
-- Create a tmp files for encoding and another one for parsed content.
 - Detect Username and plaintext Password.
 - Decide how to enum localhost IpV4/IpV6
 - Decide how to process a IpAddress ports
 - Decide if IpAddress parsing of cross mapped addresses are feature or limitation. Can be done by [Microsoft.Recognizers.Text.Sequence](https://github.com/microsoft/Recognizers-Text) automated recognition as Email, Guid and Urls are.
 - Test Excel serials in TimeStampParser and decide if its feature or limitation.
-- Test TimeStamps recognizer and parser for valid datetime range. Whats the correct range?
-- Test MaritalStatus parser. What can be a marital status?
+- Test TimeStamps recognizer and parser for valid datetime range. What's the correct range?
+- Location validation for GPS
 - Detect other content.
-- Do IPv6 validation which may be done by regex from [Vladimir Vesely - IPK2024-06-IPv6](https://moodle.vut.cz/pluginfile.php/823898/mod_folder/content/0/IPK2023-24L-09-IPv6.pdf)
+- Do IPv6 validation which may be done by regex from [Vladimir Veselý - IPK2024-06-IPv6](https://moodle.vut.cz/pluginfile.php/823898/mod_folder/content/0/IPK2023-24L-09-IPv6.pdf)
   ```regexp
   `/^\s*((([0-9A-Fa-f]{1,4}:){7}(([0-9A-Fa-f]{1,4})|:))|(([0-9A-Fa-f]{1,4}:){6}(:|((25[0-5]|2[0-4]
   \d|[01]?\d{1,2})(\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})){3})|(:[0-9A-Fa-f]{1,4})))|(([0-9A-Fa-f]
