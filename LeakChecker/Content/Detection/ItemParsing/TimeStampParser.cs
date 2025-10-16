@@ -3,7 +3,7 @@ namespace LeakChecker.Content.Detection.ItemParsing;
 public static class TimeStampParser
 {
     // Set valid range
-    private static readonly DateTime MinDate = new DateTime(2000, 1, 1);
+    private static readonly DateTime MinDate = new DateTime(2000, 1, 1);    //TODO test this
     private static readonly DateTime MaxDate = DateTime.UtcNow.AddYears(10);
     
     public static bool TryParse(string token, out DateTime dateTime)
@@ -15,6 +15,7 @@ public static class TimeStampParser
 
         try
         {
+            //TODO unix seconds can also mismatch some ids
             var dt = DateTimeOffset.FromUnixTimeSeconds(raw).UtcDateTime;
             if (IsInRange(dt)) { dateTime = dt; Console.WriteLine("UnixSeconds"); return true; }  // MinDate = 946684800
         }
@@ -55,7 +56,7 @@ public static class TimeStampParser
             // ignored
         }
 
-        return false; //TODO
+        return false; //TODO what to do with excel serials? it can mismatch an some ids
         try
         {
             // Try Excel serial date (days since 1899-12-30)
