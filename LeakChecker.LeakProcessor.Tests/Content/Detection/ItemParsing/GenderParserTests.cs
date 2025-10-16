@@ -6,27 +6,27 @@ public class GenderParserTests
 {
     [Theory]
     // Male values
-    [InlineData("he", true, "Male")]
-    [InlineData("man", true, "Male")]
-    [InlineData("male", true, "Male")]
-    [InlineData("masculino", true, "Male")]
-    [InlineData("masc", true, "Male")]
-    [InlineData("boy", true, "Male")]
+    [InlineData("he", true, "he")]
+    [InlineData("man", true, "man")]
+    [InlineData("male", true, "male")]
+    [InlineData("masculino", true, "masculino")]
+    [InlineData("masc", true, "masc")]
+    [InlineData("boy", true, "boy")]
         
     // Female values
-    [InlineData("she", true, "Female")]
-    [InlineData("woman", true, "Female")]
-    [InlineData("female", true, "Female")]
-    [InlineData("feminino", true, "Female")]
-    [InlineData("fem", true, "Female")]
-    [InlineData("girl", true, "Female")]
+    [InlineData("she", true, "she")]
+    [InlineData("woman", true, "woman")]
+    [InlineData("female", true, "female")]
+    [InlineData("feminino", true, "feminino")]
+    [InlineData("fem", true, "fem")]
+    [InlineData("girl", true, "girl")]
         
     // Other values
-    [InlineData("trans", true, "Other")]
-    [InlineData("transgender", true, "Other")]
-    [InlineData("nonbinary", true, "Other")]
-    [InlineData("non-binary", true, "Other")]
-    [InlineData("shemale", true, "Other")]
+    [InlineData("trans", true, "trans")]
+    [InlineData("transgender", true, "transgender")]
+    [InlineData("nonbinary", true, "nonbinary")]
+    [InlineData("non-binary", true, "non-binary")]
+    [InlineData("shemale", true, "shemale")]
         
     // Negative test cases
     [InlineData("Helikoptera", false, "")]
@@ -36,7 +36,7 @@ public class GenderParserTests
     public void TryParse_ShouldReturnExpectedResult(string input, bool expectedResult, string expectedGender)
     {
         // Act
-        var result = GenderParser.TryParse(input, out var gender);
+        var result = GenderParser.TryParse(input, out string gender);
 
         // Assert
         Assert.Equal(expectedResult, result);

@@ -21,19 +21,19 @@ public static class GenderParser
     {
         if (MaleValues.Contains(token))
         {
-            gender = "Male";
+            gender = token;
             return true;
         }
         
         if (FemaleValues.Contains(token))
         {
-            gender = "Female";
+            gender = token;
             return true;
         }
         
         if (OtherValues.Contains(token))
         {
-            gender = "Other";
+            gender = token;
             return true;
         }
 
