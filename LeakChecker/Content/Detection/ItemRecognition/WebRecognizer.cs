@@ -15,9 +15,15 @@ public static class WebRecognizer
         var results = SequenceRecognizer.RecognizeURL(line, Culture);
         foreach (var result in results)
         {
-            if (Uri.TryCreate(result.Text, UriKind.RelativeOrAbsolute, out Uri? uri))
+            int start = result.Start;
+            int end = result.End;
+            string textUri = line.Substring(start, end - start + 1);
+            
+            // if (textUri.Contains('_')) { continue; }    // TODO domain name cant contain '_'
+            
+            if (Uri.TryCreate(textUri, UriKind.RelativeOrAbsolute, out Uri? uri))
             {
-                stringUris.Add(result.Text);
+                stringUris.Add(textUri);
                 uris.Add(uri);
                 found = true;
             }
