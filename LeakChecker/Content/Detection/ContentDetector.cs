@@ -16,6 +16,7 @@ public static class ContentDetector
     {
         List<SchemaHeuristicRecord> linePatterns = new();
         string originLine = line;
+        line = line.TrimOuterParentheses().TrimOuterParenthesesAndComma();
         
         //TODO
         // line = line.Trim().TrimOuterParenthesesAndComma();
@@ -177,7 +178,7 @@ public static class ContentDetector
             if (skip) continue;
 
             string token = tokens[i].Trim().TrimOuterQuotes();
-            if (string.IsNullOrEmpty(token)) continue;
+            if (string.IsNullOrEmpty(token) || string.IsNullOrWhiteSpace(token)) continue;
 
             ItemEnum itemType = await DetectToken(token, logger);
 
@@ -213,7 +214,7 @@ public static class ContentDetector
     public static async Task<ItemEnum> DetectToken(string token, FileLogger logger)
     {
         //TODO how to handle empty im heuristic analysis if it will be None, Empty or Other
-        if (string.IsNullOrEmpty(token) || string.IsNullOrWhiteSpace(token)) return ItemEnum.Other;
+        // if (string.IsNullOrEmpty(token) || string.IsNullOrWhiteSpace(token)) return ItemEnum.Other;
         
         if (TimeStampRecognizer.TryRecognize(token, out _, out _)) { return ItemEnum.TimeStamp; }
 
@@ -250,15 +251,14 @@ public static class ContentDetector
         
         if (PhoneNumberParser.TryParse(token, out _)) { return ItemEnum.PhoneNumber; }
 
-        if (PhysicalAddress.TryParse(token, out PhysicalAddress? mac) && mac.GetAddressBytes().Length == 6)
-        { return ItemEnum.Mac; }
+        if (MacAddressParser.TryParse(token, out _)) { return ItemEnum.Mac; }
 
         //TODO bypas for faster detection in development because www.hashes.com responds take a while
         if (TimeStampParser.TryParse(token, out _)) { return ItemEnum.TimeStamp; }
-        // Console.ForegroundColor = ConsoleColor.Red;
-        // Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");
-        // Console.ResetColor();
-        // return ItemEnum.Other;
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");
+        Console.ResetColor();
+        return ItemEnum.Other;
         
         try
         {
@@ -292,8 +292,7 @@ public static class ContentDetector
         
         if (PhoneNumberParser.TryParse(token, out _)) { return ItemEnum.PhoneNumber; }
 
-        if (PhysicalAddress.TryParse(token, out PhysicalAddress? mac) && mac.GetAddressBytes().Length == 6)
-        { return ItemEnum.Mac; }
+        if (MacAddressParser.TryParse(token, out _)) { return ItemEnum.Mac; }
 
         //TODO bypas for faster detection in development because www.hashes.com responds take a while
         if (TimeStampParser.TryParse(token, out _)) { return ItemEnum.TimeStamp; }
