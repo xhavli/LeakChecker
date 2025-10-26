@@ -24,8 +24,8 @@ public class CsvFileProcessor(Dictionary<int, (ItemEnum Attribute, int Delimiter
 
             Console.WriteLine($"CSV file line {recordsProcessed} processing: {line}");
 
-            string[] fields = SplitCsvLine(line, delimiter);
-            await ProcessRecord(delimiter, fields, logger);
+            string[] row = SplitCsvLine(line, delimiter);
+            await ProcessRow(delimiter, row, logger);
 
             Console.WriteLine();
             if (recordsProcessed == 150) break;
@@ -34,33 +34,34 @@ public class CsvFileProcessor(Dictionary<int, (ItemEnum Attribute, int Delimiter
         return (recordsProcessed, bytesRead);
     }
 
-    private async Task ProcessRecord(char delimiter, string[] fields, FileLogger logger)
+    private async Task ProcessRow(char delimiter, string[] row, FileLogger logger)
     {
         int i = 0;
-        while (i < fields.Length)
+        while (i < row.Length)
         {
-            string value = fields[i].Trim();
+            string value = row[i].Trim();
 
             // If current field has schema
             if (schema.TryGetValue(i, out var schemaEntry))
             {
                 // Merge undefined fields that follow
                 int nextIndex = i + 1;
-                while (nextIndex < fields.Length && !schema.ContainsKey(nextIndex))
+                while (nextIndex < row.Length && !schema.ContainsKey(nextIndex))
                 {
-                    string nextVal = fields[nextIndex].Trim();
+                    string nextVal = row[nextIndex].Trim();
                     if (!string.IsNullOrEmpty(nextVal))
                         value += delimiter + nextVal;
                     nextIndex++;
                 }
 
+                // TODO: forward to content storage
                 Console.WriteLine($"[{i}] {schemaEntry.Attribute} = {value}");
                 i = nextIndex;
             }
             else
             {
                 // No schema for this field -> log warning
-                string warnVal = fields[i].Trim();
+                string warnVal = row[i].Trim();
                 await logger.Log($"Unmapped CSV field[{i}] = {warnVal}", LogLevel.Warning, LogContext.Processing);
                 i++;
             }

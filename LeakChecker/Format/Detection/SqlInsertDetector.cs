@@ -110,13 +110,13 @@ public static class SqlInsertDetector
                         {
                             // Extract tuple (row)
                             string tuple = stringBuilder.ToString().Trim(',', ';', ' ');
-                            string[] record = ParseTuple(tuple);
+                            string[] row = ParseTuple(tuple);
 
                             // Validate column count
-                            if (record.Length != expectedColumns)
+                            if (row.Length != expectedColumns)
                             {
                                 await logger.Log(
-                                    $"Incorrect Sql Insert: Columns count mismatch. Expected {expectedColumns}, got {record.Length}. Sql Insert = {tuple}",
+                                    $"Incorrect Sql Insert: Columns count mismatch. Expected {expectedColumns}, got {row.Length}. Sql Insert = {tuple}",
                                     LogLevel.Warning, LogContext.Content);
                             }
 
@@ -125,16 +125,18 @@ public static class SqlInsertDetector
                             List<SchemaHeuristicRecord> linePatterns = new();
                             
                             Console.WriteLine($"SQL insert sample {samplesCount}: {tuple}");
-                            for (int j = 0; j < record.Length; j++)
+                            for (int j = 0; j < row.Length; j++)
                             {
-                                ItemEnum item = await ContentDetector.DetectToken(record[j], logger);
-                                Console.WriteLine($"[{j}] {item} = {record[j]}");
+                                string value = row[j];
+                                if (string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value)) continue;
+                                ItemEnum item = await ContentDetector.DetectToken(value, logger);
+                                Console.WriteLine($"[{j}] {item} = {value}");
 
                                 linePatterns.Add(new SchemaHeuristicRecord
                                 {
                                     Attribute = item,
                                     Position = j,
-                                    DelimitersInside = record[j].Count(ch => ch == Delimiter)
+                                    DelimitersInside = value.Count(ch => ch == Delimiter)
                                 });
                             }
 

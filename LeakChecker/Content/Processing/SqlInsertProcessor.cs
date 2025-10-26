@@ -85,8 +85,8 @@ public class SqlInsertProcessor(
                             
                             Console.WriteLine();
                             Console.WriteLine($"SQL insert {recordsProcessed} processing: {tuple}");
-                            string[] record = SqlInsertDetector.ParseTuple(tuple);
-                            await ProcessRecord(record);
+                            string[] row = SqlInsertDetector.ParseTuple(tuple);
+                            await ProcessRow(row);
 
                             if (recordsProcessed == 150) return (recordsProcessed, bytesRead);
                             
@@ -112,19 +112,20 @@ public class SqlInsertProcessor(
         return (recordsProcessed, bytesRead);
     }
 
-    private async Task ProcessRecord(string[] record)
+    private async Task ProcessRow(string[] row)
     {
-        for (int i = 0; i < record.Length; i++)
+        for (int i = 0; i < row.Length; i++)
         {
-            if (schema.TryGetValue(i, out var schemaEntry))
+            string value = row[i];
+
+            if (!schema.TryGetValue(i, out var schemaEntry))
             {
-                // TODO: forward to content storage
-                Console.WriteLine($"[{i}] {schemaEntry.Attribute} = {record[i]}");
+                await logger.Log($"Unmapped field[{i}] = {value}", LogLevel.Warning, LogContext.Processing);
+                continue;
             }
-            else
-            {
-                await logger.Log($"Unmapped field[{i}] = {record[i]}", LogLevel.Warning, LogContext.Processing);
-            }
+
+            // TODO: forward to content storage
+            Console.WriteLine($"[{i}] {schemaEntry.Attribute} = {value}");
         }
     }
 }
