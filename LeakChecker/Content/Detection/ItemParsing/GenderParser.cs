@@ -19,23 +19,11 @@ public static class GenderParser
     
     public static Boolean TryParse(string token, out string gender)
     {
-        if (MaleValues.Contains(token))
-        {
-            gender = token;
-            return true;
-        }
+        gender = token;
         
-        if (FemaleValues.Contains(token))
-        {
-            gender = token;
-            return true;
-        }
-        
-        if (OtherValues.Contains(token))
-        {
-            gender = token;
-            return true;
-        }
+        if (MaleValues.Contains(token)) return true;
+        if (FemaleValues.Contains(token)) return true;
+        if (OtherValues.Contains(token)) return true;
 
         gender = string.Empty;
         return false;

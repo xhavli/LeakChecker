@@ -170,12 +170,7 @@ public static class ContentDetector
         string[] tokens = line.Split(delimiter);
         for (int i = 0; i < tokens.Length; i++)
         {
-            bool skip = false;
-            foreach (var linePattern in linePatterns)
-            {
-                if (linePattern.Position == i) skip = true;
-            }
-            if (skip) continue;
+            if (linePatterns.Any(lp => lp.Position == i)) continue;
 
             string token = tokens[i].Trim().TrimOuterQuotes();
             if (string.IsNullOrEmpty(token) || string.IsNullOrWhiteSpace(token)) continue;
@@ -216,24 +211,23 @@ public static class ContentDetector
         //TODO how to handle empty im heuristic analysis if it will be None, Empty or Other
         // if (string.IsNullOrEmpty(token) || string.IsNullOrWhiteSpace(token)) return ItemEnum.Other;
         
-        if (TimeStampRecognizer.TryRecognize(token, out _, out _)) { return ItemEnum.TimeStamp; }
-
-        if (EmailRecognizer.TryRecognize(token, out _, out _)) { return ItemEnum.Email; }
-        
-        if (WebRecognizer.TryRecognize(token, out _, out _)) { return ItemEnum.Web; }
+        if (TimeStampRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.TimeStamp;
+        if (EmailRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Email;
+        if (WebRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Web;
         
         try
         {
             List<PresidioEntity> analyzeResults = await PythonNerServiceRecognizer.TryRecognize(token);
             if (analyzeResults.Any())
             {
-                var entity = analyzeResults.First();
-                
-                if (entity.Type.Equals("PERSON")) { return ItemEnum.Name; }
-
-                if (entity.Type.Equals("LOCATION")) { return ItemEnum.Location; }
-
-                if (entity.Type.Equals("ORGANIZATION")) { return ItemEnum.Organization; }
+                string entityType = analyzeResults.First().Type;
+                return entityType switch
+                {
+                    "PERSON" => ItemEnum.Name,
+                    "LOCATION" => ItemEnum.Location,
+                    "ORGANIZATION" => ItemEnum.Organization,
+                    _ => throw new Exception($"Unknown entity type: {entityType} returned from PythonNerService"),
+                };
             }
         }
         catch (Exception e)
@@ -241,20 +235,17 @@ public static class ContentDetector
             await logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Exception, LogContext.Content);
         }
         
-        if (GuidRecognizer.TryRecognize(token, out _, out _)) { return ItemEnum.Id; }
+        if (GuidRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Id;
+        if (GenderParser.TryParse(token, out _)) return ItemEnum.Gender;
+        if (MaritalStatusParser.TryParse(token, out _)) return ItemEnum.MaritalStatus;
+        if (IpAddressParser.TryParse(token, out ItemEnum itemType, out _)) return itemType;
+        if (PhoneNumberParser.TryParse(token, out _)) return ItemEnum.PhoneNumber;
+        if (MacAddressParser.TryParse(token, out _)) return ItemEnum.Mac;
+        if (IbanParser.TryParse(token)) return ItemEnum.Iban;
 
-        if (GenderParser.TryParse(token, out _)) { return ItemEnum.Gender; }
-
-        if (MaritalStatusParser.TryParse(token, out _)) { return ItemEnum.MaritalStatus;}
-        
-        if (IpAddressParser.TryParse(token, out ItemEnum itemType, out _)) { return itemType; }
-        
-        if (PhoneNumberParser.TryParse(token, out _)) { return ItemEnum.PhoneNumber; }
-
-        if (MacAddressParser.TryParse(token, out _)) { return ItemEnum.Mac; }
 
         //TODO bypas for faster detection in development because www.hashes.com responds take a while
-        if (TimeStampParser.TryParse(token, out _)) { return ItemEnum.TimeStamp; }
+        if (TimeStampParser.TryParse(token, out _)) return ItemEnum.TimeStamp;
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");
         Console.ResetColor();
@@ -263,18 +254,14 @@ public static class ContentDetector
         try
         {
             var (isHash, withSalt, _) = await HashParser.TryParse(token);
-            
-            if (isHash && !withSalt) { return ItemEnum.Hash; }
-
-            if (isHash && withSalt) { return ItemEnum.SaltedHash; }
+            if (isHash) return withSalt ? ItemEnum.SaltedHash : ItemEnum.Hash;
         }
         catch (Exception e)
         {
-            
             await logger.Log($"Communication with www.hashes.com failed. {e.Message}", LogLevel.Exception, LogContext.Content);
         }
         
-        if (TimeStampParser.TryParse(token, out _)) { return ItemEnum.TimeStamp; }
+        if (TimeStampParser.TryParse(token, out _)) return ItemEnum.TimeStamp;
 
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");
@@ -285,13 +272,9 @@ public static class ContentDetector
     private static async Task<ItemEnum> ParseToken(string token, FileLogger logger)
     {
         if (IpAddressParser.TryParse(token, out ItemEnum itemType, out _)) { return itemType; }
-
         if (GenderParser.TryParse(token, out _)) { return ItemEnum.Gender; }
-
         if (MaritalStatusParser.TryParse(token, out _)) { return ItemEnum.MaritalStatus;}
-        
         if (PhoneNumberParser.TryParse(token, out _)) { return ItemEnum.PhoneNumber; }
-
         if (MacAddressParser.TryParse(token, out _)) { return ItemEnum.Mac; }
 
         //TODO bypas for faster detection in development because www.hashes.com responds take a while

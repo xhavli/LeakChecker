@@ -12,10 +12,10 @@ public static class HashParser
     {
         bool isSalted = false;
         string hashType = string.Empty;
+
+        if (Base64.IsValid(token)) return (true, false, "Base64");   //TODO mark Base64 and decode it later
         
-        if (Base64.IsValid(token)) {}   //TODO mark Base64 and decode
-        
-        string requestUrl = BaseUrl + Uri.EscapeDataString(token);  //Ready for simple use
+        string requestUrl = BaseUrl + Uri.EscapeDataString(token);  //Return one best algorithm
         string requestUrlExtended = requestUrl + "&extended=true";  //Offers more possible algorithms sorted by its popularity
 
         var response = await Client.GetStringAsync(requestUrlExtended);
