@@ -11,7 +11,7 @@ Author: Adam Havlík
   - [Format Detection](#format-detection)
 - [Content](#content)
   - [Content Detection](#content-detection)
-  - [Content Procession](#content-procession)
+  - [Content Processing](#content-processing)
 - [Utilities](#utilities)
 - [Tests](#tests)
   - [Unit Tests](#unit-tests)
@@ -39,12 +39,22 @@ Author: Adam Havlík
 
 ## Format
 
+### Delimiter Detection
+
+- `20.8.2025` - [Python CSV sniffer](https://docs.python.org/3/library/csv.html#csv.Sniffer)  
+  Smaller chunks 1024 B showed better results than larger 10_000_000 B (10MB). This can be linked only to the tested sample. Cant parse files where lot of attributes are missing as Facebook leak.
+- `14.10.2025` - DelimiterDetector initial
+- `29.10.2025` - DelimiterDetector accuracy improvement and code simplification  
+  [NOTE] JDs solution have a success rate of 9/12 tested files. Current have full 12/12 but cant handle concatenated formats.
+
 ### Format Detection
 
 - `21.9.2025` - HeuristicAnalyzer  
   Heuristic analyzer created with some helper methods. First shot of Pattern or Schema dramatically boost performance by decade or two.
-- `29.9.2025` - Sql Insert detector  
-  SqlInsertDetector read and detect predefined number (17) of Sql Insert records, and return back heuristic schema.
+- `29.9.2025` - SqlInsertDetector  
+  read and detect predefined number (23) of Sql Insert records, and return back heuristic schema.
+- `9.10.2025` - CsvFileDetector  
+  read and detect predefined number (47) of lines, and return back heuristic schema.
 - `XX.XX.2025` - Sql Insert header guesser
 
 ## Content
@@ -61,9 +71,10 @@ Author: Adam Havlík
   [facebook/bart-large-mnli](https://huggingface.co/facebook/bart-large-mnli) was tested with almost good results. There is need to know delimiters in data, process it by commonly know regexes and at the end tokens which are still unknown send to Zero-shot recognizer for categorization.  
   [NOTE] This model is 10x faster on Nvidia 1650Ti than on Intel 10300H. There is need to reinstall python torch from CPU to GPU.
 - `3.8.2025` - Content detections  
-  - C# - [MailAddress.TryCreate()](https://learn.microsoft.com/en-us/dotnet/api/system.net.mail.mailaddress.trycreate?view=net-10.0) is good enough.
-  - C# - [DateTime.TryParse()](https://learn.microsoft.com/en-us/dotnet/api/system.datetime.tryparse?view=net-10.0) [NOTE] It cant parse 4/15/2018 12:00:00 AM from Facebook leak.
-  - C# - [IPAddress.TryParse()](https://learn.microsoft.com/en-us/dotnet/api/system.net.ipaddress.tryparse?view=net-10.0) is good for now, it can parse wide scale of formats  
+  - C# - [MailAddress.TryCreate()](https://learn.microsoft.com/en-us/dotnet/api/system.net.mail.mailaddress.trycreate?view=net-10.0) is good for now.
+  - C# - [DateTime.TryParse()](https://learn.microsoft.com/en-us/dotnet/api/system.datetime.tryparse?view=net-10.0) good for now.   
+    [NOTE] It cant parse 4/15/2018 12:00:00 AM from Facebook leak.
+  - C# - [IPAddress.TryParse()](https://learn.microsoft.com/en-us/dotnet/api/system.net.ipaddress.tryparse?view=net-10.0) is good for now.  
     [NOTE] It can also parse decimal or hexadecimal format. For example US phone number in local format 4085551234 can be misinterpreted as 243.132.144.130. Then we need additional validation for IPv4.
     ```csharp
     if (ipAddress.AddressFamily == AddressFamily.InterNetwork &&
@@ -71,18 +82,22 @@ Author: Adam Havlík
     ```
     IPv6 was not properly tested. This can also parse IpV4 mapped to IpV6 - 192.168.1.1 = ::ffff:192.168.1.1 .
  = ::ffff:c0a8:0101.
-  - NuGet - [PhoneNumbers](https://github.com/google/libphonenumber) validation  
+  - NuGet - [PhoneNumbers](https://github.com/google/libphonenumber) by Google  
     [NOTE] It can do also optional localization. It cant process local number formats like 055 234 5678 from the United Arab Emirates.
 - `4.8.2025` - Hash identification
-  - Hash Identification applications were manually tested with dataset from [onlinehashcrack](https://www.onlinehashcrack.com/hash-acceptance.php).
-  - [www.hashes.com](https://hashes.com/en/tools/hash_identifier) - Tools - Hash Identifier do proper validation and return most successful results, have demo its web application with well documented [api](https://hashes.com/en/docs). Chosen solution.  
+  - Hash Identification applications were manually tested with dataset from [onlinehashcrack](https://www.onlinehashcrack.com/hash-acceptance.php). Better will be [Hashcat Examples](https://hashcat.net/wiki/doku.php?id=example_hashes).
+  - [www.hashes.com](https://hashes.com/en/tools/hash_identifier) - Hash Identifier do proper validation and return most successful results ordered by its popularity, have demo its web application with well documented [api](https://hashes.com/en/docs). Chosen solution.  
     [NOTE] It can misinterpret 2), 5)... as Base64 encoded text of plaintext ''. Then we need additional validation.
     ```csharp
     if (Base64.IsValid(hash))
     ```
   - [HAITI](https://github.com/noraj/haiti) - Wide scale of supported hash types (600+) but do not validation, match everything including mobile number, don't have a demo.
   - [CyberChef](https://github.com/gchq/CyberChef) - Do validation, have demo, do not support hashes with salt.
-  - [Name That Hash](https://github.com/bee-san/Name-That-Hash) - Wide scale of supported hash types (300+), have demo, do some validation but not 100% correct, most unknown hashes fall in "default" BigCrypt hash type.
+  - [Name-That-Hash](https://github.com/bee-san/Name-That-Hash) - Wide scale of supported hash types (300+), have demo, do some validation but not 100% correct, most unknown hashes fall in "default" BigCrypt hash type.
+  - [hash-identifier](https://github.com/cadesalaberry/hash-identifier) - deprecated. Have demo. Last update is from 2015
+  - [hashID](https://github.com/psypanda/hashID) - Deprecated. Last update is from 2015
+  - [dcode.fr/hash-identifier](https://www.dcode.fr/hash-identifier) - Also good but don't have public API.
+  - [NOTE] - Other solutions are deprecated, not support salted values or support only few types of hash
 - `18.8.2025` - Named Entity Recognition of Name, Location and Organization  
   - [Microsoft Presidio](https://microsoft.github.io/presidio/) with [flair/ner-english-large](https://huggingface.co/flair/ner-english-large) model integrated after google close issue with sentencepiece used by flair.
 - `11.9.2025` - Automated recognition from text where item may contain delimiter 
@@ -90,14 +105,16 @@ Author: Adam Havlík
     [NOTE] It can detect and convert 4/15/2018 12:00:00 AM from Facebook leak and also natural language like first of October 2018 15:32:18. It also detects a time range what we don't want to.
   - NuGet - [Microsoft.Recognizers.Text.Sequence](https://github.com/microsoft/Recognizers-Text) for recognition and conversion to C# structures  
     - Email + [MailAddress.TryCreate()](https://learn.microsoft.com/en-us/dotnet/api/system.net.mail.mailaddress.trycreate?view=net-10.0) for extra validation
-    - Guid
-    - Url
+    - Guid + TryParse
+    - Url + TryParse
+    - IpAddress - Not added because it cant recognize ports.
 - `13.9.2025` - Validation of Gender and Marital Status  
   - Validation done with some hardcoded values
 - `22.9.2025` - MAC Address parser  
-  - C# - [PhysicalAddress.TryParse()](https://learn.microsoft.com/en-us/dotnet/api/system.net.networkinformation.physicaladdress.tryparse?view=net-10.0#system-net-networkinformation-physicaladdress-tryparse(system-string-system-net-networkinformation-physicaladdress@)) mac address validation added  
+  - C# - [PhysicalAddress.TryParse()](https://learn.microsoft.com/en-us/dotnet/api/system.net.networkinformation.physicaladdress.tryparse?view=net-10.0#system-net-networkinformation-physicaladdress-tryparse(system-string-system-net-networkinformation-physicaladdress@))    
     [NOTE] SHA1 hash 08137e51edc9d3bf54fd051e3d91bd471c93a240 can be misinterpreted as Mac address. Then we need additional validation.
     ```csharp
+    if (normalizedToken.Length == 12 && normalizedToken.All(char.IsAsciiHexDigit))
     if (mac.GetAddressBytes().Length == 6)
     ```
 - `28.9.2025` - TimeStamp parser
@@ -136,8 +153,9 @@ Author: Adam Havlík
   - [knowledgator/gliner-pii-large-v1.0](https://huggingface.co/knowledgator/gliner-pii-large-v1.0) tested with no relevant results.
   - [Microsoft Presidio](https://microsoft.github.io/presidio/) tested as orchestrator of previously used model and models from `2.10.2025` with no relevant results.  
   [NOTE] - Most models can recognize contextual data like "User login info: username: alice, password: p@ssW0rd123".  Pure credentials as content-free data are hard to recognize, detect and validate.
+- `27.10.2025` [IbanNet](https://github.com/skwasjer/IbanNet) - validation of some common formats
 
-### Content Procession
+### Content Processing
 
 - `30.9.2025` Sql Insert processor  
   SqlInsertProcessor added for processing Sql Insert records with given schema
@@ -157,8 +175,8 @@ Author: Adam Havlík
 
 ### Unit tests
 
-- `14.10.2025` - Content.Detection.ItemParsing tests
-- `15.10.2025` - Content.Detection.ItemRecognition tests
+- `14.10.2025` - Content.Detection.ItemParsing add 230 tests
+- `15.10.2025` - Content.Detection.ItemRecognition add 158 tests
 - `XX.10.2025` - Encodings.Detection tests
 - `XX.10.2025` - Encodings.Conversion tests
 - `XX.10.2025` - Format.Delimiter tests
@@ -174,14 +192,16 @@ Author: Adam Havlík
 
 ## TODOs
 
-- Search for delimiters properly [python CSV sniffer](https://docs.python.org/3/library/csv.html#csv.Sniffer) cant parse files where lot of attributes are missing as Facebook leak.
+- Search for delimiters properly.
 - Detect Username and plaintext Password.
 - Decide how to enum localhost IpV4/IpV6
 - Decide how to process a IpAddress ports
 - Decide if IpAddress parsing of cross mapped addresses are feature or limitation. Can be done by [Microsoft.Recognizers.Text.Sequence](https://github.com/microsoft/Recognizers-Text) automated recognition as Email, Guid and Urls are.
 - Test Excel serials in TimeStampParser and decide if its feature or limitation.
 - Test TimeStamps recognizer and parser for valid datetime range. What's the correct range?
-- Location validation for GPS
+- Location GPS coordinates [parser](https://github.com/Tronald/CoordinateSharp)
+- NationalID and VAT [parsers](https://github.com/anghelvalentin/CountryValidator)
+- Bank cards ???
 - Detect other content.
 - Do IPv6 validation which may be done by regex from [Vladimir Veselý - IPK2024-06-IPv6](https://moodle.vut.cz/pluginfile.php/823898/mod_folder/content/0/IPK2023-24L-09-IPv6.pdf)
   ```regexp
