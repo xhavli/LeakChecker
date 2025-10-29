@@ -9,6 +9,7 @@ public enum ItemEnum
     Location,
     Organization,
     PhoneNumber,
+    Iban,
     Gender,
     Email,
     Name,
