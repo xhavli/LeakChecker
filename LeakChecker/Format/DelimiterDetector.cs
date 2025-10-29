@@ -1,12 +1,8 @@
-using System.Buffers;
-using System.Runtime.CompilerServices;
+using System.Globalization;
 using System.Text;
 
 namespace LeakChecker.Format;
 
-/// <summary>
-/// Result for a single delimiter candidate.
-/// </summary>
 public sealed class DelimiterCandidate
 {
     public char Delimiter { get; init; }
@@ -16,15 +12,15 @@ public sealed class DelimiterCandidate
     public int LinesSeen { get; internal set; }
     public int LinesWithAny { get; internal set; }
     public double Coverage => LinesSeen == 0 ? 0 : (double)LinesWithAny / LinesSeen;
-    /// <summary>Fraction of lines whose count is within ±1 of the final mean (only among lines with any occurrences).</summary>
     public double WithinOneOfMeanFraction { get; internal set; }
-    /// <summary>The most common per-line count we observed and how often it occurred (mode estimate).</summary>
     public int ApproxModeCount { get; internal set; }
     public int ApproxModeFrequency { get; internal set; }
 
     public override string ToString()
-        => $"'{(Delimiter == '\t' ? "\\t" : Delimiter.ToString())}' => {ProbabilityPercent:F1}% " +
-           $"(mean {MeanPerLine:F2} ± {StdDevPerLine:F2}, coverage {Coverage:P0})";
+    {
+        string disp = Delimiter == '\t' ? "\\t" : Delimiter.ToString();
+        return $"'{disp}' => {ProbabilityPercent:F1}% (mean {MeanPerLine:F2} ± {StdDevPerLine:F2}, coverage {Coverage:P0})";
+    }
 }
 
 public sealed class DelimiterHeuristicResult
@@ -35,197 +31,107 @@ public sealed class DelimiterHeuristicResult
     public IReadOnlyList<DelimiterCandidate> Candidates { get; internal set; } = Array.Empty<DelimiterCandidate>();
 }
 
-/// <summary>
-/// High-performance delimiter detector for very large UTF-8 text files.
-/// </summary>
 public static class DelimiterHeuristic
 {
-    // ASCII range we care about for delimiter candidates: punctuation & whitespace (space and tab).
-    // We’ll mark candidates dynamically on first sight to keep the inner loop tight.
-    private static bool IsAsciiPunctuationOrSpace(char ch)
+    private static readonly HashSet<char> AllowedDelimiters = [',', ';', ':', '\t', '|', '~', '-', '_', ' '];
+
+    public static DelimiterHeuristicResult Analyze(string path, int maxLines = 10_000, int bufferSize = 1_048_576)
     {
-        if (ch > 0x7E) return false;                  // non-ASCII
-        if (ch == '\r' ||  ch == '\n') return false;   // line breaks
-        if (char.IsLetterOrDigit(ch)) return false;
-        // Keep space and tab (common delimiters), exclude quotes separately (we still count them for quote detection).
-        // We simply allow: space (0x20), tab (0x09), and other punctuation.
-        return true;
+        using var reader = new StreamReader(path, new UTF8Encoding(false), false, bufferSize);
+        return Analyze(reader, maxLines, bufferSize);
     }
 
-    /// <summary>
-    /// Analyze a UTF-8 file and guess its delimiter using first <paramref name="maxLines"/> lines.
-    /// </summary>
-    /// <param name="path">File path (UTF-8 text).</param>
-    /// <param name="maxLines">Max lines to analyze (default 10,000).</param>
-    /// <param name="readBufferChars">Internal char buffer size (default 1,048,576).</param>
-    /// <returns>Heuristic result with probabilities and diagnostics.</returns>
-    public static DelimiterHeuristicResult Analyze(
-        string path,
-        int maxLines = 10_000,
-        int readBufferChars = 1_048_576)
+    private static DelimiterHeuristicResult Analyze(TextReader reader, int maxLines, int bufferSize)
     {
-        using var fs = new FileStream(
-            path,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            bufferSize: 1 << 20, // 1 MiB
-            FileOptions.SequentialScan);
-
-        var reader = new StreamReader(fs, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), detectEncodingFromByteOrderMarks: true, bufferSize: 1 << 20, leaveOpen: false);
-
-        return Analyze(reader, maxLines, readBufferChars);
-    }
-
-    /// <summary>
-    /// Analyze from an existing <see cref="TextReader"/>. Reader must deliver UTF-8 text; only first <paramref name="maxLines"/> are read.
-    /// </summary>
-    private static DelimiterHeuristicResult Analyze(TextReader reader, int maxLines = 10_000, int readBufferChars = 1_048_576)
-    {
-        // Per-candidate running stats (ASCII 0..127).
         var stats = new DelimStats[128];
-        var hasCandidate = new bool[128];
-        
-        // Per-line counters (stackalloc keeps GC cool). We only count ASCII candidates.
-        Span<int> perLineCounts = stackalloc int[128];
-        perLineCounts.Clear();
+        var isCandidate = new bool[128];
+        var perLine = new int[128];
+        var mode = new SmallMode[128];
 
-        // For estimating "within ±1 of mean" we’ll re-check at line end with evolving mean (approximation).
-        // We also keep a tiny mode estimator per candidate (two most frequent counts).
-        var modeA = new SmallMode[128];
-
-        // State
+        int lines = 0, bytesRead = 0;
         bool inQuote = false;
-        char quoteChar = '\0';
-        char prevChar = '\0';       // for CRLF and backslash-escape detection
-        int lines = 0;
-        int sampledBytesApprox = 0;
+        char quoteChar = '\0', prev = '\0';
+        var buf = new char[bufferSize];
 
-        // Reader loop
-        char[] buffer = ArrayPool<char>.Shared.Rent(readBufferChars);
-        try
+        while (lines < maxLines)
         {
-            while (lines < maxLines)
+            int read = reader.Read(buf, 0, buf.Length);
+            if (read <= 0)
             {
-                int read = reader.Read(buffer, 0, buffer.Length);
-                if (read <= 0)
+                if (HasCounts(perLine))
+                    EndLine(ref lines, perLine, stats, mode);
+                break;
+            }
+
+            bytesRead += read;
+
+            for (int i = 0; i < read; i++)
+            {
+                char ch = buf[i];
+
+                if (!inQuote && ch is '\n' or '\r')
                 {
-                    // flush any last unterminated line
-                    if (AnyCounts(perLineCounts)) EndLine(ref lines, perLineCounts, stats, modeA);
-                    break;
+                    if (ch == '\r' && i + 1 < read && buf[i + 1] == '\n') i++;
+                    EndLine(ref lines, perLine, stats, mode);
+                    if (lines >= maxLines) break;
+                    prev = ch;
+                    continue;
                 }
-                sampledBytesApprox += read; // chars ~ bytes for ASCII-heavy; fine for a sample stat
 
-                int i = 0;
-                while (i < read)
+                if (ch is '"' or '\'')
                 {
-                    char ch = buffer[i++];
-
-                    // Handle CRLF newlines gracefully
-                    if (!inQuote && (ch == '\n' || ch == '\r'))
-                    {
-                        // If CRLF, consume the LF if next
-                        if (ch == '\r' && i < read && buffer[i] == '\n') i++;
-
-                        EndLine(ref lines, perLineCounts, stats, modeA);
-                        if (lines >= maxLines) break;
-
-                        prevChar = ch;
-                        continue;
-                    }
-
-                    // Quote handling (CSV-like): enter/exit on ' or " ; support doubled quotes and backslash-escaped quotes.
-                    if (ch == '"' || ch == '\'')
-                    {
-                        if (!inQuote)
-                        {
-                            inQuote = true;
-                            quoteChar = ch;
-                            if (ch == '"')
-                            {
-                            }
-                            else
-                            {
-                            }
-                        }
-                        else if (ch == quoteChar)
-                        {
-                            bool escapedByBackslash = prevChar == '\\';
-                            bool doubled = (i < read && buffer[i] == quoteChar);
-                            if (doubled)
-                            {
-                                // Consume the doubled quote, stays inQuote
-                                i++;
-                            }
-                            else if (!escapedByBackslash)
-                            {
-                                // End quote
-                                inQuote = false;
-                                quoteChar = '\0';
-                            }
-                        }
-                        prevChar = ch;
-                        continue;
-                    }
-
-                    // Count delimiter candidates only when not inside quotes.
                     if (!inQuote)
                     {
-                        if (ch <= 0x7F && IsAsciiPunctuationOrSpace(ch))
+                        inQuote = true;
+                        quoteChar = ch;
+                    }
+                    else if (ch == quoteChar)
+                    {
+                        bool escaped = prev == '\\';
+                        bool doubled = (i + 1 < read && buf[i + 1] == quoteChar);
+                        if (doubled) i++;
+                        else if (!escaped)
                         {
-                            int idx = ch;
-                            // Mark as candidate lazily (skip obvious non-delimiter punctuation later via scoring).
-                            hasCandidate[idx] = true;
-                            perLineCounts[idx]++;
+                            inQuote = false;
+                            quoteChar = '\0';
                         }
                     }
-
-                    prevChar = ch;
+                    prev = ch;
+                    continue;
                 }
+
+                if (!inQuote && ch <= 127 && IsPossibleDelimiter(ch))
+                {
+                    int idx = ch;
+                    isCandidate[idx] = true;
+                    perLine[idx]++;
+                }
+
+                prev = ch;
             }
         }
-        finally
-        {
-            ArrayPool<char>.Shared.Return(buffer);
-        }
 
-        // Build candidate list and compute probabilities
-        var candidates = new List<DelimiterCandidate>(32);
-        double bestScore = 0;
-        double scoreSum = 0;
+        var candidates = new List<DelimiterCandidate>();
+        double totalScore = 0, bestScore = 0;
 
         for (int idx = 0; idx < 128; idx++)
         {
-            if (!hasCandidate[idx]) continue;
-            if (idx == '"' || idx == '\'') continue; // not delimiters
+            if (!isCandidate[idx]) continue;
+            char delim = (char)idx;
+            if (!AllowedDelimiters.Contains(delim)) continue;
 
-            ref var s = ref stats[idx];
+            var s = stats[idx];
             if (s.Lines == 0) continue;
 
-            // Basic filters: ignore CR/LF (already separated); exclude non-printables except tab and space
-            char delim = (char)idx;
-            if (delim != '\t' && delim != ' ' && delim < 0x20) continue;
-
             double mean = s.Mean;
-            double variance = s.Lines > 1 ? s.M2 / (s.Lines - 1) : 0.0;
-            double stdev = Math.Sqrt(Math.Max(0, variance));
+            double stdev = s.Lines > 1 ? Math.Sqrt(s.M2 / (s.Lines - 1)) : 0;
+            double coverage = (double)s.LinesWithAny / s.Lines;
+            double coefVar = mean > 0 ? stdev / mean : 1;
+            double within1Frac = s.LinesWithAny == 0 ? 0 : (double)s.Within1 / s.LinesWithAny;
 
-            double coverage = s.Lines == 0 ? 0 : (double)s.LinesWithAny / s.Lines;
-            double coefVar = mean > 0 ? stdev / mean : 1.0;
-
-            // Stability: fraction of lines with counts within ±1 of mean (among lines with any occurrences).
-            double within1 = s.WithinOneOfMeanCount;
-            double within1Frac = s.LinesWithAny == 0 ? 0 : within1 / s.LinesWithAny;
-
-            // Scoring: encourage broad coverage, low variance, and non-trivial mean.
-            // The log1p(mean) term favors delimiters with multiple columns.
-            double score = coverage                           // appears on many lines
-                           * (1.0 - Clamp01(coefVar))         // consistent counts per line
-                           * Log1P(mean)                 // higher column counts
-                           * (0.75 + 0.25 * within1Frac);     // slight bump for tight mode
-
+            double score = coverage * (1 - Clamp01(coefVar)) * Log1P(mean) * (0.75 + 0.25 * within1Frac);
+            totalScore += score;
             bestScore = Math.Max(bestScore, score);
-            scoreSum += score;
 
             candidates.Add(new DelimiterCandidate
             {
@@ -240,114 +146,98 @@ public static class DelimiterHeuristic
             });
         }
 
-        // Normalize scores => probabilities
-        // If all scores 0 (e.g., fixed-width or weird data), everyone gets 0%; BestDelimiter stays null.
-        if (scoreSum > 0)
+        if (totalScore > 0)
         {
-            // Recompute with the same formula to map to percentages
             foreach (var c in candidates)
             {
-                ref var s = ref stats[c.Delimiter];
-                double mean = c.MeanPerLine;
-                double stdev = c.StdDevPerLine;
-                double coverage = c.Coverage;
-                double coefVar = mean > 0 ? stdev / mean : 1.0;
-                double within1 = c.WithinOneOfMeanFraction;
-
-                double score = coverage * (1.0 - Clamp01(coefVar)) * Log1P(mean) * (0.75 + 0.25 * within1);
-                c.ProbabilityPercent = 100.0 * score / scoreSum;
+                double coefVar = c.StdDevPerLine / Math.Max(1e-9, c.MeanPerLine);
+                double score = c.Coverage * (1 - Clamp01(coefVar)) * Log1P(c.MeanPerLine) * (0.75 + 0.25 * c.WithinOneOfMeanFraction);
+                c.ProbabilityPercent = 100 * score / totalScore;
             }
         }
 
-        // Sort by probability desc, then by coverage desc as a tiebreaker
         candidates.Sort((a, b) =>
         {
             int cmp = b.ProbabilityPercent.CompareTo(a.ProbabilityPercent);
-            if (cmp != 0) return cmp;
-            return b.Coverage.CompareTo(a.Coverage);
+            return cmp != 0 ? cmp : b.Coverage.CompareTo(a.Coverage);
         });
 
-        var result = new DelimiterHeuristicResult
+        return new DelimiterHeuristicResult
         {
             BestDelimiter = candidates.Count > 0 && candidates[0].ProbabilityPercent > 0 ? candidates[0].Delimiter : null,
             SampledLines = lines,
-            SampledBytes = sampledBytesApprox,
+            SampledBytes = bytesRead,
             Candidates = candidates
         };
-        return result;
-
-        // ---- local helpers ----
-        static bool AnyCounts(Span<int> counts)
-        {
-            ref int r0 = ref counts[0];
-            for (int i = 0; i < counts.Length; i++)
-                if (Unsafe.Add(ref r0, i) != 0) return true;
-            return false;
-        }
-
-        static void EndLine(ref int lines, Span<int> perLine, DelimStats[] stats, SmallMode[] mode)
-        {
-            lines++;
-            // We’ll update stats for any candidate that had a non-zero per-line count.
-            ref int p0 = ref perLine[0];
-            for (int idx = 0; idx < 128; idx++)
-            {
-                int count = Unsafe.Add(ref p0, idx);
-                ref var s = ref stats[idx];
-
-                // Update line counter even for zeros so variance reflects dataset lines (important for coverage).
-                s.Lines++;
-
-                if (count > 0)
-                {
-                    s.LinesWithAny++;
-                    // Welford’s algorithm
-                    double delta = count - s.Mean;
-                    s.Mean += delta / s.Lines;
-                    s.M2 += delta * (count - s.Mean);
-
-                    // Track "within ±1 of current mean" approximation
-                    double mu = s.Mean;
-                    if (Math.Abs(count - mu) <= 1.0) s.WithinOneOfMeanCount++;
-
-                    // Tiny mode estimator (2 bins with on-the-fly swap).
-                    ref var m = ref mode[idx];
-                    if (count == m.ACount) m.AFreq++;
-                    else if (count == m.BCount) m.BFreq++;
-                    else if (m.AFreq <= m.BFreq)
-                    {
-                        m.ACount = count; m.AFreq = 1;
-                    }
-                    else
-                    {
-                        m.BCount = count; m.BFreq = 1;
-                    }
-
-                    // Persist best mode into stats at line boundaries (keeps allocations at zero)
-                    if (m.AFreq >= m.BFreq)
-                    {
-                        s.ModeCount = m.ACount; s.ModeFreq = m.AFreq;
-                    }
-                    else
-                    {
-                        s.ModeCount = m.BCount; s.ModeFreq = m.BFreq;
-                    }
-                }
-            }
-            perLine.Clear();
-        }
-
-        static double Clamp01(double x) => x < 0 ? 0 : (x > 1 ? 1 : x);
     }
 
-    // Internal running-stat struct (kept as value type for cache locality).
+    private static bool IsPossibleDelimiter(char ch)
+    {
+        if (AllowedDelimiters.Contains(ch)) return true;
+        if (char.IsLetterOrDigit(ch) || char.IsControl(ch)) return false;
+        UnicodeCategory cat = char.GetUnicodeCategory(ch);
+        return cat is UnicodeCategory.SpaceSeparator
+            or UnicodeCategory.DashPunctuation
+            or UnicodeCategory.ModifierSymbol;
+    }
+
+    private static bool HasCounts(int[] arr)
+    {
+        foreach (int x in arr)
+            if (x != 0) return true;
+        return false;
+    }
+
+    private static void EndLine(ref int lines, int[] perLine, DelimStats[] stats, SmallMode[] mode)
+    {
+        lines++;
+        for (int i = 0; i < perLine.Length; i++)
+        {
+            int count = perLine[i];
+            var s = stats[i];
+            s.Lines++;
+
+            if (count > 0)
+            {
+                s.LinesWithAny++;
+                double delta = count - s.Mean;
+                s.Mean += delta / s.Lines;
+                s.M2 += delta * (count - s.Mean);
+                if (Math.Abs(count - s.Mean) <= 1) s.Within1++;
+
+                var m = mode[i];
+                if (count == m.ACount) m.AFreq++;
+                else if (count == m.BCount) m.BFreq++;
+                else if (m.AFreq <= m.BFreq) (m.ACount, m.AFreq) = (count, 1);
+                else (m.BCount, m.BFreq) = (count, 1);
+
+                if (m.AFreq >= m.BFreq)
+                {
+                    s.ModeCount = m.ACount; s.ModeFreq = m.AFreq;
+                }
+                else
+                {
+                    s.ModeCount = m.BCount; s.ModeFreq = m.BFreq;
+                }
+
+                mode[i] = m;
+            }
+
+            perLine[i] = 0;
+            stats[i] = s;
+        }
+    }
+
+    private static double Log1P(double x) => Math.Abs(x) < 1e-4 ? x - 0.5 * x * x : Math.Log(1 + x);
+    private static double Clamp01(double x) => x < 0 ? 0 : (x > 1 ? 1 : x);
+
     private struct DelimStats
     {
         public int Lines;
         public int LinesWithAny;
         public double Mean;
         public double M2;
-        public int WithinOneOfMeanCount;
+        public int Within1;
         public int ModeCount;
         public int ModeFreq;
     }
@@ -356,14 +246,5 @@ public static class DelimiterHeuristic
     {
         public int ACount, AFreq;
         public int BCount, BFreq;
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static double Log1P(double x)
-    {
-        // Numerically stable for small x
-        if (Math.Abs(x) < 1e-4)
-            return x - 0.5 * x * x;
-        return Math.Log(1.0 + x);
     }
 }
