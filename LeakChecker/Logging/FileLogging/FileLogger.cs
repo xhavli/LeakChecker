@@ -105,6 +105,16 @@ public class FileLogger : IDisposable
         await LogAsync("---------------------------");
         await Log("Encoding processing started");
     }
+    
+    public async Task LogConsistEncDetection()
+    {
+        await Log("Trying to detect consistent encoding");
+    }
+    
+    public async Task LogConcatEncDetection()
+    {
+        await Log("Trying to detect concatenated encoding");
+    }
 
     public async Task LogEncodingStats(List<EncodingSegment> segments)
     {
@@ -205,7 +215,7 @@ public class FileLogger : IDisposable
         var columnNames = columnList.Split(',');
         for (int i = 0; i < columnNames.Length; i++)
         {
-            await LogAsync($"[{i}] {columnNames[i].Trim()}");
+            await LogAsync($"[{i}] {columnNames[i].Trim().Trim('`')}");
         }
 
         await LogAsync("");
