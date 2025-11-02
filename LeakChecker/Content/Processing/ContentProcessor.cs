@@ -17,10 +17,10 @@ public class ContentProcessor
     private readonly char _delimiter;
     private readonly Encoding _encoding;
     private readonly StreamReader _reader;
-    private readonly FileLogger _logger;
+    private readonly IFileLogger _logger;
     private readonly FileStats _fileStats;
 
-    private ContentProcessor(char delimiter, Encoding encoding, StreamReader reader, FileLogger logger, FileStats fileStats)
+    private ContentProcessor(char delimiter, Encoding encoding, StreamReader reader, IFileLogger logger, FileStats fileStats)
     {
         _delimiter = delimiter;
         _encoding = encoding;
@@ -30,7 +30,7 @@ public class ContentProcessor
     }
 
     public static async Task<ContentProcessor> CreateAsync(
-        char delimiter, FileLogger logger, FileStats stats, Encoding? encoding = null)
+        char delimiter, IFileLogger logger, FileStats stats, Encoding? encoding = null)
     {
         if (encoding == null)
         {
@@ -70,9 +70,10 @@ public class ContentProcessor
             }
             
             // if looks like a JSON    //TODO
-            if (line.StartsWith('{') || line.StartsWith('[')) {}
+            if (line.StartsWith('{') || line.StartsWith('[')) {}    // test if it really is a json and parse it
             // if looks like a HTML    //TODO
-            if (line.Contains("<html", StringComparison.OrdinalIgnoreCase) || line.Contains("<body", StringComparison.OrdinalIgnoreCase)) {}
+            if (line.Contains("<html", StringComparison.OrdinalIgnoreCase) || 
+                line.Contains("<body", StringComparison.OrdinalIgnoreCase)) {}  // // test if it really is a html and parse it
 
             await ProcessCsvFile();
             
@@ -371,6 +372,7 @@ public class ContentProcessor
 
     private async Task AdjustReader(long offset)
     {
+        //TODO remove validations and make it as a reader extension
         if (offset < 0)
         {
             await _logger.Log("Offset out of range in AdjustReader. Provided value is negative. Offset set to 0.", LogLevel.Warning, LogContext.Processing);
