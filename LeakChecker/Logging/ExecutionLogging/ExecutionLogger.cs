@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.Text;
-using LeakChecker.Utilities;
+using LeakChecker.Utilities.Configuration;
 
 namespace LeakChecker.Logging.ExecutionLogging;
 
