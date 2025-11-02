@@ -8,7 +8,7 @@ namespace LeakChecker.Format.Detection;
 public static class CsvFileDetector
 {
     public static async Task<Dictionary<int, (ItemEnum Attribute, int DelimiterSpan)>> DetectFormat(
-        char delimiter, StreamReader reader, FileLogger logger, int detectSamples = 47)
+        char delimiter, StreamReader reader, IFileLogger logger, int detectSamples = 47)
     {
         int samplesCount = 0;
         SchemaHeuristic analyzer = new();
