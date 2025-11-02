@@ -12,7 +12,7 @@ namespace LeakChecker.Content.Detection;
 
 public static class ContentDetector
 {
-    public static async Task<List<SchemaHeuristicRecord>> DetectLine(string line, char delimiter, FileLogger logger)
+    public static async Task<List<SchemaHeuristicRecord>> DetectLine(string line, char delimiter, IFileLogger logger)
     {
         List<SchemaHeuristicRecord> linePatterns = new();
         string originLine = line;
@@ -22,6 +22,54 @@ public static class ContentDetector
         // line = line.Trim().TrimOuterParenthesesAndComma();
         // if (string.IsNullOrEmpty(line)) return linePatterns;
         // Console.WriteLine(line);
+        
+        if (WebRecognizer.TryRecognize(line, out List<string> stringUris, out List<Uri> uris))
+        {
+            if (stringUris.Count == uris.Count)
+            {
+                foreach (var uri in stringUris.OrderByDescending(s => s.Length))
+                {
+                    int position = CountDelimitersBefore(originLine, uri, delimiter);
+                    Console.WriteLine($"[{position}] {ItemEnum.Web} = {uri}");
+
+                    linePatterns.Add(new SchemaHeuristicRecord
+                    {
+                        Attribute = ItemEnum.Web,
+                        Position = position,
+                        DelimitersInside = uri.Count(ch => ch == delimiter)
+                    });
+                    line = line.Replace(uri, "");
+                }
+            }
+            else
+            {
+                await logger.Log("stringUris.Count != uris.Count", LogLevel.Warning, LogContext.Content);
+            }
+        }
+        
+        if (EmailRecognizer.TryRecognize(line, out List<string> stringEmails, out List<MailAddress> emails))
+        {
+            if (stringEmails.Count == emails.Count)
+            {
+                foreach (var email in stringEmails)
+                {
+                    int position = CountDelimitersBefore(originLine, email, delimiter);
+                    Console.WriteLine($"[{position}] {ItemEnum.Email} = {email}");
+
+                    linePatterns.Add(new SchemaHeuristicRecord
+                    {
+                        Attribute = ItemEnum.Email,
+                        Position = position,
+                        DelimitersInside = email.Count(ch => ch == delimiter)
+                    });
+                    line = line.Replace(email, "", StringComparison.InvariantCultureIgnoreCase);
+                }
+            }
+            else
+            {
+                await logger.Log("stringEmails.Count != emails.Count", LogLevel.Warning, LogContext.Content);
+            }
+        }
         
         if (TimeStampRecognizer.TryRecognize(line, out List<string> stringTimeStamps, out List<DateTime> timeStamps))
         {
@@ -46,55 +94,7 @@ public static class ContentDetector
                 await logger.Log("stringTimeStamps.Count != timeStamps.Count", LogLevel.Warning, LogContext.Content);
             }
         }
-
-        if (EmailRecognizer.TryRecognize(line, out List<string> stringEmails, out List<MailAddress> emails))
-        {
-            if (stringEmails.Count == emails.Count)
-            {
-                foreach (var email in stringEmails)
-                {
-                    int position = CountDelimitersBefore(originLine, email, delimiter);
-                    Console.WriteLine($"[{position}] {ItemEnum.Email} = {email}");
-
-                    linePatterns.Add(new SchemaHeuristicRecord
-                    {
-                        Attribute = ItemEnum.Email,
-                        Position = position,
-                        DelimitersInside = email.Count(ch => ch == delimiter)
-                    });
-                    line = line.Replace(email, "", StringComparison.InvariantCultureIgnoreCase);
-                }
-            }
-            else
-            {
-                await logger.Log("stringEmails.Count != emails.Count", LogLevel.Warning, LogContext.Content);
-            }
-        }
-
-        if (WebRecognizer.TryRecognize(line, out List<string> stringUris, out List<Uri> uris))
-        {
-            if (stringUris.Count == uris.Count)
-            {
-                foreach (var uri in stringUris.OrderByDescending(s => s.Length))
-                {
-                    int position = CountDelimitersBefore(originLine, uri, delimiter);
-                    Console.WriteLine($"[{position}] {ItemEnum.Web} = {uri}");
-
-                    linePatterns.Add(new SchemaHeuristicRecord
-                    {
-                        Attribute = ItemEnum.Web,
-                        Position = position,
-                        DelimitersInside = uri.Count(ch => ch == delimiter)
-                    });
-                    line = line.Replace(uri, "");
-                }
-            }
-            else
-            {
-                await logger.Log("stringUris.Count != uris.Count", LogLevel.Warning, LogContext.Content);
-            }
-        }
-
+        
         try
         {
             List<PresidioEntity> analyzeResults = await PythonNerServiceRecognizer.TryRecognize(line);
@@ -142,7 +142,7 @@ public static class ContentDetector
         {
             await logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Exception,LogContext.Content);
         }
-
+        
         if (GuidRecognizer.TryRecognize(line, out List<string> stringGuids, out List<Guid> guids))
         {
             if (stringGuids.Count == guids.Count)
@@ -166,7 +166,7 @@ public static class ContentDetector
                 await logger.Log("stringGuids.Count != guids.Count", LogLevel.Warning, LogContext.Content);
             }
         }
-
+        
         string[] tokens = line.Split(delimiter);
         for (int i = 0; i < tokens.Length; i++)
         {
@@ -206,14 +206,14 @@ public static class ContentDetector
         return linePatterns;
     }
     
-    public static async Task<ItemEnum> DetectToken(string token, FileLogger logger)
+    public static async Task<ItemEnum> DetectToken(string token, IFileLogger logger)
     {
         //TODO how to handle empty im heuristic analysis if it will be None, Empty or Other
         // if (string.IsNullOrEmpty(token) || string.IsNullOrWhiteSpace(token)) return ItemEnum.Other;
         
-        if (TimeStampRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.TimeStamp;
-        if (EmailRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Email;
         if (WebRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Web;
+        if (EmailRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Email;
+        if (TimeStampRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.TimeStamp;
         
         try
         {
