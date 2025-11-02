@@ -8,7 +8,7 @@ using LeakChecker.Utilities.Extensions;
 namespace LeakChecker.Content.Processing;
 
 public class SqlInsertProcessor(
-    Dictionary<int, (ItemEnum Attribute, int DelimiterSpan)> schema, StreamReader reader, FileLogger logger)
+    Dictionary<int, (ItemEnum Attribute, int DelimiterSpan)> schema, StreamReader reader, IFileLogger logger)
 {
     public async Task<(long recordProcessed, long bytesRead)> ProcessSqlInsert()
     {

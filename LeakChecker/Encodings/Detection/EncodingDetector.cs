@@ -7,7 +7,7 @@ using UtfUnknown;
 
 namespace LeakChecker.Encodings.Detection;
 
-public class EncodingDetector(FileLogger logger, FileStats stats)
+public class EncodingDetector(IFileLogger logger, FileStats stats)
 {
     private readonly Stopwatch _stopWatch = new();
 

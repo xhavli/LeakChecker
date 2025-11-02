@@ -4,27 +4,30 @@ using LeakChecker.Content;
 using LeakChecker.Encodings;
 using LeakChecker.Format;
 using LeakChecker.Utilities;
+using LeakChecker.Utilities.Configuration;
 
 namespace LeakChecker.Logging.FileLogging;
 
-public class FileLogger : IDisposable
+public class FileLogger : IFileLogger
 {
     public string SubjectFileName { get; }
     public string SubjectFilePath { get; }
     public string SubjectTmpFilePath { get; }
     public long SubjectFileBytes { get; private set; }
-    public readonly DateTime ProcessingStart = DateTime.Now;
+    private bool EnableConsole { get; }
+    public DateTime ProcessingStart { get; } = DateTime.Now;
     private readonly StreamWriter _writer;
 
-    private FileLogger(string subjectFilePath, string tmpFilePath, StreamWriter writer)
+    private FileLogger(string subjectFilePath, string tmpFilePath, StreamWriter writer, bool enableConsole)
     {
         SubjectFilePath = subjectFilePath;
         SubjectFileName = Path.GetFileName(subjectFilePath);
         SubjectTmpFilePath = tmpFilePath;
+        EnableConsole = enableConsole;
         _writer = writer;
     }
 
-    public static async Task<FileLogger> CreateAsync(string subjectFilePath, AppConfig config)
+    public static async Task<IFileLogger> CreateAsync(string subjectFilePath, AppConfig config, bool enableConsole)
     {
         string subjectFileName = Path.GetFileName(subjectFilePath);
         DateTime processingStart = DateTime.Now;
@@ -40,7 +43,7 @@ public class FileLogger : IDisposable
             AutoFlush = true
         };
 
-        var logger = new FileLogger(subjectFilePath, tmpFilePath, writer);
+        var logger = new FileLogger(subjectFilePath, tmpFilePath, writer, enableConsole);
 
         await logger.CreateHeaderAsync();
 
@@ -78,9 +81,12 @@ public class FileLogger : IDisposable
         string log = context is null ? $"[{DateTime.Now:T}] {level.GetString()} {message}"
                                      : $"[{DateTime.Now:T}] {level.GetString()} {context.Value.GetString()} {message}";
         await LogAsync(log);
-        Console.ForegroundColor = consoleColor;
-        Console.WriteLine($"'{SubjectFilePath}' {log}");
-        Console.ResetColor();
+        if (EnableConsole)
+        {
+            Console.ForegroundColor = consoleColor;
+            Console.WriteLine($"'{SubjectFilePath}' {log}");
+            Console.ResetColor();
+        }
     }
 
     private async Task CreateHeaderAsync()

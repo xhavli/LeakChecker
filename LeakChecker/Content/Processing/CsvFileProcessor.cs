@@ -8,16 +8,15 @@ namespace LeakChecker.Content.Processing;
 public class CsvFileProcessor(Dictionary<int, (ItemEnum Attribute, int DelimiterSpan)> schema)
 {
     public async Task<(long recordProcessed, long bytesRead)> ProcessCsvFile(
-        StreamReader reader, FileLogger logger, char delimiter = ':')
+        StreamReader reader, IFileLogger logger, char delimiter = ':')
     {
-        long bytesRead = 0;
-        long recordsProcessed = 0;
+        long bytesRead = 0, linesRead = 0, recordsProcessed = 0;
         Encoding encoding = reader.CurrentEncoding;
 
         while (await reader.ReadLineWithEndingAsync() is { } line)
         {
             bytesRead += encoding.GetByteCount(line);
-            recordsProcessed++;
+            linesRead++;    //TODO
         
             line = line.ReplaceLineEndings("").Trim();
             if (string.IsNullOrWhiteSpace(line) || string.IsNullOrEmpty(line)) { continue; }
@@ -26,6 +25,7 @@ public class CsvFileProcessor(Dictionary<int, (ItemEnum Attribute, int Delimiter
 
             string[] row = SplitCsvLine(line, delimiter);
             await ProcessRow(delimiter, row, logger);
+            recordsProcessed++;
 
             Console.WriteLine();
             if (recordsProcessed == 150) break;
@@ -34,7 +34,7 @@ public class CsvFileProcessor(Dictionary<int, (ItemEnum Attribute, int Delimiter
         return (recordsProcessed, bytesRead);
     }
 
-    private async Task ProcessRow(char delimiter, string[] row, FileLogger logger)
+    private async Task ProcessRow(char delimiter, string[] row, IFileLogger logger)
     {
         int i = 0;
         while (i < row.Length)

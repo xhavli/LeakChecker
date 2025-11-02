@@ -1,0 +1,22 @@
+using LeakChecker.Encodings;
+using LeakChecker.Format;
+
+namespace LeakChecker.Logging.FileLogging;
+
+public interface IFileLogger : IDisposable
+{
+    string SubjectFileName { get; }
+    string SubjectFilePath { get; }
+    long SubjectFileBytes { get; }
+    DateTime ProcessingStart { get; }
+
+    Task Log(string? message, LogLevel level = LogLevel.Info, LogContext? context = null);
+    Task LogEncodingHeader();
+    Task LogConsistEncDetection();
+    Task LogConcatEncDetection();
+    Task LogEncodingStats(List<EncodingSegment> segments);
+    Task LogEncodingDetails(List<EncodingSegment> segments);
+    Task LogContentHeader();
+    Task LogSqlInsertHeader(string subject, string columnList, string fullHeader);
+    Task LogContentHeuristic(SchemaHeuristic analyzer, double threshold = 50.0);
+}

@@ -11,7 +11,7 @@ public static class SqlInsertDetector
     private const char Delimiter = ',';
 
     public static async Task<Dictionary<int, (ItemEnum Attribute, int DelimiterSpan)>> DetectFormat(
-        StreamReader reader, FileLogger logger, int detectSamples = 23)
+        StreamReader reader, IFileLogger logger, int detectSamples = 23)
     {
         bool inInsert = false;
         int parenDepth = 0;
