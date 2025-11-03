@@ -58,6 +58,7 @@ public static class SqlHeaderGuesser
                 new("date_of_birth", MatchPolicy.Substring),
                 new("created", MatchPolicy.Token),
                 new("modified", MatchPolicy.Token),
+                new("modifiedon", MatchPolicy.Token),
                 new("updated", MatchPolicy.Token),
                 new("insert", MatchPolicy.Token),
                 new("insertdate", MatchPolicy.Substring),
@@ -69,6 +70,9 @@ public static class SqlHeaderGuesser
                 new("latitude", MatchPolicy.Token),
                 new("longitude", MatchPolicy.Token),
                 new("latlng", MatchPolicy.Token),
+                new("gps", MatchPolicy.Token),
+                new("position", MatchPolicy.Token),
+                new("coordinates", MatchPolicy.Substring),
                 new("address", MatchPolicy.Token),
                 new("city", MatchPolicy.Token),
                 new("region", MatchPolicy.Token),
@@ -79,6 +83,7 @@ public static class SqlHeaderGuesser
         },
         {
             ItemEnum.PhoneNumber, [
+                new("phno", MatchPolicy.Token),
                 new("phone", MatchPolicy.Token),
                 new("phonenumber", MatchPolicy.Substring),
                 new("phone-number", MatchPolicy.Substring),
@@ -88,6 +93,9 @@ public static class SqlHeaderGuesser
                 new("telephone-num", MatchPolicy.Substring),
                 new("telephone_num", MatchPolicy.Substring),
                 new("mobile", MatchPolicy.Token),
+                new("mobilenum", MatchPolicy.Substring),
+                new("mobile-num", MatchPolicy.Substring),
+                new("mobile_num", MatchPolicy.Substring),
                 new("mobilephone", MatchPolicy.Substring),
                 new("mobile-phone", MatchPolicy.Substring),
                 new("mobile_phone", MatchPolicy.Substring),
@@ -108,57 +116,109 @@ public static class SqlHeaderGuesser
         {
             ItemEnum.Iban, [
                 new("iban", MatchPolicy.Token),
+                new("iban", MatchPolicy.Substring),
                 new("bankaccount", MatchPolicy.Substring),
                 new("bank-account", MatchPolicy.Substring),
                 new("bank_account", MatchPolicy.Substring),
             ]
         },
         {
-            ItemEnum.Gender, [new("gender", MatchPolicy.Substring),]
+            ItemEnum.Gender, [
+                new("gender", MatchPolicy.Substring),
+                new("usergender", MatchPolicy.Exact),
+                new("user-gender", MatchPolicy.Exact),
+                new("user_gender", MatchPolicy.Exact),
+                new("sex", MatchPolicy.Token),
+                new("usersex", MatchPolicy.Exact),
+                new("user-sex", MatchPolicy.Exact),
+                new("user_sex", MatchPolicy.Exact),
+            ]
         },
         {
             ItemEnum.Name, [
                 new("name", MatchPolicy.Token),
                 new("firstname", MatchPolicy.Token),
+                new("firstname", MatchPolicy.Substring),
                 new("lastname", MatchPolicy.Token),
+                new("lastname", MatchPolicy.Substring),
+                new("realname", MatchPolicy.Substring),
+                new("legalname", MatchPolicy.Substring),
                 new("surname", MatchPolicy.Token),
                 new("fullname", MatchPolicy.Token),
                 new("givenname", MatchPolicy.Token),
+                new("person", MatchPolicy.Token),
+                new("customername", MatchPolicy.Substring),
+                new("user-name", MatchPolicy.Substring),
+                new("user_name", MatchPolicy.Substring),
             ]
         },
         {
             ItemEnum.Username, [
                 new("username", MatchPolicy.Substring),
-                new("user-name", MatchPolicy.Substring),
-                new("user_name", MatchPolicy.Substring),
+                new("accountname", MatchPolicy.Substring),
                 new("user-login", MatchPolicy.Substring),
                 new("user_login", MatchPolicy.Substring),
                 new("user_nicename", MatchPolicy.Substring),
+                new("userdisplayname", MatchPolicy.Substring),
+                new("user_displayname", MatchPolicy.Substring),
+                new("user_display_name", MatchPolicy.Substring),
                 new("nick", MatchPolicy.Substring),
                 new("nickname", MatchPolicy.Substring),
                 new("nick-name", MatchPolicy.Substring),
                 new("nick_name", MatchPolicy.Substring),
-                new("alias", MatchPolicy.Substring),
+                new("nicename", MatchPolicy.Substring),
                 new("displayname", MatchPolicy.Substring),
                 new("display-name", MatchPolicy.Substring),
                 new("display_name", MatchPolicy.Substring),
+                new("alias", MatchPolicy.Substring),
+                new("loginname", MatchPolicy.Substring),
+                new("login_name", MatchPolicy.Substring),
+                new("screenname", MatchPolicy.Substring),
+                new("screen_name", MatchPolicy.Substring),
+                new("forum_user", MatchPolicy.Substring),
+                new("forumnickname", MatchPolicy.Substring),
             ]
         },
         {
             ItemEnum.Password, [
-                new("password", MatchPolicy.Substring),
-                new("passwd", MatchPolicy.Token),
-                new("pass", MatchPolicy.Token),
                 new("pwd", MatchPolicy.Token),
-                new("user_pass", MatchPolicy.Exact),
+                new("pass", MatchPolicy.Token),
+                new("passwd", MatchPolicy.Token),
+                new("password", MatchPolicy.Substring),
+                new("passcode", MatchPolicy.Substring),
+                new("passwordval", MatchPolicy.Substring),
+                new("password-val", MatchPolicy.Substring),
+                new("password_val", MatchPolicy.Substring),
+                new("passwordvalue", MatchPolicy.Substring),
+                new("password-value", MatchPolicy.Substring),
+                new("password_value", MatchPolicy.Substring),
+                new("passwordkey", MatchPolicy.Substring),
+                new("user-pwd", MatchPolicy.Substring),
+                new("user_pwd", MatchPolicy.Substring),
+                new("userpass", MatchPolicy.Substring),
+                new("user_pass", MatchPolicy.Substring),
+                new("user-passwd", MatchPolicy.Substring),
+                new("user_passwd", MatchPolicy.Substring),
                 new("userpassword", MatchPolicy.Substring),
                 new("user-password", MatchPolicy.Substring),
                 new("user_password", MatchPolicy.Substring),
+                new("usersecret", MatchPolicy.Substring),
+                new("user-secret", MatchPolicy.Substring),
+                new("user_secret", MatchPolicy.Substring),
+                new("loginsecret", MatchPolicy.Substring),
+                new("login-secret", MatchPolicy.Substring),
+                new("login_secret", MatchPolicy.Substring),
+                new("gamepin", MatchPolicy.Substring),
+                new("gamepassword", MatchPolicy.Substring),
+                new("secret", MatchPolicy.Token),
             ]
         },
         {
             ItemEnum.Hash, [
                 new("hash", MatchPolicy.Substring),
+                new("hashval", MatchPolicy.Substring),
+                new("hash-val", MatchPolicy.Substring),
+                new("hash_val", MatchPolicy.Substring),
                 new("hash", MatchPolicy.Token),
                 new("md5", MatchPolicy.Token),
                 new("sha1", MatchPolicy.Token),
@@ -171,15 +231,19 @@ public static class SqlHeaderGuesser
             ]
         },
         {
-            ItemEnum.Salt, [new("salt", MatchPolicy.Token)]
+            ItemEnum.Salt, [
+                new("salting", MatchPolicy.Substring),
+                new("salt", MatchPolicy.Token),
+                new("saltvalue", MatchPolicy.Substring),
+            ]
         },
         {
             ItemEnum.Token, [
                 new("token", MatchPolicy.Token),
+                new("key", MatchPolicy.Token),
                 new("api_key", MatchPolicy.Exact),
                 new("api_key", MatchPolicy.Substring),
-                new("auth", MatchPolicy.Substring), //TODO
-                new("secret", MatchPolicy.Token),
+                // new("secret", MatchPolicy.Token),
                 new("access_token", MatchPolicy.Exact)
             ]
         },
@@ -233,6 +297,12 @@ public static class SqlHeaderGuesser
 
     public static ItemEnum GuessItem(string header)
     {
+        if (string.IsNullOrEmpty(header))
+        {
+            Console.WriteLine("Sql header column have empty label");
+            return ItemEnum.Null;   //todo validate in higher logic
+        }
+        
         // FIRST PASS: true semantic exact matches (ignore policy)
         foreach (var (itemType, keywords) in Synonyms)
         {
@@ -294,14 +364,25 @@ public static class SqlHeaderGuesser
                             else if (index == 0)
                                 score += 1; // first token
                             else
-                                score += 1; // middle tokens still add small bonus
+                                score += 2; // middle tokens still add small bonus
                         }
                         break;
 
                     case MatchPolicy.Substring:
                         if (lowerHeader.Contains(keyword.Keyword, StringComparison.OrdinalIgnoreCase))
                         {
-                            score += 2; // existing base only, no positional bonus //TODO origin 1
+                            if (lowerHeader.EndsWith(keyword.Keyword, StringComparison.OrdinalIgnoreCase))
+                            {
+                                score += 3;
+                            } 
+                            else if (lowerHeader.StartsWith(keyword.Keyword, StringComparison.OrdinalIgnoreCase))
+                            {
+                                score += 1;
+                            }
+                            else
+                            {
+                                score += 2; // existing base only, no positional bonus //TODO origin 1
+                            }
                             matched = true;
                         }
                         break;
@@ -379,5 +460,5 @@ public static class SqlHeaderGuesser
     }
     
     private static string Normalize(string s)
-        => new string(s.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+        => s.ToLowerInvariant();
 }
