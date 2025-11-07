@@ -290,11 +290,11 @@ public class FileLogger : IFileLogger
 
     public async Task LogSchema(Dictionary<int, ItemEnum> schema)
     {
-        await Log("Final schema detected + guessed or assigned:");
+        await LogAsync("Final schema detected + guessed or assigned:");
         Console.WriteLine("Final schema:");
         foreach (var col in schema)
         {
-            await Log($"[{col.Key}] = {col.Value}");
+            await LogAsync($"[{col.Key}] = {col.Value}");
             Console.WriteLine($"[{col.Key}] = {col.Value}");
         }
     }
