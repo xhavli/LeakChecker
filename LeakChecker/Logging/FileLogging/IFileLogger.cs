@@ -18,5 +18,5 @@ public interface IFileLogger : IDisposable
     Task LogEncodingDetails(List<EncodingSegment> segments);
     Task LogContentHeader();
     Task LogSqlInsertHeader(string subject, string columnList, string fullHeader);
-    Task LogContentHeuristic(SchemaHeuristic analyzer, double threshold = 50.0);
+    Task LogContentHeuristic(SchemaHeuristic analyzer, double threshold);
 }

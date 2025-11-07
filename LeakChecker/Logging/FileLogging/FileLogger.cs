@@ -229,58 +229,66 @@ public class FileLogger : IFileLogger
     
     public async Task LogContentHeuristic(SchemaHeuristic analyzer, double threshold = 50.0)
     {
-        await LogAsync("Heuristic data stats:");
-        Console.WriteLine("Heuristic data stats:");
-        foreach (var kvp in analyzer.PositionCounts.OrderBy(x => x.Key))
-        {
-            int totalAtPosition = kvp.Value.Sum();
-            await LogAsync($"   Position {kvp.Key}: (total {totalAtPosition})");
-            Console.WriteLine($"   Position {kvp.Key}: (total {totalAtPosition})");
+        await LogAsync("Heuristic input data:");
+        Console.WriteLine("Heuristic input data:");
 
-            var records = Enumerable.Range(0, analyzer.AttributeCount)
+        foreach (var kvp in analyzer.AttributeCountsPerPosition.OrderBy(x => x.Key))
+        {
+            int total = kvp.Value.Sum();
+            await LogAsync($"   Position {kvp.Key}: (total {total})");
+            Console.WriteLine($"   Position {kvp.Key}: (total {total})");
+
+            var stats = Enumerable.Range(0, analyzer.AttributeCount)
                 .Where(i => kvp.Value[i] > 0)
-                .Select(i => new
-                {
-                    Attribute = (ItemEnum)i,
-                    Count = kvp.Value[i]
-                })
+                .Select(i => new { Attribute = (ItemEnum)i, Count = kvp.Value[i] })
                 .OrderByDescending(r => r.Count);
 
-            foreach (var rec in records)
+            foreach (var rec in stats)
             {
-                double percent = (double)rec.Count / totalAtPosition * 100.0;
-                string log = $"      {rec.Attribute} = {rec.Count} ({percent:0.##}%)";
-                await LogAsync(log);
-                Console.WriteLine($"      {rec.Attribute} = {rec.Count} ({percent:0.##}%)");
-            }
-
-        }
-
-        await LogAsync("");
-        Console.WriteLine();
-        await LogAsync($"Likely schema (SuccessRate => {threshold}%):");
-        Console.WriteLine($"Likely schema (SuccessRate => {threshold}%):");
-        
-        foreach (var kvp in analyzer.PositionCounts.OrderBy(x => x.Key))
-        {
-            int totalAtPosition = kvp.Value.Sum();
-            if (totalAtPosition == 0) continue;
-
-            int maxCount = kvp.Value.Max();
-            int maxIndex = Array.IndexOf(kvp.Value, maxCount);
-            double percent = (double)maxCount / totalAtPosition * 100.0;
-
-            if (percent >= threshold)
-            {
-                string log = $"   Position {kvp.Key} = ({(ItemEnum)maxIndex}, {percent:0.##}%)";
+                double pct = (double)rec.Count / total * 100.0;
+                string log = $"      {rec.Attribute} = {rec.Count} ({pct:0.##}%)";
                 await LogAsync(log);
                 Console.WriteLine(log);
             }
         }
 
         await LogAsync("");
-    }
+        Console.WriteLine();
 
+        await LogAsync($"Dominant schema (SuccessRate >= {threshold}%):");
+        Console.WriteLine($"Dominant schema (SuccessRate >= {threshold}%):");
+
+        // Expanded schema contains Previous entries
+        var fullSchema = analyzer.GetDominantSchema(threshold);
+
+        // Cached % for the leading positions (no recompute)
+        var dominant = analyzer.GetDominantStats(threshold);
+
+        foreach (var kvp in fullSchema.OrderBy(x => x.Key))
+        {
+            int pos = kvp.Key;
+            var attr = kvp.Value;
+
+            if (attr == ItemEnum.Previous)
+            {
+                string log = $"   Position {pos} = ({attr})";
+                await LogAsync(log);
+                Console.WriteLine(log);
+                continue;
+            }
+
+            // Use cached percentage if available
+            double pct = dominant.TryGetValue(pos, out var tuple) ? tuple.percent : 0.0;
+
+            string line = $"   Position {pos} = {attr} - {pct:0.##}%";
+            await LogAsync(line);
+            Console.WriteLine(line);
+        }
+
+        await LogAsync("");
+
+    }
+    
     public void Dispose()
     {
         _writer.Flush();
