@@ -1,33 +1,65 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
 using System.Text;
+using LeakChecker.Content.Detection;
 using LeakChecker.Content.Detection.RecognitionService;
 using LeakChecker.Content.Processing;
+using LeakChecker.Data;
+using LeakChecker.Encodings;
+using LeakChecker.Encodings.Detection;
 using LeakChecker.Format;
 using LeakChecker.Logging;
 using LeakChecker.Logging.ExecutionLogging;
 using LeakChecker.Logging.FileLogging;
 using LeakChecker.Utilities;
-using LeakChecker.Tests;
+using LeakChecker.Utilities.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LeakChecker;
 
 public static class Program
 {
-    public static async Task Main()
+    private static ExecutionLogger? ExecLogger { get; set; }
+
+    public static async Task<int> Main()
     {
+        const string configJson = "appsettings.json";
+        AppConfig config;
+        try
+        {
+            config = AppConfigParser.LoadFromFile(configJson);
+        }
+        catch (Exception e)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            await Console.Error.WriteLineAsync($"[EXCEPTION] [CONFIG] {e.Message}");
+            await Console.Error.WriteLineAsync(e.ToString());
+            Console.ResetColor();
+            Console.WriteLine("Program will exit with exit code 1.");
+            return 1;
+        }
+        
+        object consoleLock = new object();
         Stopwatch sw = Stopwatch.StartNew();
         
-        AppConfig config = AppConfig.ParseAppConfig();
-        ExecutionLogger execLogger = new ExecutionLogger(config);
+        var services = new ServiceCollection();
+        services.AddSingleton(config);
         
-        PythonNerService pythonNerService = new PythonNerService(execLogger);
+        services.AddSingleton<IFileLoggerFactory, FileLoggerFactory>();
+        services.AddSingleton<ExecutionLogger>();
+        
+        var provider = services.BuildServiceProvider();
+        ExecLogger = provider.GetRequiredService<ExecutionLogger>();
+        var loggerFactory = provider.GetRequiredService<IFileLoggerFactory>();
+        
+        PythonNerService pythonNerService = new PythonNerService(ExecLogger);
         // await pythonNerService.Start();
-        await pythonNerService.WaitForStart();
+        // await pythonNerService.WaitForStart();   //TODO
         
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         Encoding utf8 = new UTF8Encoding(false); // false = no BOM
-        Console.OutputEncoding = utf8;  // Enforce UTF8 encoding which can handle cyrilic characters 
+        Console.InputEncoding = utf8;   // Enforce UTF8 encoding which can handle cyrilic characters 
+        Console.OutputEncoding = utf8; 
         
         int success = 0;
 
@@ -35,13 +67,17 @@ public static class Program
         var filePaths = data.Keys.ToList();
         var tasks = filePaths.Select(async filePath =>
         {
-            if (!File.Exists(filePath))
+            try
             {
-                await execLogger.Log($"File not found: {filePath}", LogLevel.Warning);
+                ValidateFileReadability(filePath);
+            }
+            catch (Exception e)
+            {
+                await ExecLogger.Log(e.Message, LogLevel.Exception);
                 return;
             }
             
-            FileLogger fileLogger = await FileLogger.CreateAsync(filePath, config);
+            var fileLogger = await loggerFactory.CreateAsync(filePath);
             FileStats fileStats = new()
             {
                 FilePath = filePath,
@@ -58,25 +94,41 @@ public static class Program
                 //  fileStats.EncodingSegments = encodingSegments;
                 //  await EncodingConverter.ConvertFileToUtf8(fileLogger, encodingSegments);
                 
-                // TODO test this and use this
-                //  var result = DelimiterHeuristic.Analyze(filePath, maxLines: 10_000);
-                //  Console.WriteLine($"Best delimiter: {(result.BestDelimiter is '\t' ? "\\t" : result.BestDelimiter?.ToString() ?? "none")}");
+                char delimiter = data[filePath];    //TODO
+                //TODO use this
+                // var result = DelimiterHeuristic.Analyze(filePath, maxLines: 100_000);
+                // if (result.BestDelimiter != null)
+                // {
+                //     delimiter = (char)result.BestDelimiter;
+                // }
+                // else
+                // {
+                //     await fileLogger.Log("Delimiter detection failed. Setting default delimiter ':'",
+                //          LogLevel.Warning, LogContext.Format);
+                //     // delimiter = ':'; TODO use after remove FileDelimiters.cs
+                //     delimiter = data[filePath];
+                // }
+                
+                //TODO delete this only for testing purposes
+                // lock (consoleLock)
+                // {
+                //  if (delimiter == data[filePath])
+                //  {
+                //      success++;
+                //      Console.ForegroundColor = ConsoleColor.Green;
+                //      Console.WriteLine($"\n{fileStats.FileName} delimiter match '{data[filePath]}'");
+                //      Console.ResetColor();
+                //  }
+                //  else
+                //  {
+                //      Console.ForegroundColor = ConsoleColor.Red;
+                //      Console.WriteLine($"\n{fileStats.FileName} delimiter '{delimiter}' not match '{data[filePath]}'");
+                //      Console.ResetColor();
+                //  }
                 //  Console.WriteLine($"Sampled {result.SampledLines} lines (~{result.SampledBytes} chars)");
                 //  foreach (var c in result.Candidates.Take(10))
                 //      Console.WriteLine(c);
-                //
-                //  return;
-                
-                char delimiter = await FormatDetector.DetectDelimiterFromFile(fileLogger);
-                if (delimiter == data[filePath])
-                {
-                    success++;
-                }
-                else
-                {
-                    await fileLogger.Log("Detected delimiter not match. Setting predefined", LogLevel.Warning, LogContext.Format);
-                    delimiter = data[filePath];
-                }
+                // }
 
                 ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(delimiter, fileLogger, fileStats);
                 await contentProcessor.ProcessFile();
@@ -89,7 +141,7 @@ public static class Program
             }
             catch (Exception e)
             {
-                await execLogger.Log($"{filePath}: {e}", LogLevel.Exception, LogContext.Main);
+                await ExecLogger.Log($"{filePath}: {e}", LogLevel.Exception, LogContext.Main);
             }
             finally
             {
@@ -108,10 +160,37 @@ public static class Program
         
         // pythonNerService.Stop();
         
-        await execLogger.Log($"Delimiter success rate is {success}/{data.Keys.Count}");
-        await execLogger.Log($"Execution finished successfully. {data.Keys.Count} files processed. Time taken {sw.Elapsed}, current DateTime is " +
+        await ExecLogger.Log($"Delimiter success rate is {success}/{data.Keys.Count}");
+        await ExecLogger.Log($"Execution finished successfully. {data.Keys.Count} files processed. Time taken {sw.Elapsed}, current DateTime is " +
                          $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Main);
-        await execLogger.Log("Program will exit with code 0");
-        Environment.Exit(0);
+        await ExecLogger.Log("Program will exit with exit code 0");
+        return 0;
+    }
+
+    private static void ValidateFileReadability(string filePath)
+    {
+        try
+        {
+            using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
+            //TODO is it necessary?
+            // using var reader = new StreamReader(stream);
+            // for (int i = 0; i < 10; i++)
+            // {
+            //     _ = reader.ReadLine();
+            // }
+        }
+        catch (FileNotFoundException)
+        {
+            throw new FileNotFoundException($"File in path: '{filePath}' does not exists.", filePath);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            throw new UnauthorizedAccessException(
+                $"{AppDomain.CurrentDomain.FriendlyName} does not have permission to read the file in path: '{filePath}'.");
+        }
+        catch (IOException)
+        {
+            throw new IOException($"File in path: '{filePath}' is locked or in use.");
+        }
     }
 }
