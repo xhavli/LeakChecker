@@ -86,4 +86,32 @@ public static class StreamReaderExtensions
 
         return null;
     }
+    
+    /// <summary>
+    /// Adjusts the reader's position to a specified offset.
+    /// Throws exceptions if the offset is out of range.
+    /// </summary>
+    /// <param name="reader">The StreamReader instance.</param>
+    /// <param name="offset">The position to move to in the underlying stream.</param>
+    /// <exception cref="ArgumentNullException">Thrown when reader is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when offset is negative or greater than the stream length.
+    /// </exception>
+    public static void AdjustPosition(this StreamReader? reader, long offset)
+    {
+        if (reader is null)
+            throw new ArgumentNullException(nameof(reader));
+
+        if (offset < 0)
+            throw new ArgumentOutOfRangeException(nameof(offset), "Offset cannot be negative.");
+
+        if (!reader.BaseStream.CanSeek)
+            throw new NotSupportedException("The underlying stream does not support seeking.");
+
+        if (offset > reader.BaseStream.Length)
+            throw new ArgumentOutOfRangeException(nameof(offset), "Offset exceeds the length of the stream.");
+
+        reader.BaseStream.Seek(offset, SeekOrigin.Begin);
+        reader.DiscardBufferedData();
+    }
 }
