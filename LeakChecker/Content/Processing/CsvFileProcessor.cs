@@ -5,18 +5,20 @@ using LeakChecker.Utilities.Extensions;
 
 namespace LeakChecker.Content.Processing;
 
-public class CsvFileProcessor(Dictionary<int, (ItemEnum Attribute, int DelimiterSpan)> schema)
+public class CsvFileProcessor(Dictionary<int, ItemEnum> schema, IFileLogger logger)
 {
-    public async Task<(long recordProcessed, long bytesRead)> ProcessCsvFile(
-        StreamReader reader, IFileLogger logger, char delimiter = ':')
+    public async Task<(long recordProcessed, long bytesRead, long linesRead)> ProcessCsvFile(
+        StreamReader reader, char delimiter = ':')
     {
+        int expectedFields = schema.Count == 0 ? 0 : schema.Keys.Max() + 1;
         long bytesRead = 0, linesRead = 0, recordsProcessed = 0;
         Encoding encoding = reader.CurrentEncoding;
 
         while (await reader.ReadLineWithEndingAsync() is { } line)
         {
-            bytesRead += encoding.GetByteCount(line);
-            linesRead++;    //TODO
+            // bytesRead += encoding.GetByteCount(line);
+            int lineBytes = encoding.GetByteCount(line);
+            linesRead++;
         
             line = line.ReplaceLineEndings("").Trim();
             if (string.IsNullOrWhiteSpace(line) || string.IsNullOrEmpty(line)) { continue; }
@@ -24,29 +26,38 @@ public class CsvFileProcessor(Dictionary<int, (ItemEnum Attribute, int Delimiter
             Console.WriteLine($"CSV file line {recordsProcessed} processing: {line}");
 
             string[] row = SplitCsvLine(line, delimiter);
-            await ProcessRow(delimiter, row, logger);
+            
+            int actualFields = row.Length;
+            if (actualFields != expectedFields)
+            {
+                await logger.Log($"Bad row length: actual {actualFields}, expected {expectedFields}, line {line}", LogLevel.Warning);
+                // return (recordsProcessed, bytesRead, linesRead); //need to be tested
+                continue;
+            }
+
+            await ProcessRow(delimiter, row);
+            bytesRead += lineBytes;
             recordsProcessed++;
 
             Console.WriteLine();
-            if (recordsProcessed == 150) break;
+            if (recordsProcessed == 150) break; //TODO remove
         }
 
-        return (recordsProcessed, bytesRead);
+        return (recordsProcessed, bytesRead, linesRead);
     }
 
-    private async Task ProcessRow(char delimiter, string[] row, IFileLogger logger)
+    private async Task ProcessRow(char delimiter, string[] row)
     {
         int i = 0;
+        
         while (i < row.Length)
         {
             string value = row[i].Trim();
 
-            // If current field has schema
             if (schema.TryGetValue(i, out var schemaEntry))
             {
-                // Merge undefined fields that follow
                 int nextIndex = i + 1;
-                while (nextIndex < row.Length && !schema.ContainsKey(nextIndex))
+                while (nextIndex < row.Length && schema.TryGetValue(nextIndex, out var cont) && cont == ItemEnum.Previous)
                 {
                     string nextVal = row[nextIndex].Trim();
                     if (!string.IsNullOrEmpty(nextVal))
@@ -55,7 +66,7 @@ public class CsvFileProcessor(Dictionary<int, (ItemEnum Attribute, int Delimiter
                 }
 
                 // TODO: forward to content storage
-                Console.WriteLine($"[{i}] {schemaEntry.Attribute} = {value}");
+                Console.WriteLine($"[{i}] {schemaEntry} = {value}");
                 i = nextIndex;
             }
             else
@@ -63,6 +74,7 @@ public class CsvFileProcessor(Dictionary<int, (ItemEnum Attribute, int Delimiter
                 // No schema for this field -> log warning
                 string warnVal = row[i].Trim();
                 await logger.Log($"Unmapped CSV field[{i}] = {warnVal}", LogLevel.Warning, LogContext.Processing);
+                //todo exception to higher logic to search for new pattern
                 i++;
             }
         }
