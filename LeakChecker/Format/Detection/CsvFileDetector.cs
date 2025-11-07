@@ -7,8 +7,8 @@ namespace LeakChecker.Format.Detection;
 
 public static class CsvFileDetector
 {
-    public static async Task<Dictionary<int, (ItemEnum Attribute, int DelimiterSpan)>> DetectFormat(
-        char delimiter, StreamReader reader, IFileLogger logger, int detectSamples = 47)
+    public static async Task<Dictionary<int, ItemEnum >> DetectFormat(
+        char delimiter, StreamReader reader, IFileLogger logger, int detectSamples = 107, int threshold = 50)
     {
         int samplesCount = 0;
         SchemaHeuristic analyzer = new();
@@ -25,7 +25,7 @@ public static class CsvFileDetector
             analyzer.AddLinePatterns(await ContentDetector.DetectLine(line, delimiter, logger));
         }
         
-        await logger.LogContentHeuristic(analyzer);
-        return analyzer.GetSchemaWithSpans();
+        await logger.LogContentHeuristic(analyzer, threshold);
+        return analyzer.GetDominantSchema(threshold);
     }
 }

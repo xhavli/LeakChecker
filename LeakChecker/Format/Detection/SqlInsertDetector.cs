@@ -10,8 +10,8 @@ public static class SqlInsertDetector
 {
     private const char Delimiter = ',';
 
-    public static async Task<Dictionary<int, (ItemEnum Attribute, int DelimiterSpan)>> DetectFormat(
-        StreamReader reader, IFileLogger logger, int detectSamples = 23)
+    public static async Task<Dictionary<int, ItemEnum>> DetectFormat(
+        StreamReader reader, IFileLogger logger, int detectSamples = 53, int threshold = 50)
     {
         bool inInsert = false;
         int parenDepth = 0;
@@ -156,8 +156,8 @@ public static class SqlInsertDetector
             }
         }
 
-        await logger.LogContentHeuristic(analyzer);
-        return analyzer.GetSchemaWithSpans();
+        await logger.LogContentHeuristic(analyzer, threshold);
+        return analyzer.GetDominantSchema(threshold);
     }
 
     public static string[] ParseTuple(string tuple)

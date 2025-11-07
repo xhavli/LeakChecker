@@ -4,48 +4,48 @@ namespace LeakChecker.Format;
 
 public class SchemaHeuristic
 {
-    // Instead of storing every line, keep direct tallies:
-    // Position -> counts array (indexed by ItemEnum)
-    public readonly Dictionary<int, int[]> PositionCounts = new();
+    public readonly Dictionary<int, int[]> AttributeCountsPerPosition = new();
     public readonly int AttributeCount = Enum.GetValues(typeof(ItemEnum)).Length;
-    private readonly Dictionary<int, List<int>> _delimiterSpans = new(); 
-    
+    private readonly Dictionary<int, List<int>> _delimiterCountsPerPosition = new();
 
-    /// <summary>
-    /// Add recognized patterns from a single line (streaming aggregation).
-    /// </summary>
+    private Dictionary<int, (ItemEnum attr, double percent)>? _cachedDominant;
+
     public void AddLinePatterns(List<SchemaHeuristicRecord> linePatterns)
     {
-        foreach (var pat in linePatterns)
+        foreach (var pattern in linePatterns)
         {
-            if (!PositionCounts.TryGetValue(pat.Position, out var counts))
+            if (!AttributeCountsPerPosition.TryGetValue(pattern.Position, out var counts))
             {
                 counts = new int[AttributeCount];
-                PositionCounts[pat.Position] = counts;
+                AttributeCountsPerPosition[pattern.Position] = counts;
             }
-            counts[(int)pat.Attribute]++;
+            counts[(int)pattern.Attribute]++;
 
-            if (!_delimiterSpans.ContainsKey(pat.Position))
-                _delimiterSpans[pat.Position] = new List<int>();
-
-            _delimiterSpans[pat.Position].Add(pat.DelimitersInside);
+            if (!_delimiterCountsPerPosition.TryGetValue(pattern.Position, out var spans))
+            {
+                spans = new List<int>();
+                _delimiterCountsPerPosition[pattern.Position] = spans;
+            }
+            spans.Add(pattern.DelimitersInside);
         }
+
+        // Invalidate cache when new data is added
+        _cachedDominant = null;
     }
 
-    private Dictionary<int, (ItemEnum Attribute, double SuccessRate)> ComputeDominantWithSuccessRate(double threshold = 50.0)
+    private Dictionary<int, (ItemEnum attr, double percent)> CalculateDominant(double threshold)
     {
         var result = new Dictionary<int, (ItemEnum, double)>();
 
-        foreach (var kvp in PositionCounts)
+        foreach (var kvp in AttributeCountsPerPosition)
         {
-            int totalAtPosition = kvp.Value.Sum();
-            if (totalAtPosition == 0) continue;
+            var array = kvp.Value;
+            int total = array.Sum();
+            if (total == 0) continue;
 
-            int maxCount = kvp.Value.Max();
-            int maxIndex = Array.IndexOf(kvp.Value, maxCount);
-
-            double percent = (double)maxCount / totalAtPosition * 100.0;
-            percent = Math.Round(percent, 2);
+            int maxCount = array.Max();
+            int maxIndex = Array.IndexOf(array, maxCount);
+            double percent = Math.Round((double)maxCount / total * 100.0, 2);
 
             if (percent >= threshold)
                 result[kvp.Key] = ((ItemEnum)maxIndex, percent);
@@ -54,98 +54,46 @@ public class SchemaHeuristic
         return result;
     }
 
-    /// <summary>
-    /// Returns a schema of positions → attributes, only including
-    /// those where dominance >= threshold.
-    /// </summary>
-    public Dictionary<int, ItemEnum> GetDominantSchema(double threshold = 50.0)
+    public Dictionary<int, (ItemEnum attr, double percent)> GetDominantStats(double threshold)
     {
-        var dominantWithRate = ComputeDominantWithSuccessRate(threshold);
-        return dominantWithRate.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Attribute);
+        return _cachedDominant ??= CalculateDominant(threshold);
     }
-    
-    public Dictionary<int, (ItemEnum Attribute, int DelimiterSpan)> GetSchemaWithSpans(double threshold = 50.0)
+
+    public Dictionary<int, ItemEnum> GetDominantSchema(double threshold)
     {
-        var schema = new Dictionary<int, (ItemEnum, int)>();
+        var dominant = GetDominantStats(threshold);
 
-        foreach (var kvp in PositionCounts)
+        var ordered = dominant.Keys.OrderBy(i => i).ToArray();
+        var result = new Dictionary<int, ItemEnum>();
+
+        for (int idx = 0; idx < ordered.Length; idx++)
         {
-            int totalAtPosition = kvp.Value.Sum();
-            if (totalAtPosition == 0) continue;
+            int start = ordered[idx];
+            var attr = dominant[start].attr;
 
-            int maxCount = kvp.Value.Max();
-            int maxIndex = Array.IndexOf(kvp.Value, maxCount);
-            double percent = (double)maxCount / totalAtPosition * 100.0;
+            if (result.ContainsKey(start)) continue;
 
-            if (percent >= threshold)
+            int avgDelims = 0;
+            if (_delimiterCountsPerPosition.TryGetValue(start, out var spans) && spans.Count > 0)
+                avgDelims = Math.Max(0, (int)Math.Round(spans.Average()));
+
+            int expectedLength = Math.Max(1, avgDelims + 1);
+
+            bool hasNextBoundary = idx + 1 < ordered.Length;
+            int maxSpanBeforeNextKnown = hasNextBoundary
+                ? Math.Min(expectedLength, Math.Max(1, ordered[idx + 1] - start))
+                : expectedLength;
+
+            result[start] = attr;
+
+            for (int offset = 1; offset < maxSpanBeforeNextKnown ; offset++)
             {
-                // compute average or max span observed for this position
-                int span = _delimiterSpans.TryGetValue(kvp.Key, out var delimiterSpan) 
-                    ? (int)Math.Round(delimiterSpan.Average())
-                    : 0;
-
-                schema[kvp.Key] = ((ItemEnum)maxIndex, span);
-            }
-            else
-            {
-                schema[kvp.Key] = ((ItemEnum.Other), 0);
+                int pos = start + offset;
+                if (dominant.ContainsKey(pos)) break;
+                result[pos] = ItemEnum.Previous;
             }
         }
 
-        return schema;
-    }
-
-    public void PrintHeuristicData()
-    {
-        Console.WriteLine("Heuristic data stats:");
-
-        foreach (var kvp in PositionCounts.OrderBy(x => x.Key))
-        {
-            int totalAtPosition = kvp.Value.Sum();
-            Console.WriteLine($"Position {kvp.Key}: (total {totalAtPosition})");
-
-            // Order attributes by occurrence (count) descending
-            var records = Enumerable.Range(0, AttributeCount)
-                .Where(i => kvp.Value[i] > 0)
-                .Select(i => new
-                {
-                    Attribute = (ItemEnum)i,
-                    Count = kvp.Value[i]
-                })
-                .OrderByDescending(r => r.Count);
-
-            foreach (var rec in records)
-            {
-                double percent = (double)rec.Count / totalAtPosition * 100.0;
-                Console.WriteLine($"   {rec.Attribute} = {rec.Count} ({percent:0.##}%)");
-            }
-        }
-
-        Console.WriteLine();
-    }
-
-    public void PrintDominantSchema(double threshold = 50.0)
-    {
-        Console.WriteLine($"Likely schema (SuccessRate => {threshold}%):");
-
-        foreach (var kvp in PositionCounts.OrderBy(x => x.Key))
-        {
-            int totalAtPosition = kvp.Value.Sum();
-            if (totalAtPosition == 0) continue;
-
-            // Find dominant attribute at this position
-            int maxCount = kvp.Value.Max();
-            int maxIndex = Array.IndexOf(kvp.Value, maxCount);
-            double percent = (double)maxCount / totalAtPosition * 100.0;
-
-            if (percent >= threshold)
-            {
-                Console.WriteLine(
-                    $"   Position {kvp.Key} = ({(ItemEnum)maxIndex}, {percent:0.##}%)"
-                );
-            }
-        }
-
-        Console.WriteLine();
+        return result;
     }
 }

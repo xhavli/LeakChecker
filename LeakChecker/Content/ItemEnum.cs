@@ -25,4 +25,6 @@ public enum ItemEnum
     Other,
     Empty,
     Null,
+    
+    Previous,
 }
