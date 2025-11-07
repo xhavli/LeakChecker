@@ -1,5 +1,4 @@
 using System.Net.Mail;
-using System.Net.NetworkInformation;
 using LeakChecker.Content.Detection.ItemParsing;
 using LeakChecker.Content.Detection.ItemRecognition;
 using LeakChecker.Content.Detection.RecognitionService;
@@ -266,37 +265,6 @@ public static class ContentDetector
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");
         Console.ResetColor();
-        return ItemEnum.Other;
-    }
-    
-    private static async Task<ItemEnum> ParseToken(string token, FileLogger logger)
-    {
-        if (IpAddressParser.TryParse(token, out ItemEnum itemType, out _)) { return itemType; }
-        if (GenderParser.TryParse(token, out _)) { return ItemEnum.Gender; }
-        if (MaritalStatusParser.TryParse(token, out _)) { return ItemEnum.MaritalStatus;}
-        if (PhoneNumberParser.TryParse(token, out _)) { return ItemEnum.PhoneNumber; }
-        if (MacAddressParser.TryParse(token, out _)) { return ItemEnum.Mac; }
-
-        //TODO bypas for faster detection in development because www.hashes.com responds take a while
-        if (TimeStampParser.TryParse(token, out _)) { return ItemEnum.TimeStamp; }
-        return ItemEnum.Other;
-        
-        try
-        {
-            var (isHash, withSalt, algorithm) = await HashParser.TryParse(token);
-            
-            if (isHash && !withSalt) { return ItemEnum.Hash; }
-
-            if (isHash && withSalt) { return ItemEnum.SaltedHash; }
-        }
-        catch (Exception e)
-        {
-            
-            await logger.Log($"Communication with www.hashes.com failed. {e.Message}", LogLevel.Exception, LogContext.Content);
-        }
-        
-        if (TimeStampParser.TryParse(token, out _)) { return ItemEnum.TimeStamp; }
-
         return ItemEnum.Other;
     }
 
