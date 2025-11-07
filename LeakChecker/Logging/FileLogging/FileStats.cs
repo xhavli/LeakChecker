@@ -9,8 +9,9 @@ public class FileStats
     public Guid Id { get; } = Guid.NewGuid();
     public string? FileName { get; init; }
     public string? FilePath { get; init; }
-    public long RecordsCount { get; set; }
     public long FileBytes { get; init; }
+    public long LinesRead { get; set; }
+    public long RecordsCount { get; set; }
     public Encoding? Encoding { get; set; }
     public List<EncodingSegment> EncodingSegments { get; set; } = new();
     public List<char> Delimiters { get; set; } = new();
@@ -22,8 +23,9 @@ public class FileStats
     public void PrintFileStats()
     {
         Console.WriteLine($"File {FileName} stats:");
-        // Console.WriteLine($"Origin encoding [{Encoding?.WebName}]");
-        // Console.WriteLine($"Origin encoding segments [{EncodingSegments.Count}]");
+        var origin = string.IsNullOrEmpty(Encoding?.WebName) ? "NULL" : Encoding.WebName;
+        Console.WriteLine($"Origin encoding [{origin}]");
+        Console.WriteLine($"Origin encoding segments [{EncodingSegments.Count}]");
         foreach (var format in Formats)
         {
             Console.WriteLine($"File format: {format.ToString()}");
