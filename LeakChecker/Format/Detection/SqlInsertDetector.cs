@@ -14,8 +14,8 @@ public static class SqlInsertDetector
         StreamReader reader, IFileLogger logger, int detectSamples = 53, int threshold = 50)
     {
         bool inInsert = false;
-        int parenDepth = 0;
-        int expectedColumns = 0;
+        int parenDepth = 0, expectedColumns = 0;
+        List<string> sqlHeaders = null;
         StringBuilder stringBuilder = new();
 
         int samplesCount = 0;
@@ -52,8 +52,12 @@ public static class SqlInsertDetector
                         // Extract column list
                         string columnList = trimmed.Substring(openParen + 1, closeParen - openParen - 1);
                         expectedColumns = columnList.Split(Delimiter).Select(c => c.Trim()).Count();
+                        sqlHeaders = columnList
+                            .Split(Delimiter)
+                            .Select(c => c.Trim().Trim('`'))
+                            .ToList();
 
-                        await logger.LogSqlInsertHeader(subject, columnList, trimmed);
+                        await logger.LogSqlInsertHeader(subject, sqlHeaders, trimmed);
                     }
 
 
@@ -156,8 +160,39 @@ public static class SqlInsertDetector
             }
         }
 
-        await logger.LogContentHeuristic(analyzer, threshold);
-        return analyzer.GetDominantSchema(threshold);
+        await logger.LogHeuristicData(analyzer, threshold);
+        var schema = analyzer.GetDominantSchema(threshold);
+        if (sqlHeaders is not null)
+        {
+            var guessed = SqlHeaderGuesser.GuessColumns(sqlHeaders);
+
+            foreach (var kv in guessed)
+            {
+                int idx = kv.Key;
+                ItemEnum guess = kv.Value;
+
+                if (!schema.TryGetValue(idx, out var existing) || 
+                    existing == ItemEnum.Other || existing == ItemEnum.Null)
+                {
+                    schema[idx] = guess;
+                }
+            }
+        }
+
+        Console.WriteLine("Sql Header is"); //TODO remove this
+        foreach (var header in sqlHeaders)
+        {
+            Console.Write(header + ", ");
+        }
+        Console.WriteLine();
+        
+        foreach (var col in schema)
+        {
+            Console.WriteLine($"[{col.Key}] = {col.Value}");
+        }
+
+        await logger.LogSchema(schema);
+        return schema;
     }
 
     public static string[] ParseTuple(string tuple)

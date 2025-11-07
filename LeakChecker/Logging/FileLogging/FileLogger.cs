@@ -214,20 +214,19 @@ public class FileLogger : IFileLogger
         }
     }
 
-    public async Task LogSqlInsertHeader(string subject, string columnList, string fullHeader)
+    public async Task LogSqlInsertHeader(string subject, IList<string> headers, string fullHeader)
     {
         await Log(fullHeader);
         await Log($"SQL Insert subject: {subject}");
-        var columnNames = columnList.Split(',');
-        for (int i = 0; i < columnNames.Length; i++)
-        {
-            await LogAsync($"[{i}] {columnNames[i].Trim().Trim('`')}");
-        }
+
+        for (int i = 0; i < headers.Count; i++)
+            await LogAsync($"[{i}] {headers[i]}");
 
         await LogAsync("");
     }
+
     
-    public async Task LogContentHeuristic(SchemaHeuristic analyzer, double threshold = 50.0)
+    public async Task LogHeuristicData(SchemaHeuristic analyzer, double threshold)
     {
         await LogAsync("Heuristic input data:");
         Console.WriteLine("Heuristic input data:");
@@ -287,6 +286,17 @@ public class FileLogger : IFileLogger
 
         await LogAsync("");
 
+    }
+
+    public async Task LogSchema(Dictionary<int, ItemEnum> schema)
+    {
+        await Log("Final schema detected + guessed or assigned:");
+        Console.WriteLine("Final schema:");
+        foreach (var col in schema)
+        {
+            await Log($"[{col.Key}] = {col.Value}");
+            Console.WriteLine($"[{col.Key}] = {col.Value}");
+        }
     }
     
     public void Dispose()

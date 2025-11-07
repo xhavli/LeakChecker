@@ -1,3 +1,4 @@
+using LeakChecker.Content;
 using LeakChecker.Encodings;
 using LeakChecker.Format;
 
@@ -17,6 +18,7 @@ public interface IFileLogger : IDisposable
     Task LogEncodingStats(List<EncodingSegment> segments);
     Task LogEncodingDetails(List<EncodingSegment> segments);
     Task LogContentHeader();
-    Task LogSqlInsertHeader(string subject, string columnList, string fullHeader);
-    Task LogContentHeuristic(SchemaHeuristic analyzer, double threshold);
+    Task LogSqlInsertHeader(string subject, IList<string> headers, string fullHeader);
+    Task LogHeuristicData(SchemaHeuristic analyzer, double threshold);
+    Task LogSchema(Dictionary<int, ItemEnum> schema);
 }

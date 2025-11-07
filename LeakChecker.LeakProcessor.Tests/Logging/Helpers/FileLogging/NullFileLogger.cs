@@ -1,3 +1,4 @@
+using LeakChecker.Content;
 using LeakChecker.Encodings;
 using LeakChecker.Format;
 using LeakChecker.Logging;
@@ -19,8 +20,9 @@ public sealed class NullFileLogger(string path) : IFileLogger
     public Task LogEncodingStats(List<EncodingSegment> segments) => Task.CompletedTask;
     public Task LogEncodingDetails(List<EncodingSegment> segments) => Task.CompletedTask;
     public Task LogContentHeader() => Task.CompletedTask;
-    public Task LogSqlInsertHeader(string subject, string columnList, string fullHeader) => Task.CompletedTask;
-    public Task LogContentHeuristic(SchemaHeuristic analyzer, double threshold = 50) => Task.CompletedTask;
+    public Task LogSqlInsertHeader(string subject, IList<string> headers, string fullHeader) => Task.CompletedTask;
+    public Task LogHeuristicData(SchemaHeuristic analyzer, double threshold = 50) => Task.CompletedTask;
+    public Task LogSchema(Dictionary<int, ItemEnum> schema) => Task.CompletedTask; 
 
     public void Dispose() { }
 }
