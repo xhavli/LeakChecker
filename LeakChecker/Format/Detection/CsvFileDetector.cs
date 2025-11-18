@@ -25,7 +25,7 @@ public static class CsvFileDetector
             analyzer.AddLinePatterns(await ContentDetector.DetectLine(line, delimiter, logger));
         }
         
-        await logger.LogContentHeuristic(analyzer, threshold);
+        await logger.LogHeuristicData(analyzer, threshold);
         return analyzer.GetDominantSchema(threshold);
     }
 }
