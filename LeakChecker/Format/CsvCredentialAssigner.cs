@@ -4,10 +4,9 @@ namespace LeakChecker.Format;
 
 public static class CsvCredentialAssigner
 {
-    public static Dictionary<int, ItemEnum>? Assign(Dictionary<int, ItemEnum>? schema)
+    public static Dictionary<int, ItemEnum> Assign(Dictionary<int, ItemEnum> schema)
     {
-        if (schema is null || schema.Count == 0)
-            return schema;
+        if (schema.Count == 0) return schema;
 
         // If both already exist, nothing to do
         if (schema.ContainsValue(ItemEnum.Username) &&
