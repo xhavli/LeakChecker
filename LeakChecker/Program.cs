@@ -51,6 +51,7 @@ public static class Program
         var provider = services.BuildServiceProvider();
         ExecLogger = provider.GetRequiredService<ExecutionLogger>();
         var loggerFactory = provider.GetRequiredService<IFileLoggerFactory>();
+        var exeStats = new ExecutionStats();
         
         PythonNerService pythonNerService = new PythonNerService(ExecLogger);
         // await pythonNerService.Start();
@@ -83,7 +84,7 @@ public static class Program
                 FilePath = filePath,
                 FileName = fileLogger.SubjectFileName,
                 FileBytes = fileLogger.SubjectFileBytes,
-                ProcessingStart = fileLogger.ProcessingStart,
+                ParsingStart = fileLogger.ProcessingStart,
             };
 
             try
@@ -133,10 +134,12 @@ public static class Program
                 ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(delimiter, fileLogger, fileStats);
                 await contentProcessor.ProcessFile();
 
-                Console.WriteLine();
-                fileStats.ProcessingEnd = DateTime.Now;
-                fileStats.PrintFileStats();
-                Console.WriteLine();
+                fileStats.ParsingEnd = DateTime.Now;
+                await fileLogger.LogFileStats(fileStats);
+                
+                exeStats.FilesParsed.Add(fileStats.ParsingId);
+                exeStats.BytesParsed += fileStats.BytesRead;
+                exeStats.LinesParsed += fileStats.RecordsCount;
 
             }
             catch (Exception e)
@@ -160,7 +163,11 @@ public static class Program
         
         // pythonNerService.Stop();
         
-        await ExecLogger.Log($"Delimiter success rate is {success}/{data.Keys.Count}");
+        Console.WriteLine();
+        exeStats.ParsingEnd = DateTime.Now;
+        exeStats.PrintExecutionStats();
+        Console.WriteLine();
+        
         await ExecLogger.Log($"Execution finished successfully. {data.Keys.Count} files processed. Time taken {sw.Elapsed}, current DateTime is " +
                          $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Main);
         await ExecLogger.Log("Program will exit with exit code 0");
