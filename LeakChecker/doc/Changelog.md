@@ -55,7 +55,7 @@ Author: Adam Havlík
   read and detect predefined number (23) of Sql Insert records, and return back heuristic schema.
 - `9.10.2025` - CsvFileDetector  
   read and detect predefined number (47) of lines, and return back heuristic schema.
-- `XX.XX.2025` - Sql Insert header guesser
+- `3.11.2025` - SqlHeaderGuesser guessing predefined and hardcoded values and try to match it on ItemEnum
 
 ## Content
 
@@ -75,7 +75,7 @@ Author: Adam Havlík
   - C# - [DateTime.TryParse()](https://learn.microsoft.com/en-us/dotnet/api/system.datetime.tryparse?view=net-10.0) good for now.   
     [NOTE] It cant parse 4/15/2018 12:00:00 AM from Facebook leak.
   - C# - [IPAddress.TryParse()](https://learn.microsoft.com/en-us/dotnet/api/system.net.ipaddress.tryparse?view=net-10.0) is good for now.  
-    [NOTE] It can also parse decimal or hexadecimal format. For example US phone number in local format 4085551234 can be misinterpreted as 243.132.144.130. Then we need additional validation for IPv4.
+    [NOTE] It can also parse decimal or hexadecimal format. For example US phone number in local format 4085551234 can be misinterpreted as 243.132.144.130. Additional validation for IPv4:
     ```csharp
     if (ipAddress.AddressFamily == AddressFamily.InterNetwork &&
         token.Count(ch => ch == '.') == 3)
@@ -87,7 +87,7 @@ Author: Adam Havlík
 - `4.8.2025` - Hash identification
   - Hash Identification applications were manually tested with dataset from [onlinehashcrack](https://www.onlinehashcrack.com/hash-acceptance.php). Better will be [Hashcat Examples](https://hashcat.net/wiki/doku.php?id=example_hashes).
   - [www.hashes.com](https://hashes.com/en/tools/hash_identifier) - Hash Identifier do proper validation and return most successful results ordered by its popularity, have demo its web application with well documented [api](https://hashes.com/en/docs). Chosen solution.  
-    [NOTE] It can misinterpret 2), 5)... as Base64 encoded text of plaintext ''. Then we need additional validation.
+    [NOTE] It can misinterpret 2), 5)... as Base64 encoded text of plaintext ''. Additional validation:
     ```csharp
     if (Base64.IsValid(hash))
     ```
@@ -112,7 +112,7 @@ Author: Adam Havlík
   - Validation done with some hardcoded values
 - `22.9.2025` - MAC Address parser  
   - C# - [PhysicalAddress.TryParse()](https://learn.microsoft.com/en-us/dotnet/api/system.net.networkinformation.physicaladdress.tryparse?view=net-10.0#system-net-networkinformation-physicaladdress-tryparse(system-string-system-net-networkinformation-physicaladdress@))    
-    [NOTE] SHA1 hash 08137e51edc9d3bf54fd051e3d91bd471c93a240 can be misinterpreted as Mac address. Then we need additional validation.
+    [NOTE] SHA1 hash 08137e51edc9d3bf54fd051e3d91bd471c93a240 can be misinterpreted as Mac address. Additional validation:
     ```csharp
     if (normalizedToken.Length == 12 && normalizedToken.All(char.IsAsciiHexDigit))
     if (mac.GetAddressBytes().Length == 6)
@@ -123,7 +123,7 @@ Author: Adam Havlík
   - Windows FileTime - 100-nanosecond intervals since 1601-01-01 00:00:00 UTC
   - .Net ticks - 100-nanoseconds = 1 tic, tics since 0001-01-01 00:00:00 UTC
   - Excel serial date - days since 1899-12-30  
-  [NOTE] As it could be almost every bigger number, we need additional validation and Excel serials might be removed in future according to possible mismatch with one of IDs. Also, UnixSeconds but that's quite common in logs.
+  [NOTE] As it could be almost every bigger number. Additional validation and Excel serials might be removed in future according to possible mismatch with one of IDs. Also, UnixSeconds but that's quite common in logs.
   ```csharp
   // Date of birth can be 100 years ago, games with big impact as Counter Strike and Mario cart were released after 2000
   DateTime minDate = new DateTime(2000, 1, 1);
@@ -175,12 +175,13 @@ Author: Adam Havlík
 
 ### Unit tests
 
-- `14.10.2025` - Content.Detection.ItemParsing add 230 tests
-- `15.10.2025` - Content.Detection.ItemRecognition add 158 tests
-- `XX.10.2025` - Encodings.Detection tests
-- `XX.10.2025` - Encodings.Conversion tests
-- `XX.10.2025` - Format.Delimiter tests
-- `XX.10.2025` - Format.Schema tests
+- `14.10.2025` - Content.Detection.ItemParsing add 230 tests initial
+- `15.10.2025` - Content.Detection.ItemRecognition add 158 tests initial
+- `3.11.2025` - SqlHeaderGuesser 245 tests initial
+- `XX.11.2025` - Encodings.Detection tests
+- `XX.11.2025` - Encodings.Conversion tests
+- `XX.11.2025` - Format.Delimiter tests
+- `XX.11.2025` - Format.Schema tests
 
 ### Module tests
 
@@ -192,7 +193,7 @@ Author: Adam Havlík
 
 ## TODOs
 
-- Search for delimiters properly.
+- ISSUE - SQL Insert - 135*failed while 244* works
 - Detect Username and plaintext Password.
 - Decide how to enum localhost IpV4/IpV6
 - Decide how to process a IpAddress ports
@@ -223,48 +224,5 @@ Author: Adam Havlík
 - Regex Timeout - ReDoS
 - Test performance and profiling
 - Implement DI
-- Implement proper AppSettings
 
 ## Notes
-
-- Performance optimization  
-  - `string[]` vs. `List<string>`  
-    - `string[]` have better performance, cant do list operations
-    ```csharp
-    List<string> tokens = line.Split(delimiter).ToList();
-    for (int i = 0; i < tokens.Count; i++)
-    {
-        ...
-    }
-    ```
-    
-    - `List<string>` worse performance, if specially need list operations (Add, Sort...)
-    ```csharp
-    List<string> tokens = line.Split(delimiter).ToList();
-    for (int i = 0; i < tokens.Count; i++)
-    {
-        ...
-    }
-    ```
-    
-  - `StringComparer.OrdinalIgnoreCase` vs. `StringComparer.InvariantCultureIgnoreCase`
-    - `StringComparison.OrdinalIgnoreCase` have better performance, binary comparison, predictable
-    ```csharp
-    tokens[] tokens = line.Split(delimiter).ToList();
-    foreach (token in tokens)
-    { 
-        token.Contains("value", StringComparison.OrdinalIgnoreCase);
-    }
-    ```
-
-  - `StringComparison.InvariantCultureIgnoreCase` have worse performance, can match straße and strasse, +0,0001ms slower
-    ```csharp
-    tokens[] tokens = line.Split(delimiter).ToList();
-    foreach (token in tokens)
-    { 
-        token.Contains("value", StringComparison.OrdinalIgnoreCase);
-    }
-    ```
-    
-  - Every string comparison and replacement or removing from line as `ReadOnly<char>` span
-    - Other comparison and removing create new string which takes too loong time
