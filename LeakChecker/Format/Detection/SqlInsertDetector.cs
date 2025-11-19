@@ -15,7 +15,7 @@ public static class SqlInsertDetector
     {
         bool inInsert = false;
         int parenDepth = 0, expectedColumns = 0;
-        List<string> sqlHeaders = null;
+        List<string> sqlHeaders = new();
         StringBuilder stringBuilder = new();
 
         int samplesCount = 0;
@@ -160,38 +160,31 @@ public static class SqlInsertDetector
             }
         }
 
-        await logger.LogHeuristicData(analyzer, threshold);
+        await logger.LogHeuristicData(analyzer);
+        await logger.LogDominantSchema(analyzer, threshold);
+        
         var schema = analyzer.GetDominantSchema(threshold);
-        if (sqlHeaders is not null)
+        var guessed = SqlHeaderGuesser.GuessColumns(sqlHeaders);
+
+        foreach (var (idx, guess) in guessed)
         {
-            var guessed = SqlHeaderGuesser.GuessColumns(sqlHeaders);
-
-            foreach (var kv in guessed)
+            if (!schema.TryGetValue(idx, out var existing) || 
+                existing == ItemEnum.Other || existing == ItemEnum.Null)
             {
-                int idx = kv.Key;
-                ItemEnum guess = kv.Value;
-
-                if (!schema.TryGetValue(idx, out var existing) || 
-                    existing == ItemEnum.Other || existing == ItemEnum.Null)
-                {
-                    schema[idx] = guess;
-                }
+                schema[idx] = guess;
             }
         }
 
-        Console.WriteLine("Sql Header is"); //TODO remove this
+        Console.WriteLine();
+        Console.Write("Sql Header is: "); //TODO remove this
         foreach (var header in sqlHeaders)
         {
             Console.Write(header + ", ");
         }
         Console.WriteLine();
-        
-        foreach (var col in schema)
-        {
-            Console.WriteLine($"[{col.Key}] = {col.Value}");
-        }
+        Console.WriteLine();
 
-        await logger.LogSchema(schema);
+        await logger.LogFinalSchema(schema);
         return schema;
     }
 

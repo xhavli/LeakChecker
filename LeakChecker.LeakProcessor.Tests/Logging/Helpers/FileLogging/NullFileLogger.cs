@@ -20,9 +20,11 @@ public sealed class NullFileLogger(string path) : IFileLogger
     public Task LogEncodingStats(List<EncodingSegment> segments) => Task.CompletedTask;
     public Task LogEncodingDetails(List<EncodingSegment> segments) => Task.CompletedTask;
     public Task LogContentHeader() => Task.CompletedTask;
+    public Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int count) => Task.CompletedTask;
     public Task LogSqlInsertHeader(string subject, IList<string> headers, string fullHeader) => Task.CompletedTask;
-    public Task LogHeuristicData(SchemaHeuristic analyzer, double threshold = 50) => Task.CompletedTask;
-    public Task LogSchema(Dictionary<int, ItemEnum> schema) => Task.CompletedTask; 
-
+    public Task LogHeuristicData(SchemaHeuristic analyzer) => Task.CompletedTask;
+    public Task LogDominantSchema(SchemaHeuristic analyzer, double threshold) => Task.CompletedTask;
+    public Task LogFinalSchema(Dictionary<int, ItemEnum> schema) => Task.CompletedTask; 
+    public Task LogFileStats(FileStats stats) => Task.CompletedTask;
     public void Dispose() { }
 }

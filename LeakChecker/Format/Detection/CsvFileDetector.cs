@@ -25,7 +25,13 @@ public static class CsvFileDetector
             analyzer.AddLinePatterns(await ContentDetector.DetectLine(line, delimiter, logger));
         }
         
-        await logger.LogHeuristicData(analyzer, threshold);
-        return analyzer.GetDominantSchema(threshold);
+        await logger.LogHeuristicData(analyzer);
+        await logger.LogDominantSchema(analyzer, threshold);
+        
+        var schema = analyzer.GetDominantSchema(threshold);
+        var assigned = CsvCredentialAssigner.Assign(schema);
+
+        await logger.LogFinalSchema(assigned);
+        return assigned;
     }
 }

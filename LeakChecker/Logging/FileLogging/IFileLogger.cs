@@ -18,7 +18,10 @@ public interface IFileLogger : IDisposable
     Task LogEncodingStats(List<EncodingSegment> segments);
     Task LogEncodingDetails(List<EncodingSegment> segments);
     Task LogContentHeader();
+    Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int count);
     Task LogSqlInsertHeader(string subject, IList<string> headers, string fullHeader);
-    Task LogHeuristicData(SchemaHeuristic analyzer, double threshold);
-    Task LogSchema(Dictionary<int, ItemEnum> schema);
+    Task LogHeuristicData(SchemaHeuristic analyzer);
+    Task LogDominantSchema(SchemaHeuristic analyzer, double threshold);
+    Task LogFinalSchema(Dictionary<int, ItemEnum> schema);
+    Task LogFileStats(FileStats stats);
 }
