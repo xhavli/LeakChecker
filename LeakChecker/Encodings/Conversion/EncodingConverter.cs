@@ -11,7 +11,7 @@ public static class EncodingConverter
     /// If the file is already UTF-8 (single segment), it is just copied.
     /// </summary>
     public static async Task ConvertFileToUtf8(
-        FileLogger logger, List<EncodingSegment> encodingSegments, int bufferSize = 1024 * 1024) // 1 MB per chunk
+        IFileLogger logger, List<EncodingSegment> encodingSegments, int bufferSize = 1024 * 1024) // 1 MB per chunk
     {
         string inputFilePath = logger.SubjectFilePath;
         string outputFilePath = logger.SubjectTmpFilePath;
