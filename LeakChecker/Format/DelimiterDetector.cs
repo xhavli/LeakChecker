@@ -1,5 +1,5 @@
+using System.Diagnostics;
 using System.Globalization;
-using System.Text;
 
 namespace LeakChecker.Format;
 
@@ -7,42 +7,36 @@ public sealed class DelimiterCandidate
 {
     public char Delimiter { get; init; }
     public double ProbabilityPercent { get; internal set; }
-    public double MeanPerLine { get; internal set; }
-    public double StdDevPerLine { get; internal set; }
-    public int LinesSeen { get; internal set; }
-    public int LinesWithAny { get; internal set; }
+    public double MeanPerLine { get; internal init; }
+    public double StdDevPerLine { get; internal init; }
+    public int LinesSeen { get; internal init; }
+    public int LinesWithAny { get; internal init; }
     public double Coverage => LinesSeen == 0 ? 0 : (double)LinesWithAny / LinesSeen;
-    public double WithinOneOfMeanFraction { get; internal set; }
-    public int ApproxModeCount { get; internal set; }
-    public int ApproxModeFrequency { get; internal set; }
+    public double WithinOneOfMeanFraction { get; internal init; }
 
     public override string ToString()
     {
-        string disp = Delimiter == '\t' ? "\\t" : Delimiter.ToString();
-        return $"'{disp}' => {ProbabilityPercent:F1}% (mean {MeanPerLine:F2} ± {StdDevPerLine:F2}, coverage {Coverage:P0})";
+        string delimiter = Delimiter == '\t' ? "\\t" : Delimiter.ToString();
+        return $"'{delimiter}' = {ProbabilityPercent:F1}% (mean {MeanPerLine:F2} ± {StdDevPerLine:F2}, coverage {Coverage:P0})";
     }
 }
 
 public sealed class DelimiterHeuristicResult
 {
-    public char? BestDelimiter { get; internal set; }
-    public int SampledLines { get; internal set; }
-    public int SampledBytes { get; internal set; }
-    public IReadOnlyList<DelimiterCandidate> Candidates { get; internal set; } = Array.Empty<DelimiterCandidate>();
+    public char? BestDelimiter { get; internal init; }
+    public int SampledLines { get; internal init; }
+    public int SampledBytes { get; internal init; }
+    public IReadOnlyList<DelimiterCandidate> Candidates { get; internal init; } = Array.Empty<DelimiterCandidate>();
+    public TimeSpan Duration { get; internal init; }
 }
 
 public static class DelimiterHeuristic
 {
     private static readonly HashSet<char> AllowedDelimiters = [',', ';', ':', '\t', '|', '~', '-', '_', ' '];
 
-    public static DelimiterHeuristicResult Analyze(string path, int maxLines = 10_000, int bufferSize = 1_048_576)
+    public static DelimiterHeuristicResult Analyze(StreamReader reader, int maxLines = 10_000, int bufferSize = 1_048_576)
     {
-        using var reader = new StreamReader(path, new UTF8Encoding(false), false, bufferSize);
-        return Analyze(reader, maxLines, bufferSize);
-    }
-
-    private static DelimiterHeuristicResult Analyze(TextReader reader, int maxLines, int bufferSize)
-    {
+        Stopwatch sw = Stopwatch.StartNew();
         var stats = new DelimStats[128];
         var isCandidate = new bool[128];
         var perLine = new int[128];
@@ -167,7 +161,8 @@ public static class DelimiterHeuristic
             BestDelimiter = candidates.Count > 0 && candidates[0].ProbabilityPercent > 0 ? candidates[0].Delimiter : null,
             SampledLines = lines,
             SampledBytes = bytesRead,
-            Candidates = candidates
+            Candidates = candidates,
+            Duration = sw.Elapsed
         };
     }
 
