@@ -1,17 +1,15 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
 using System.Text;
-using LeakChecker.Content.Detection;
 using LeakChecker.Content.Detection.RecognitionService;
 using LeakChecker.Content.Processing;
 using LeakChecker.Data;
 using LeakChecker.Encodings;
+using LeakChecker.Encodings.Conversion;
 using LeakChecker.Encodings.Detection;
-using LeakChecker.Format;
 using LeakChecker.Logging;
 using LeakChecker.Logging.ExecutionLogging;
 using LeakChecker.Logging.FileLogging;
-using LeakChecker.Utilities;
 using LeakChecker.Utilities.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,7 +17,7 @@ namespace LeakChecker;
 
 public static class Program
 {
-    private static ExecutionLogger? ExecLogger { get; set; }
+    private static ExecutionLogger? ExeLogger { get; set; }
 
     public static async Task<int> Main()
     {
@@ -38,8 +36,7 @@ public static class Program
             Console.WriteLine("Program will exit with exit code 1.");
             return 1;
         }
-        
-        object consoleLock = new object();
+
         Stopwatch sw = Stopwatch.StartNew();
         
         var services = new ServiceCollection();
@@ -49,22 +46,21 @@ public static class Program
         services.AddSingleton<ExecutionLogger>();
         
         var provider = services.BuildServiceProvider();
-        ExecLogger = provider.GetRequiredService<ExecutionLogger>();
+        ExeLogger = provider.GetRequiredService<ExecutionLogger>();
         var loggerFactory = provider.GetRequiredService<IFileLoggerFactory>();
-        var exeStats = new ExecutionStats();
+        Guid executionId = Guid.NewGuid();
+        var exeStats = new ExecutionStats(executionId);
         
-        PythonNerService pythonNerService = new PythonNerService(ExecLogger);
+        PythonNerService pythonNerService = new PythonNerService(ExeLogger);
         // await pythonNerService.Start();
-        // await pythonNerService.WaitForStart();   //TODO
+        await pythonNerService.WaitForStart();   //TODO
         
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         Encoding utf8 = new UTF8Encoding(false); // false = no BOM
         Console.InputEncoding = utf8;   // Enforce UTF8 encoding which can handle cyrilic characters 
-        Console.OutputEncoding = utf8; 
-        
-        int success = 0;
+        Console.OutputEncoding = utf8;
 
-        var data = FilesDelimiters.FilesDelimitersDictUtf8;
+        var data = FilesDelimiters.FilesDelimitersDictRaw;
         var filePaths = data.Keys.ToList();
         var tasks = filePaths.Select(async filePath =>
         {
@@ -74,64 +70,31 @@ public static class Program
             }
             catch (Exception e)
             {
-                await ExecLogger.Log(e.Message, LogLevel.Exception);
+                await ExeLogger.Log(e.Message, LogLevel.Exception);
                 return;
             }
             
-            var fileLogger = await loggerFactory.CreateAsync(filePath);
+            Guid parsingId = Guid.NewGuid();
+            DateTime parsingStart = DateTime.Now;
+            using var fileLogger = await loggerFactory.CreateAsync(parsingId, executionId, parsingStart, filePath);
             FileStats fileStats = new()
             {
+                ParsingId = parsingId,
+                ExecutionId = executionId,
+                ParsingStart = parsingStart,
+                FileName = Path.GetFileName(filePath),
                 FilePath = filePath,
-                FileName = fileLogger.SubjectFileName,
-                FileBytes = fileLogger.SubjectFileBytes,
-                ParsingStart = fileLogger.ProcessingStart,
+                FileSize = new FileInfo(filePath).Length,
             };
 
             try
             {
-                // TODO
-                //  EncodingDetector encDetector = new(fileLogger, fileStats);
-                //  List<EncodingSegment> encodingSegments = await encDetector.DetectFileEncodings();
-                //  fileStats.EncodingSegments = encodingSegments;
-                //  await EncodingConverter.ConvertFileToUtf8(fileLogger, encodingSegments);
+                EncodingDetector encDetector = new(fileLogger, fileStats);
+                List<EncodingSegment> encodingSegments = await encDetector.DetectFileEncodings();
+                fileStats.EncodingSegments = encodingSegments;
+                await EncodingConverter.ConvertFileToUtf8(fileLogger, encodingSegments);
                 
-                char delimiter = data[filePath];    //TODO
-                //TODO use this
-                // var result = DelimiterHeuristic.Analyze(filePath, maxLines: 100_000);
-                // if (result.BestDelimiter != null)
-                // {
-                //     delimiter = (char)result.BestDelimiter;
-                // }
-                // else
-                // {
-                //     await fileLogger.Log("Delimiter detection failed. Setting default delimiter ':'",
-                //          LogLevel.Warning, LogContext.Format);
-                //     // delimiter = ':'; TODO use after remove FileDelimiters.cs
-                //     delimiter = data[filePath];
-                // }
-                
-                //TODO delete this only for testing purposes
-                // lock (consoleLock)
-                // {
-                //  if (delimiter == data[filePath])
-                //  {
-                //      success++;
-                //      Console.ForegroundColor = ConsoleColor.Green;
-                //      Console.WriteLine($"\n{fileStats.FileName} delimiter match '{data[filePath]}'");
-                //      Console.ResetColor();
-                //  }
-                //  else
-                //  {
-                //      Console.ForegroundColor = ConsoleColor.Red;
-                //      Console.WriteLine($"\n{fileStats.FileName} delimiter '{delimiter}' not match '{data[filePath]}'");
-                //      Console.ResetColor();
-                //  }
-                //  Console.WriteLine($"Sampled {result.SampledLines} lines (~{result.SampledBytes} chars)");
-                //  foreach (var c in result.Candidates.Take(10))
-                //      Console.WriteLine(c);
-                // }
-
-                ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(delimiter, fileLogger, fileStats);
+                using ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(fileLogger, fileStats, utf8);
                 await contentProcessor.ProcessFile();
 
                 fileStats.ParsingEnd = DateTime.Now;
@@ -140,22 +103,21 @@ public static class Program
                 exeStats.FilesParsed.Add(fileStats.ParsingId);
                 exeStats.BytesParsed += fileStats.BytesRead;
                 exeStats.LinesParsed += fileStats.RecordsCount;
-
             }
             catch (Exception e)
             {
-                await ExecLogger.Log($"{filePath}: {e}", LogLevel.Exception, LogContext.Main);
+                await ExeLogger.Log($"{filePath}: {e}", LogLevel.Exception, LogContext.Main);
             }
             finally
             {
-                // if (!File.Exists(fileLogger.SubjectTmpFilePath))
-                // {
-                //     await execLogger.Log($"TMP File not found: {filePath}", LogLevel.Warning);
-                // }
-                // else
-                // {
-                //     File.Delete(fileLogger.SubjectTmpFilePath);
-                // }
+                if (File.Exists(fileLogger.SubjectTmpFilePath))
+                {
+                    File.Delete(fileLogger.SubjectTmpFilePath);
+                }
+                else
+                {
+                    await ExeLogger.Log($"TMP File not found: {filePath}", LogLevel.Warning);
+                }
             }
         });
 
@@ -168,9 +130,9 @@ public static class Program
         exeStats.PrintExecutionStats();
         Console.WriteLine();
         
-        await ExecLogger.Log($"Execution finished successfully. {data.Keys.Count} files processed. Time taken {sw.Elapsed}, current DateTime is " +
+        await ExeLogger.Log($"Execution finished successfully. {data.Keys.Count} files processed. Time taken {sw.Elapsed}, current DateTime is " +
                          $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Main);
-        await ExecLogger.Log("Program will exit with exit code 0");
+        await ExeLogger.Log("Program will exit with exit code 0");
         return 0;
     }
 
@@ -179,12 +141,6 @@ public static class Program
         try
         {
             using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
-            //TODO is it necessary?
-            // using var reader = new StreamReader(stream);
-            // for (int i = 0; i < 10; i++)
-            // {
-            //     _ = reader.ReadLine();
-            // }
         }
         catch (FileNotFoundException)
         {
