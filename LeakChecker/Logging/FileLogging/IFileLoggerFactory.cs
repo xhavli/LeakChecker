@@ -2,5 +2,5 @@ namespace LeakChecker.Logging.FileLogging;
 
 public interface IFileLoggerFactory
 {
-    Task<IFileLogger> CreateAsync(string filePath);
+    Task<IFileLogger> CreateAsync(Guid parsingId, Guid executionId, DateTime parseStart, string filePath);
 }

@@ -9,41 +9,55 @@ namespace LeakChecker.Logging.FileLogging;
 
 public class FileLogger : IFileLogger
 {
+    public Guid ParsingId {get; init;}
+    public Guid ExecutionId {get; init;}
+    public DateTime ParseStart { get; }
     public string SubjectFileName { get; }
     public string SubjectFilePath { get; }
     public string SubjectTmpFilePath { get; }
-    public long SubjectFileBytes { get; private set; }
-    private bool EnableConsole { get; }
-    public DateTime ProcessingStart { get; } = DateTime.Now;
+    private bool EnableConsole { get; } = true;
     private readonly StreamWriter _writer;
 
-    private FileLogger(string subjectFilePath, string tmpFilePath, StreamWriter writer, bool enableConsole)
+    private FileLogger(
+        Guid parsingId,
+        Guid executionId,
+        DateTime parseStart,
+        string subjectFilePath,
+        string tmpFilePath,
+        StreamWriter writer)
     {
-        SubjectFilePath = subjectFilePath;
+        ParsingId = parsingId;
+        ExecutionId = executionId;
+        ParseStart = parseStart;
         SubjectFileName = Path.GetFileName(subjectFilePath);
+        SubjectFilePath = subjectFilePath;
         SubjectTmpFilePath = tmpFilePath;
-        EnableConsole = enableConsole;
         _writer = writer;
     }
 
-    public static async Task<IFileLogger> CreateAsync(string subjectFilePath, AppConfig config, bool enableConsole)
+    public static async Task<IFileLogger> CreateAsync(
+        AppConfig config,
+        Guid parsingId,
+        Guid executionId,
+        DateTime parsingStart,
+        string subjectFilePath)
     {
         string subjectFileName = Path.GetFileName(subjectFilePath);
-        DateTime processingStart = DateTime.Now;
 
-        string nameTimeStamp = $"{processingStart:yyyy-M-dTHH-mm-ss}";
-        string logFileName = $"{nameTimeStamp}_{subjectFileName}.txt";
+        string fileTimeStamp = $"{parsingStart:yyyy-M-dTHH-mm-ss}";
+        string logFileName = $"{fileTimeStamp}_{subjectFileName}_{parsingId}.txt";
         string logFilePath = Path.Combine(config.LogDirectory, logFileName);
         string tmpFilePath = Path.Combine(config.TmpDirectory, logFileName);
 
-        var writer = new StreamWriter(logFilePath, append: true,
-            encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
+        var writer = new StreamWriter(
+            logFilePath, append: true, encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
         {
             AutoFlush = true
         };
 
-        var logger = new FileLogger(subjectFilePath, tmpFilePath, writer, enableConsole);
-        await logger.CreateHeaderAsync();
+        var logger = new FileLogger(
+            parsingId, executionId, parsingStart, subjectFilePath, tmpFilePath, writer);
+        await logger.CreateLogHeaderAsync();
 
         return logger;
     }
@@ -77,53 +91,41 @@ public class FileLogger : IFileLogger
                 break;
         }
 
-        string log = context is null ? $"[{DateTime.Now:T}] {level.GetString()} {message}"
-                                     : $"[{DateTime.Now:T}] {level.GetString()} {context.Value.GetString()} {message}";
-
         Console.ForegroundColor = consoleColor;
-        await LogLineAsync(log);
+        await LogLineAsync(context is null ? $"[{DateTime.Now:T}] {level.GetString()} {message}"
+                                           : $"[{DateTime.Now:T}] {level.GetString()} {context.Value.GetString()} {message}");
         Console.ResetColor();
     }
 
-    private async Task CreateHeaderAsync()
+    private async Task CreateLogHeaderAsync()
     {
-        string timeStamp = ProcessingStart.ToString("F", CultureInfo.InvariantCulture);
+        string timeStamp = ParseStart.ToString("F", CultureInfo.InvariantCulture);
         FileInfo fileInfo = new FileInfo(SubjectFilePath);
-        SubjectFileBytes = fileInfo.Length;
-        double sizeMb = SubjectFileBytes / (1024.0 * 1024);
-        double sizeGb = SubjectFileBytes / (1024.0 * 1024 * 1024);
+        long fileSize = fileInfo.Length;
+        double sizeMb = fileSize / (1024.0 * 1024);
+        double sizeGb = fileSize / (1024.0 * 1024 * 1024);
 
-        await LogLineAsync($"File processing start at: {timeStamp}");
+        await LogLineAsync($"File parsing start at: {timeStamp}");
         await LogLineAsync($"File path: {fileInfo.FullName}");
         await LogLineAsync($"File name: {fileInfo.Name}");
-        await LogLineAsync($"File size: {sizeGb:F2} GB / {sizeMb:F2} MB / {SubjectFileBytes:N0} bytes ");
+        await LogLineAsync($"File size: {sizeGb:F2} GB / {sizeMb:F2} MB / {fileSize:N0} bytes ");
     }
     
     public async Task LogEncodingHeader()
     {
         await LogLineAsync();
-        await LogLineAsync("---------------------------");
-        await LogLineAsync("[X] ENCODING PROCESSING [X]");
-        await LogLineAsync("---------------------------");
-        await Log("Encoding processing started");
+        await LogLineAsync("---------------------------------------------");
+        await LogLineAsync("          [X] ENCODING DETECTION [X]");
+        await LogLineAsync("---------------------------------------------");
+        await Log("Encoding detection started");
     }
     
-    public async Task LogConsistEncDetection()
-    {
-        await Log("Trying to detect consistent encoding");
-    }
-    
-    public async Task LogConcatEncDetection()
-    {
-        await Log("Trying to detect concatenated encoding");
-    }
-
     public async Task LogEncodingStats(List<EncodingSegment> segments)
     {
         await LogLineAsync();
-        await LogLineAsync("--------------------------------------");
-        await LogLineAsync("[X] ENCODING PROCESSING STATISTICS [X]");
-        await LogLineAsync("--------------------------------------");
+        await LogLineAsync("---------------------------------------------");
+        await LogLineAsync("    [X] ENCODING DETECTION STATISTICS [X]");
+        await LogLineAsync("---------------------------------------------");
         
         await LogLineAsync($"Encoding segments count: {segments.Count}");
         int distinctEncodingCount = segments
@@ -132,83 +134,72 @@ public class FileLogger : IFileLogger
             .Count();
         await LogLineAsync($"Different encodings count: {distinctEncodingCount}");
         
-        var largestSegment = segments
-            .MaxBy(s => s.Length);
-        await LogLineAsync($"Largest encoding segment: {largestSegment!.ToByteString()}");
-        
-        await LogLineAsync("-");
+        await LogLineAsync("--");
         await LogLineAsync("Encodings by segment count:");
         var encodingCounts = segments
             .GroupBy(s => s.Encoding?.WebName)
             .OrderByDescending(g => g.Count());
-        
         foreach (var group in encodingCounts)
         {
-            await LogLineAsync($"{group.Key,-15} : {group.Count()} segments");
+            string encName = string.IsNullOrWhiteSpace(group.Key) ? "[NULL]" : group.Key;
+            await LogLineAsync($"{encName,-15} : {group.Count()} segments");
         }
         
-        await LogLineAsync("-");
+        await LogLineAsync("--");
         await LogLineAsync("Encodings by total size:");
         var encodingSizes = segments
             .GroupBy(s => s.Encoding?.WebName)
             .OrderByDescending(g => g.Sum(s => s.Length));
-        
         foreach (var group in encodingSizes)
         {
+            string encName = string.IsNullOrWhiteSpace(group.Key) ? "[NULL]" : group.Key;
             long totalBytes = group.Sum(s => s.Length);
-            await LogLineAsync($"{group.Key,-15} : {totalBytes:N0} bytes");
+            await LogLineAsync($"{encName,-15} : {totalBytes:N0} bytes");
         }
+        
+        await LogLineAsync("--");
+        await LogLineAsync("Largest encoding segments:");
+        var largestSegments = segments
+            .OrderByDescending(s => s.Length)
+            .Take(5)
+            .ToList();
+        foreach (var seg in largestSegments)
+            await LogLineAsync($"{seg.ToByteString()}");
     }
 
     public async Task LogEncodingDetails(List<EncodingSegment> segments)
     {
         await LogLineAsync();
-        await LogLineAsync("-----------------------------------");
-        await LogLineAsync("[X] ENCODING PROCESSING DETAILS [X]");
-        await LogLineAsync("-----------------------------------");
+        await LogLineAsync("----------------------------------------------------------");
+        await LogLineAsync("           [X] ENCODING DETECTION DETAILS [X]");
+        await LogLineAsync("----------------------------------------------------------");
         
         foreach (var segment in segments)
         {
             await LogLineAsync(segment.ToByteString());
         }
     }
-
+    
+    public async Task LogContentHeader()
+    {
+        await LogLineAsync();
+        await LogLineAsync("---------------------------------------------");
+        await LogLineAsync("           [X] CONTENT PARSING [X]");
+        await LogLineAsync("---------------------------------------------");
+    }
+    
     public async Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int count = 5)
     {
-        await Log($"Best delimiter: '{result.BestDelimiter}', sampled {result.SampledLines} lines " +
-                  $"(~{result.SampledBytes} chars)");
-        
+        await LogLineAsync();
+        await LogLineAsync("---------------------------------------------");
+        await LogLineAsync("         [X] DELIMITER DETECTION [X]");
+        await LogLineAsync("---------------------------------------------");
+        await Log($"Best delimiter: [{result.BestDelimiter}]");
+        await LogLineAsync($"Sampled {result.SampledLines:N0} lines (~{result.SampledBytes} chars) in {result.Duration} seconds");
         foreach (var candidate in result.Candidates.Take(count))
             await LogLineAsync(candidate.ToString());
 
         await LogLineAsync();
-    }
-
-    public async Task LogContentHeader()
-    {
-        await LogLineAsync();
-        await LogLineAsync("--------------------------");
-        await LogLineAsync("[X] CONTENT PROCESSING [X]");
-        await LogLineAsync("--------------------------");
-    }
-    
-    public async Task LogContentStats(Dictionary<ItemEnum, int> contentResults)
-    {
-        await LogLineAsync();
-        await LogLineAsync("-------------------------------------");
-        await LogLineAsync("[X] CONTENT PROCESSING STATISTICS [X]");
-        await LogLineAsync("-------------------------------------");
-        
-        await LogLineAsync("Content attributes found:");
-        var contentStats = contentResults.OrderByDescending(x => x.Value);
-        foreach (var kvp in contentStats)
-        {
-            string log = $"{kvp.Key}: {kvp.Value}";
-            await LogLineAsync(log);
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(log);
-            Console.ResetColor();
-        }
     }
 
     public async Task LogSqlInsertHeader(string subject, IList<string> headers, string fullHeader)
@@ -224,6 +215,10 @@ public class FileLogger : IFileLogger
     
     public async Task LogHeuristicData(SchemaHeuristic analyzer)
     {
+        await LogLineAsync();
+        await LogLineAsync("---------------------------------------------");
+        await LogLineAsync("           [X] SCHEMA DETECTION [X]");
+        await LogLineAsync("---------------------------------------------");
         await LogLineAsync("Heuristic data:");
 
         foreach (var kvp in analyzer.AttributeCountsPerPosition.OrderBy(x => x.Key))
@@ -245,7 +240,7 @@ public class FileLogger : IFileLogger
                 await LogLineAsync($"      {rec.Attribute} = {rec.Count} ({pct:0.##}%)");
             }
         }
-        await LogLineAsync();
+        await LogLineAsync("--");
     }
     
     public async Task LogDominantSchema(SchemaHeuristic analyzer, double threshold)
@@ -274,7 +269,7 @@ public class FileLogger : IFileLogger
 
             await LogLineAsync($"   Position {pos} = {attr} - {pct:0.##}%");
         }
-        await LogLineAsync();
+        await LogLineAsync("--");
     }
     
     public async Task LogFinalSchema(Dictionary<int, ItemEnum> schema)
@@ -311,7 +306,7 @@ public class FileLogger : IFileLogger
         foreach (var format in stats.Formats)
             await LogLineAsync($"   {format}");
 
-        await LogLineAsync($"Records parsed: {stats.RecordsCount}");
+        await LogLineAsync($"Records parsed: {stats.RecordsCount:N0}");
         await LogLineAsync($"Bytes parsed: {stats.BytesRead:N0}");
         await LogLineAsync($"Byte speed: {stats.ByteSpeed:F2} bytes/sec");
         await LogLineAsync($"Line speed: {stats.LineSpeed:F2} lines/sec");
@@ -321,7 +316,7 @@ public class FileLogger : IFileLogger
         await LogLineAsync($"Parsing time: {stats.Duration}");
         await LogLineAsync();
     }
-    
+
     public void Dispose()
     {
         _writer.Flush();

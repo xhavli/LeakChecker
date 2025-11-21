@@ -6,10 +6,11 @@ namespace LeakChecker.Logging.FileLogging;
 
 public class FileStats
 {
-    public Guid ParsingId { get; init; } = Guid.NewGuid();
+    public Guid ParsingId { get; init; }
+    public Guid ExecutionId { get; init; }
     public string? FileName { get; init; }
     public string? FilePath { get; init; }
-    public long FileBytes { get; init; }
+    public long FileSize { get; init; }
     public long LinesRead { get; set; }
     public long BytesRead { get; set; }
     public long RecordsCount { get; set; }

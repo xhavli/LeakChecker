@@ -6,15 +6,15 @@ namespace LeakChecker.Logging.FileLogging;
 
 public interface IFileLogger : IDisposable
 {
+    Guid ParsingId { get; }
+    Guid ExecutionId { get; }
+    DateTime ParseStart { get; }
     string SubjectFileName { get; }
     string SubjectFilePath { get; }
-    long SubjectFileBytes { get; }
-    DateTime ProcessingStart { get; }
+    string SubjectTmpFilePath { get; }
 
     Task Log(string? message, LogLevel level = LogLevel.Info, LogContext? context = null);
     Task LogEncodingHeader();
-    Task LogConsistEncDetection();
-    Task LogConcatEncDetection();
     Task LogEncodingStats(List<EncodingSegment> segments);
     Task LogEncodingDetails(List<EncodingSegment> segments);
     Task LogContentHeader();

@@ -4,19 +4,19 @@ using LeakChecker.Utilities.Configuration;
 
 namespace LeakChecker.Logging.ExecutionLogging;
 
-public class ExecutionLogger
+public class ExecutionLogger : IDisposable
 {
+    private readonly AppConfig _config;
     private readonly DateTime _startTime;
     private readonly StreamWriter _writer;
-    private readonly AppConfig _config;
 
     public ExecutionLogger(AppConfig config)
     {
-        _startTime = DateTime.Now;
         _config = config;
+        _startTime = DateTime.Now;
         
-        string nameTimeStamp = $"{_startTime:yyyy-M-dTHH-mm-ss}";
-        string reportFileName = $"{nameTimeStamp}.txt";
+        string fileTimeStamp = $"{_startTime:yyyy-M-dTHH-mm-ss}";
+        string reportFileName = $"{fileTimeStamp}.txt";
         string reportFilePath = Path.Combine(_config.LogDirectory, reportFileName);
 
         _writer = new StreamWriter(reportFilePath, append: true, encoding: Encoding.UTF8);
@@ -25,8 +25,9 @@ public class ExecutionLogger
         CreateReportHeader();
     }
     
-    private async Task LogAsync(string message)
+    private async Task LogLineAsync(string message = "")
     {
+        Console.WriteLine(message);
         await _writer.WriteLineAsync(message);
     }
     
@@ -54,27 +55,12 @@ public class ExecutionLogger
 
         string log = context is null ? $"[{DateTime.Now:T}] {level.GetString()} {message}"
                                      : $"[{DateTime.Now:T}] {level.GetString()} {context.Value.GetString()} {message}";
-        await LogAsync(log);
+        
         Console.ForegroundColor = consoleColor;
-        Console.WriteLine(log);
+        await LogLineAsync(log);
         Console.ResetColor();
     }
 
-    public async Task LogFileInfo(string filePath)
-    {
-        FileInfo fileInfo = new FileInfo(filePath);
-        
-        long sizeInBytes = fileInfo.Length;
-        double sizeMB = sizeInBytes / (1024.0 * 1024);
-
-        await LogAsync("----------------------------------------------------");
-        await LogAsync($"{DateTime.Now:T}");
-        await LogAsync($"File path: {fileInfo.FullName}");
-        await LogAsync($"File size: {sizeMB:F2} MB / {sizeInBytes:N0} bytes ");
-        await LogAsync("----------------------------------------------------");
-        await LogAsync("");
-    }
-    
     private void CreateReportHeader()
     {
         string timeStamp = _startTime.ToString("F", CultureInfo.InvariantCulture);
@@ -85,5 +71,34 @@ public class ExecutionLogger
         _writer.WriteLine($"Input folder path: {_config.InputDirectory}");
         _writer.WriteLine($"Output folder path: {_config.OutputDirectory}");
         _writer.WriteLine("-----------------------------------------------------------");
+    }
+    
+    public async Task LogExecutionStats(ExecutionStats stats)
+    {
+        await LogLineAsync();
+
+        await LogLineAsync($"Execution ID: {stats.ExecutionId}");
+        await LogLineAsync($"Files parsed: {stats.FilesParsed.Count}");
+        foreach (var id in stats.FilesParsed)
+        {
+            await LogLineAsync($"    Parsing ID: {id}");
+        }
+
+        await LogLineAsync($"Bytes parsed: {stats.BytesParsed:N0}");
+        await LogLineAsync($"Byte speed: {stats.ByteSpeed:N2} bytes/second");
+
+        await LogLineAsync($"Lines parsed: {stats.LinesParsed:N0}");
+        await LogLineAsync($"Line speed: {stats.LineSpeed:N2} lines/second");
+
+        await LogLineAsync($"Execution start: {stats.ParsingStart}");
+        await LogLineAsync($"Execution end: {stats.ParsingEnd}");
+        await LogLineAsync($"Execution duration: {stats.Duration}");
+    }
+
+    public void Dispose()
+    {
+        _writer.Flush();
+        _writer.Close();
+        _writer.Dispose();
     }
 }
