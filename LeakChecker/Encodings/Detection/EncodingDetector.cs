@@ -54,6 +54,7 @@ public class EncodingDetector(IFileLogger logger, FileStats stats)
             await logger.Log(message, LogLevel.Warning, LogContext.Encoding);
         }
         
+        stats.EncodingSegments = encSegments;
         await logger.LogEncodingStats(encSegments);
         await logger.LogEncodingDetails(encSegments);
         
