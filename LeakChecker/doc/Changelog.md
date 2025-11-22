@@ -85,6 +85,7 @@ Author: Adam Havlík
   - NuGet - [PhoneNumbers](https://github.com/google/libphonenumber) by Google  
     [NOTE] It can do also optional localization. It cant process local number formats like 055 234 5678 from the United Arab Emirates.
 - `4.8.2025` - Hash identification
+  - C# - [Base64.IsValid](https://learn.microsoft.com/en-us/dotnet/api/system.buffers.text.base64.isvalid?view=net-10.0) is good, but it can mismatch some string for example hl251986 as valid Base64.
   - Hash Identification applications were manually tested with dataset from [onlinehashcrack](https://www.onlinehashcrack.com/hash-acceptance.php). Better will be [Hashcat Examples](https://hashcat.net/wiki/doku.php?id=example_hashes).
   - [www.hashes.com](https://hashes.com/en/tools/hash_identifier) - Hash Identifier do proper validation and return most successful results ordered by its popularity, have demo its web application with well documented [api](https://hashes.com/en/docs). Chosen solution.  
     [NOTE] It can misinterpret 2), 5)... as Base64 encoded text of plaintext ''. Additional validation:
@@ -193,8 +194,10 @@ Author: Adam Havlík
 
 ## TODOs
 
-- ISSUE - SQL Insert - 135*failed while 244* works
-- Detect Username and plaintext Password.
+- SqlDetector stop at the end of sql insert
+- ExcelDataParser - VelvetSweetShop obfuscation
+- Detect Username and plaintext Password. CredentiaCandidate
+- Communication timeout for connection and request reply
 - Decide how to enum localhost IpV4/IpV6
 - Decide how to process a IpAddress ports
 - Decide if IpAddress parsing of cross mapped addresses are feature or limitation. Can be done by [Microsoft.Recognizers.Text.Sequence](https://github.com/microsoft/Recognizers-Text) automated recognition as Email, Guid and Urls are.
