@@ -49,7 +49,7 @@ public static class Program
         ExeLogger = provider.GetRequiredService<ExecutionLogger>();
         var loggerFactory = provider.GetRequiredService<IFileLoggerFactory>();
         Guid executionId = Guid.NewGuid();
-        var exeStats = new ExecutionStats(executionId);
+        var stats = new ExecutionStats(executionId);
         
         PythonNerService pythonNerService = new PythonNerService(ExeLogger);
         // await pythonNerService.Start();
@@ -75,13 +75,13 @@ public static class Program
             }
             
             Guid parsingId = Guid.NewGuid();
-            DateTime parsingStart = DateTime.Now;
-            using var fileLogger = await loggerFactory.CreateAsync(parsingId, executionId, parsingStart, filePath);
-            FileStats fileStats = new()
+            DateTime parseStart = DateTime.Now;
+            using var parseLogger = await loggerFactory.CreateAsync(parsingId, executionId, parseStart, filePath);
+            FileStats parseStats = new()
             {
-                ParsingId = parsingId,
+                ParseId = parsingId,
                 ExecutionId = executionId,
-                ParsingStart = parsingStart,
+                ParseStart = parseStart,
                 FileName = Path.GetFileName(filePath),
                 FilePath = filePath,
                 FileSize = new FileInfo(filePath).Length,
@@ -95,14 +95,15 @@ public static class Program
                 await EncodingConverter.ConvertFileToUtf8(fileLogger, encodingSegments);
                 
                 using ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(fileLogger, fileStats, utf8);
+                using ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(parseLogger, parseStats, utf8);
                 await contentProcessor.ProcessFile();
 
-                fileStats.ParsingEnd = DateTime.Now;
-                await fileLogger.LogFileStats(fileStats);
+                parseStats.ParseEnd = DateTime.Now;
+                await parseLogger.LogFileStats(parseStats);
                 
-                exeStats.FilesParsed.Add(fileStats.ParsingId);
-                exeStats.BytesParsed += fileStats.BytesRead;
-                exeStats.LinesParsed += fileStats.RecordsCount;
+                stats.FilesParsed.Add(parseStats.ParseId);
+                stats.BytesParsed += parseStats.BytesRead;
+                stats.LinesParsed += parseStats.RecordsCount;
             }
             catch (Exception e)
             {
@@ -110,13 +111,13 @@ public static class Program
             }
             finally
             {
-                if (File.Exists(fileLogger.SubjectTmpFilePath))
+                if (File.Exists(parseLogger.SubjectTmpFilePath))
                 {
-                    File.Delete(fileLogger.SubjectTmpFilePath);
+                    File.Delete(parseLogger.SubjectTmpFilePath);
                 }
                 else
                 {
-                    await ExeLogger.Log($"TMP File not found: {filePath}", LogLevel.Warning);
+                    await ExeLogger.Log($"Temporary parse file for delete not found: {filePath}", LogLevel.Warning);
                 }
             }
         });
@@ -126,8 +127,8 @@ public static class Program
         // pythonNerService.Stop();
         
         Console.WriteLine();
-        exeStats.ParsingEnd = DateTime.Now;
-        exeStats.PrintExecutionStats();
+        stats.ParsingEnd = DateTime.Now;
+        await ExeLogger.LogExecutionStats(stats);
         Console.WriteLine();
         
         await ExeLogger.Log($"Execution finished successfully. {data.Keys.Count} files processed. Time taken {sw.Elapsed}, current DateTime is " +
