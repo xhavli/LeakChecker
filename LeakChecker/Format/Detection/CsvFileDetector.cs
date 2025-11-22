@@ -8,19 +8,20 @@ namespace LeakChecker.Format.Detection;
 public static class CsvFileDetector
 {
     public static async Task<Dictionary<int, ItemEnum >> DetectFormat(
-        char delimiter, StreamReader reader, IFileLogger logger, int detectSamples = 107, int threshold = 50)
+        long startLine, char delimiter, StreamReader reader, IFileLogger logger, int detectSamples, int threshold)
     {
         int samplesCount = 0;
         SchemaHeuristic analyzer = new();
+        await logger.LogSchemaDetectionHeader();
 
         while (await reader.ReadLineAsync() is { } line)
         {
-            samplesCount++;
             if (samplesCount == detectSamples) break;
-
-            line = line.Trim().TrimOuterParenthesesAndComma();
+            
+            line = line.Trim().TrimOuterParenthesesAndComma().TrimOuterQuotes();
+            samplesCount++;
             Console.WriteLine();
-            Console.WriteLine($"CSV file sample {samplesCount}: {line}");
+            Console.WriteLine($"CSV file sample {samplesCount} on line {startLine + samplesCount}: {line}");
             if (string.IsNullOrWhiteSpace(line) || string.IsNullOrEmpty(line)) { continue; }
             analyzer.AddLinePatterns(await ContentDetector.DetectLine(line, delimiter, logger));
         }
@@ -30,8 +31,8 @@ public static class CsvFileDetector
         
         var schema = analyzer.GetDominantSchema(threshold);
         var assigned = CsvCredentialAssigner.Assign(schema);
-
         await logger.LogFinalSchema(assigned);
+        
         return assigned;
     }
 }

@@ -7,46 +7,52 @@ namespace LeakChecker.Content.Processing;
 
 public class CsvFileProcessor(Dictionary<int, ItemEnum> schema, IFileLogger logger)
 {
-    public async Task<(long recordProcessed, long bytesRead, long linesRead)> ProcessCsvFile(
-        StreamReader reader, char delimiter = ':')
+    public async Task<ParsingState> ProcessCsvFile(long startLine, char delimiter, StreamReader reader, long parseLimit)
     {
-        int expectedFields = schema.Count == 0 ? 0 : schema.Keys.Max() + 1;
-        long bytesRead = 0, linesRead = 0, recordsProcessed = 0;
         Encoding encoding = reader.CurrentEncoding;
+        int expectedFields = schema.Count == 0 ? 0 : schema.Keys.Max() + 1;
+        
+        long recordsRead = 0;
+        long linesRead = 0;
+        long bytesRead = 0;
 
         while (await reader.ReadLineWithEndingAsync() is { } line)
         {
-            // bytesRead += encoding.GetByteCount(line);
-            int lineBytes = encoding.GetByteCount(line);
             linesRead++;
+            int lineBytes = encoding.GetByteCount(line);
         
             line = line.ReplaceLineEndings("").Trim();
             if (string.IsNullOrWhiteSpace(line) || string.IsNullOrEmpty(line)) { continue; }
 
-            Console.WriteLine($"CSV file line {recordsProcessed} processing: {line}");
+            Console.WriteLine($"CSV file parsing line {startLine + linesRead}: {line}");
 
-            string[] row = SplitCsvLine(line, delimiter);
+            string[] row = line.Split(delimiter);
             
             int actualFields = row.Length;
             if (actualFields != expectedFields)
             {
-                await logger.Log($"Bad row length: actual {actualFields}, expected {expectedFields}, line {line}", LogLevel.Warning);
-                // return (recordsProcessed, bytesRead, linesRead); //need to be tested
+                await logger.Log($"Bad row length on line {startLine + linesRead}: expected {expectedFields}, got {actualFields} content: {line}", LogLevel.Warning);
+                // todo return (recordsProcessed, bytesRead, linesRead); //need to be tested
                 continue;
             }
 
-            await ProcessRow(delimiter, row);
+            await ParseRow(delimiter, row);
             bytesRead += lineBytes;
-            recordsProcessed++;
+            recordsRead++;
 
             Console.WriteLine();
-            if (recordsProcessed == 150) break; //TODO remove
+            if (recordsRead == parseLimit) break;
         }
-
-        return (recordsProcessed, bytesRead, linesRead);
+        
+        return new ParsingState
+        {
+            RecordsRead = recordsRead,
+            LinesRead = linesRead,
+            BytesRead = bytesRead,
+        };
     }
 
-    private async Task ProcessRow(char delimiter, string[] row)
+    private async Task ParseRow(char delimiter, string[] row)
     {
         int i = 0;
         
@@ -66,14 +72,14 @@ public class CsvFileProcessor(Dictionary<int, ItemEnum> schema, IFileLogger logg
                 }
 
                 // TODO: forward to content storage
-                Console.WriteLine($"[{i}] {schemaEntry} = {value}");
+                // Console.WriteLine($"[{i}] {schemaEntry} = {value}");
                 i = nextIndex;
             }
             else
             {
                 // No schema for this field -> log warning
                 string warnVal = row[i].Trim();
-                await logger.Log($"Unmapped CSV field[{i}] = {warnVal}", LogLevel.Warning, LogContext.Processing);
+                await logger.Log($"Unmapped CSV field[{i}] = {warnVal}", LogLevel.Warning, LogContext.Parsing);
                 //todo exception to higher logic to search for new pattern
                 i++;
             }
