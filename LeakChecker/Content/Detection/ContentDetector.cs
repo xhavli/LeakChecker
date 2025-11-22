@@ -101,35 +101,38 @@ public static class ContentDetector
             {
                 string item = line.Substring(entity.Start, entity.End - entity.Start);
                 int position = CountDelimitersBefore(originLine, item, delimiter);
-                if (entity.Type.Equals("PERSON"))
+                string entityType = entity.Type;
+                switch (entityType)
                 {
-                    linePatterns.Add(new SchemaHeuristicRecord
-                    {
-                        Attribute = ItemEnum.Name,
-                        Position = position,
-                        DelimitersInside = item.Count(ch => ch == delimiter)
-                    });
-                }
-                else if (entity.Type.Equals("LOCATION"))
-                {
-                    linePatterns.Add(new SchemaHeuristicRecord
-                    {
-                        Attribute = ItemEnum.Location,
-                        Position = position,
-                        DelimitersInside = item.Count(ch => ch == delimiter)
-                    });
-                }
-                else if (entity.Type.Equals("ORGANIZATION"))
-                {
-                    linePatterns.Add(new SchemaHeuristicRecord
-                    {
-                        Attribute = ItemEnum.Organization,
-                        Position = position,
-                        DelimitersInside = item.Count(ch => ch == delimiter)
-                    });
+                    case "PERSON":
+                        linePatterns.Add(new SchemaHeuristicRecord
+                        {
+                            Attribute = ItemEnum.Name,
+                            Position = position,
+                            DelimitersInside = item.Count(ch => ch == delimiter)
+                        });
+                        break;
+                    case "LOCATION":
+                        linePatterns.Add(new SchemaHeuristicRecord
+                        {
+                            Attribute = ItemEnum.Location,
+                            Position = position,
+                            DelimitersInside = item.Count(ch => ch == delimiter)
+                        });
+                        break;
+                    case "ORGANIZATION":
+                        linePatterns.Add(new SchemaHeuristicRecord
+                        {
+                            Attribute = ItemEnum.Organization,
+                            Position = position,
+                            DelimitersInside = item.Count(ch => ch == delimiter)
+                        });
+                        break;
+                    default:
+                        throw new Exception($"Unknown entity type: {entityType} returned from PythonNerService");
                 }
 
-                Console.WriteLine($"[{position}] {entity.Type} = {item}");
+                Console.WriteLine($"[{position}] {entityType} = {item}");
             }
 
             foreach (var entity in analyzeResults.OrderByDescending(e => e.Start))
@@ -217,7 +220,7 @@ public static class ContentDetector
         try
         {
             List<PresidioEntity> analyzeResults = await PythonNerServiceRecognizer.TryRecognize(token);
-            if (analyzeResults.Any())
+            if (analyzeResults.Count > 0)
             {
                 string entityType = analyzeResults.First().Type;
                 return entityType switch
@@ -243,12 +246,12 @@ public static class ContentDetector
         if (IbanParser.TryParse(token)) return ItemEnum.Iban;
 
 
-        //TODO bypas for faster detection in development because www.hashes.com responds take a while
-        if (TimeStampParser.TryParse(token, out _)) return ItemEnum.TimeStamp;
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");
-        Console.ResetColor();
-        return ItemEnum.Other;
+        //TODO bypass for faster detection in development because www.hashes.com responds take a while
+        // if (TimeStampParser.TryParse(token, out _)) return ItemEnum.TimeStamp;
+        // Console.ForegroundColor = ConsoleColor.Red;
+        // Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");
+        // Console.ResetColor();
+        // return ItemEnum.Other;
         
         try
         {
@@ -275,9 +278,9 @@ public static class ContentDetector
 
         ReadOnlySpan<char> span = line.AsSpan(0, index);
         int count = 0;
-        foreach (char c in span)
+        foreach (char ch in span)
         {
-            if (c == delimiter)
+            if (ch == delimiter)
                 count++;
         }
         return count;
