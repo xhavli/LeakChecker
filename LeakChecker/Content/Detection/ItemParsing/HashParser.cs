@@ -12,8 +12,6 @@ public static class HashParser
     {
         bool isSalted = false;
         string hashType = string.Empty;
-
-        if (Base64.IsValid(token)) return (true, false, "Base64");   //TODO mark Base64 and decode it later
         
         string requestUrl = BaseUrl + Uri.EscapeDataString(token);  //Return one best algorithm
         string requestUrlExtended = requestUrl + "&extended=true";  //Offers more possible algorithms sorted by its popularity
@@ -33,10 +31,7 @@ public static class HashParser
             
             if (hashType.Replace(" ", "").Contains("Base64", StringComparison.InvariantCultureIgnoreCase))
             {
-                if (!Base64.IsValid(token, out _))
-                {
-                    return (false, false, string.Empty);
-                }
+                if (!Base64.IsValid(token, out _)) return (false, false, string.Empty);
             }
             
             Console.WriteLine($"Possible hash algorithms for '{token}':");
