@@ -11,7 +11,7 @@ public static class SqlInsertDetector
     private const char Delimiter = ',';
 
     public static async Task<Dictionary<int, ItemEnum>> DetectFormat(
-        StreamReader reader, IFileLogger logger, int detectSamples = 53, int threshold = 50)
+        long startLine, StreamReader reader, IFileLogger logger, int detectSamples, int threshold)
     {
         bool inInsert = false;
         int parenDepth = 0, expectedColumns = 0;
@@ -20,6 +20,7 @@ public static class SqlInsertDetector
 
         int samplesCount = 0;
         var analyzer = new SchemaHeuristic();
+        await logger.LogSchemaDetectionHeader();
 
         while (await reader.ReadLineAsync() is { } line)
         {
@@ -116,19 +117,18 @@ public static class SqlInsertDetector
                             string tuple = stringBuilder.ToString().Trim(',', ';', ' ');
                             string[] row = ParseTuple(tuple);
 
+                            samplesCount++;
+                            
                             // Validate column count
                             if (row.Length != expectedColumns)
                             {
                                 await logger.Log(
-                                    $"Incorrect Sql Insert: Columns count mismatch. Expected {expectedColumns}, got {row.Length}. Sql Insert = {tuple}",
-                                    LogLevel.Warning, LogContext.Content);
+                                    $"Bad row length on line {startLine}: expected {expectedColumns}, got {row.Length} content: {tuple}", LogLevel.Warning);
                             }
-
-                            samplesCount++;
-
-                            List<SchemaHeuristicRecord> linePatterns = new();
                             
-                            Console.WriteLine($"SQL insert sample {samplesCount}: {tuple}");
+                            List<SchemaHeuristicRecord> linePatterns = new();
+
+                            await logger.LogSample($"SQL insert sample {samplesCount} on line {startLine + samplesCount}: {tuple}");
                             for (int j = 0; j < row.Length; j++)
                             {
                                 string value = row[j];
@@ -147,6 +147,9 @@ public static class SqlInsertDetector
                             analyzer.AddLinePatterns(linePatterns);
                             Console.WriteLine();
                             stringBuilder.Clear();
+
+                            //TODO
+                            // if (tuple.EndsWith(");") || tuple.EndsWith(") ;")) break;
                         }
 
                         continue;
@@ -158,6 +161,8 @@ public static class SqlInsertDetector
                     stringBuilder.Append(c);
                 }
             }
+            //TODO
+            // if (tuple.EndsWith(");") || tuple.EndsWith(") ;")) break;
         }
 
         await logger.LogHeuristicData(analyzer);

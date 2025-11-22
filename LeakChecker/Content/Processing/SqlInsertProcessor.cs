@@ -1,5 +1,4 @@
 using System.Text;
-using LeakChecker.Content.Detection;
 using LeakChecker.Format.Detection;
 using LeakChecker.Logging;
 using LeakChecker.Logging.FileLogging;
@@ -9,25 +8,27 @@ namespace LeakChecker.Content.Processing;
 
 public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader reader, IFileLogger logger)
 {
-    public async Task<(long recordProcessed, long bytesRead, long linesRead)> ProcessSqlInsert()
+    public async Task<ParsingState> ProcessSqlInsert(long startLine)
     {
-        int expectedFields = schema.Count == 0 ? 0 : schema.Keys.Max() + 1;
-        long bytesRead = 0, linesRead = 0, recordsProcessed = 0;
-        StringBuilder tupleBuilder = new();
+        StringBuilder stringBuilder = new();
         Encoding encoding = reader.CurrentEncoding;
+        int expectedFields = schema.Count == 0 ? 0 : schema.Keys.Max() + 1;
 
         int parenDepth = 0;
-        bool afterValues = false;
         bool inQuote = false;
-
+        bool afterValues = false;
+        
+        long recordsRead = 0;
+        long linesRead = 0;
+        long bytesRead = 0;
+        
         while (await reader.ReadLineWithEndingAsync() is { } line)
         {
+            recordsRead++;
+            linesRead++;
             bytesRead += encoding.GetByteCount(line);
             line = line.ReplaceLineEndings("").Trim();
-            linesRead++;
-
-            // string line = line.Trim();
-
+            
             // Detect when VALUES starts
             if (!afterValues)
             {
@@ -54,12 +55,12 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
                 {
                     if (inQuote && i + 1 < line.Length && line[i + 1] == '\'')
                     {
-                        tupleBuilder.Append('\''); // escaped quote
+                        stringBuilder.Append('\''); // escaped quote
                         i++;
                         continue;
                     }
                     inQuote = !inQuote;
-                    tupleBuilder.Append(c);
+                    stringBuilder.Append(c);
                     continue;
                 }
 
@@ -67,39 +68,39 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
                 {
                     if (c == '(')
                     {
-                        if (parenDepth == 0) tupleBuilder.Clear();
-                        tupleBuilder.Append(c);
+                        if (parenDepth == 0) stringBuilder.Clear();
+                        stringBuilder.Append(c);
                         parenDepth++;
                         continue;
                     }
                     
                     if (c == ')')
                     {
-                        tupleBuilder.Append(c);
+                        stringBuilder.Append(c);
                         parenDepth--;
 
                         if (parenDepth == 0)
                         {
-                            string tuple = tupleBuilder.ToString().Trim(',', ';', ' ');
+                            string tuple = stringBuilder.ToString().Trim(',', ';', ' ');
                             
                             Console.WriteLine();
-                            Console.WriteLine($"SQL insert {recordsProcessed} processing: {tuple}");
+                            Console.WriteLine($"SQL insert parsing line {startLine + linesRead}: {tuple}");
                             string[] row = SqlInsertDetector.ParseTuple(tuple);
                             
                             int actualFields = row.Length;
                             if (actualFields != expectedFields)
                             {
-                                await logger.Log($"Bad row length: actual {actualFields}, expected {expectedFields}, line {line}", LogLevel.Warning);
+                                await logger.Log($"Bad row length: actual {actualFields}, expected {expectedFields}, " +
+                                                 $"line {startLine + linesRead}: {line}", LogLevel.Warning);
                                 // return (recordsProcessed, bytesRead, linesRead); //return in the middle
                                 continue;
                             }
                             
-                            await ProcessRow(row);
-                            recordsProcessed++;
+                            await ParseRow(row);
 
-                            if (recordsProcessed == 150) return (recordsProcessed, bytesRead, linesRead);
+                            // if (recordsProcessed == 150) return (recordsProcessed, bytesRead, linesRead);
                             
-                            tupleBuilder.Clear();
+                            stringBuilder.Clear();
                         }
                         continue;
                     }
@@ -107,21 +108,24 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
 
                 if (parenDepth > 0 || inQuote)
                 {
-                    tupleBuilder.Append(c);
+                    stringBuilder.Append(c);
                 }
             }
 
             // Stop when end of insert block is reached
-            if (line.EndsWith(");", StringComparison.OrdinalIgnoreCase))
-            {
+            if (line.EndsWith(");") || line.EndsWith(") ;") || line.EndsWith(")\t;"))
                 break;
-            }
         }
 
-        return (recordsProcessed, bytesRead, linesRead);
+        return new ParsingState
+        {
+            RecordsRead = recordsRead,
+            LinesRead = linesRead,
+            BytesRead = bytesRead,
+        };
     }
 
-    private async Task ProcessRow(string[] row)
+    private async Task ParseRow(string[] row)
     {
         for (int i = 0; i < row.Length; i++)
         {
@@ -129,7 +133,7 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
 
             if (!schema.TryGetValue(i, out var schemaEntry))
             {
-                await logger.Log($"Unmapped field[{i}] = {value}", LogLevel.Warning, LogContext.Processing);
+                await logger.Log($"Unmapped field[{i}] = {value}", LogLevel.Warning, LogContext.Parsing);
                 //todo exception to higher logic for non valid sql insert and search for new pattern
                 continue;
             }
