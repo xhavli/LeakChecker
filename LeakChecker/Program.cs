@@ -70,7 +70,7 @@ public static class Program
             }
             catch (Exception e)
             {
-                await ExeLogger.Log(e.Message, LogLevel.Exception);
+                await ExeLogger.Log(e.Message, LogLevel.Warning, LogContext.Parsing);
                 return;
             }
             
@@ -89,12 +89,11 @@ public static class Program
 
             try
             {
-                EncodingDetector encDetector = new(fileLogger, fileStats);
-                List<EncodingSegment> encodingSegments = await encDetector.DetectFileEncodings();
-                fileStats.EncodingSegments = encodingSegments;
-                await EncodingConverter.ConvertFileToUtf8(fileLogger, encodingSegments);
+                EncodingDetector encodingDetector = new(parseLogger, parseStats);
+                List<EncodingSegment> encodingSegments = await encodingDetector.DetectFileEncodings();
                 
-                using ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(fileLogger, fileStats, utf8);
+                await EncodingConverter.ConvertFileToUtf8(parseLogger, encodingSegments);
+                
                 using ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(parseLogger, parseStats, utf8);
                 await contentProcessor.ProcessFile();
 
@@ -102,8 +101,9 @@ public static class Program
                 await parseLogger.LogFileStats(parseStats);
                 
                 stats.FilesParsed.Add(parseStats.ParseId);
+                stats.RecordsParsed += parseStats.RecordsRead;
+                stats.LinesParsed += parseStats.LinesRead;
                 stats.BytesParsed += parseStats.BytesRead;
-                stats.LinesParsed += parseStats.RecordsCount;
             }
             catch (Exception e)
             {
@@ -127,11 +127,11 @@ public static class Program
         // pythonNerService.Stop();
         
         Console.WriteLine();
-        stats.ParsingEnd = DateTime.Now;
+        stats.ExecutionEnd = DateTime.Now;
         await ExeLogger.LogExecutionStats(stats);
         Console.WriteLine();
         
-        await ExeLogger.Log($"Execution finished successfully. {data.Keys.Count} files processed. Time taken {sw.Elapsed}, current DateTime is " +
+        await ExeLogger.Log($"Execution finished successfully. Parsed {data.Keys.Count} files. Time taken {sw.Elapsed}, current DateTime is " +
                          $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Main);
         await ExeLogger.Log("Program will exit with exit code 0");
         return 0;
