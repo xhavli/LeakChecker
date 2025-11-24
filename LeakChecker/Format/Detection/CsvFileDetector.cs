@@ -18,11 +18,10 @@ public static class CsvFileDetector
         {
             if (samplesCount == detectSamples) break;
             
-            line = line.Trim().TrimOuterParenthesesAndComma().TrimOuterQuotes();
+            line = line.TrimOuterWhiteSpace().TrimOuterParenthesesAndComma().TrimOuterQuotes();
             samplesCount++;
-            Console.WriteLine();
-            Console.WriteLine($"CSV file sample {samplesCount} on line {startLine + samplesCount}: {line}");
-            if (string.IsNullOrWhiteSpace(line) || string.IsNullOrEmpty(line)) { continue; }
+            await logger.LogSample($"CSV file sample {samplesCount} on line {startLine + samplesCount}: {line}");
+            if (string.IsNullOrWhiteSpace(line)) { continue; }
             analyzer.AddLinePatterns(await ContentDetector.DetectLine(line, delimiter, logger));
         }
         
