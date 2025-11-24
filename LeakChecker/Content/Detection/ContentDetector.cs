@@ -15,12 +15,9 @@ public static class ContentDetector
     {
         List<SchemaHeuristicRecord> linePatterns = new();
         string originLine = line;
-        line = line.TrimOuterParentheses().TrimOuterParenthesesAndComma();
+        line = line.Trim().TrimOuterParenthesesAndComma().TrimOuterWhiteSpace().TrimOuterQuotes();
         
-        //TODO
-        // line = line.Trim().TrimOuterParenthesesAndComma();
-        // if (string.IsNullOrEmpty(line)) return linePatterns;
-        // Console.WriteLine(line);
+        //TODO if (string.IsNullOrEmpty(line)) return linePatterns;
         
         if (WebRecognizer.TryRecognize(line, out List<string> stringUris, out List<Uri> uris))
         {
@@ -246,7 +243,7 @@ public static class ContentDetector
         if (IbanParser.TryParse(token)) return ItemEnum.Iban;
 
 
-        //TODO bypass for faster detection in development because www.hashes.com responds take a while
+        // TODO bypass for faster detection in development because www.hashes.com responds take a while
         // if (TimeStampParser.TryParse(token, out _)) return ItemEnum.TimeStamp;
         // Console.ForegroundColor = ConsoleColor.Red;
         // Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");
