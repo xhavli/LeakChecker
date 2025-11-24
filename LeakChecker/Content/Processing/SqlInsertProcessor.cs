@@ -8,7 +8,7 @@ namespace LeakChecker.Content.Processing;
 
 public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader reader, IFileLogger logger)
 {
-    public async Task<ParsingState> ProcessSqlInsert(long startLine)
+    public async Task<ParsingState> ProcessSqlInsert(long startLine, long parseLimit)
     {
         StringBuilder stringBuilder = new();
         Encoding encoding = reader.CurrentEncoding;
@@ -24,19 +24,20 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
         
         while (await reader.ReadLineWithEndingAsync() is { } line)
         {
-            recordsRead++;
             linesRead++;
             bytesRead += encoding.GetByteCount(line);
-            line = line.ReplaceLineEndings("").Trim();
+            line = line.TrimOuterWhiteSpace();
             
             // Detect when VALUES starts
             if (!afterValues)
             {
-                int valuesPos = line.IndexOf("VALUES", StringComparison.OrdinalIgnoreCase);
-                if (valuesPos >= 0)
+                const string valuesKeyword = "VALUES";
+                int valuesPosition = line.IndexOf(valuesKeyword, StringComparison.OrdinalIgnoreCase);
+                
+                if (valuesPosition >= 0)
                 {
                     // start processing *after* VALUES keyword
-                    line = line.Substring(valuesPos + 6);
+                    line = line.Substring(valuesPosition + valuesKeyword.Length);
                     afterValues = true;
                 }
                 else
@@ -49,9 +50,9 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
             // Normal tuple parsing (respects inQuote)
             for (int i = 0; i < line.Length; i++)
             {
-                char c = line[i];
+                char ch = line[i];
 
-                if (c == '\'')
+                if (ch == '\'')
                 {
                     if (inQuote && i + 1 < line.Length && line[i + 1] == '\'')
                     {
@@ -60,23 +61,23 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
                         continue;
                     }
                     inQuote = !inQuote;
-                    stringBuilder.Append(c);
+                    stringBuilder.Append(ch);
                     continue;
                 }
 
                 if (!inQuote)
                 {
-                    if (c == '(')
+                    if (ch == '(')
                     {
                         if (parenDepth == 0) stringBuilder.Clear();
-                        stringBuilder.Append(c);
+                        stringBuilder.Append(ch);
                         parenDepth++;
                         continue;
                     }
                     
-                    if (c == ')')
+                    if (ch == ')')
                     {
-                        stringBuilder.Append(c);
+                        stringBuilder.Append(ch);
                         parenDepth--;
 
                         if (parenDepth == 0)
@@ -85,6 +86,7 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
                             
                             Console.WriteLine();
                             Console.WriteLine($"SQL insert parsing line {startLine + linesRead}: {tuple}");
+                            
                             string[] row = SqlInsertDetector.ParseTuple(tuple);
                             
                             int actualFields = row.Length;
@@ -97,8 +99,17 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
                             }
                             
                             await ParseRow(row);
+                            recordsRead++;
 
-                            // if (recordsProcessed == 150) return (recordsProcessed, bytesRead, linesRead);
+                            if (recordsRead == parseLimit)
+                            {
+                                return new ParsingState
+                                {
+                                    RecordsRead = recordsRead,
+                                    LinesRead = linesRead,
+                                    BytesRead = bytesRead,
+                                };
+                            }
                             
                             stringBuilder.Clear();
                         }
@@ -108,13 +119,12 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
 
                 if (parenDepth > 0 || inQuote)
                 {
-                    stringBuilder.Append(c);
+                    stringBuilder.Append(ch);
                 }
             }
 
-            // Stop when end of insert block is reached
-            if (line.EndsWith(");") || line.EndsWith(") ;") || line.EndsWith(")\t;"))
-                break;
+            // End of Sql INSERT
+            if (line.EndsWith(");") || line.EndsWith(") ;") || line.EndsWith(")\t;")) { break; }
         }
 
         return new ParsingState
