@@ -8,7 +8,7 @@ namespace LeakProcessor.Tests.Logging.Helpers.FileLogging;
 
 public sealed class NullFileLogger(string path) : IFileLogger
 {
-    public Guid ParsingId { get; } = Guid.Empty;
+    public Guid ParseId { get; } = Guid.Empty;
     public Guid ExecutionId { get; } = Guid.Empty;
     public DateTime ParseStart { get; } = DateTime.UtcNow;
     public string SubjectFileName { get; } = Path.GetFileName(path);
@@ -21,6 +21,8 @@ public sealed class NullFileLogger(string path) : IFileLogger
     public Task LogEncodingDetails(List<EncodingSegment> segments) => Task.CompletedTask;
     public Task LogContentHeader() => Task.CompletedTask;
     public Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int count) => Task.CompletedTask;
+    public Task LogSchemaDetectionHeader() => Task.CompletedTask;
+    public Task LogSample(string sample) => Task.CompletedTask;
     public Task LogSqlInsertHeader(string subject, IList<string> headers, string fullHeader) => Task.CompletedTask;
     public Task LogHeuristicData(SchemaHeuristic analyzer) => Task.CompletedTask;
     public Task LogDominantSchema(SchemaHeuristic analyzer, double threshold) => Task.CompletedTask;
