@@ -194,9 +194,9 @@ Author: Adam Havlík
 
 ## TODOs
 
-- SqlDetector stop at the end of sql insert
+- When row mismatch, parse it separately. When SampleLimit consecutive rows mismatch, recompute schema. 
 - ExcelDataParser - VelvetSweetShop obfuscation
-- Detect Username and plaintext Password. CredentiaCandidate
+- Detect Username and plaintext Password. CredentialCandidate
 - Communication timeout for connection and request reply
 - Decide how to enum localhost IpV4/IpV6
 - Decide how to process a IpAddress ports
