@@ -63,8 +63,6 @@ public class ExecutionLogger : IDisposable
 
     private void CreateReportHeader()
     {
-        string timeStamp = _startTime.ToString("F", CultureInfo.InvariantCulture);
-        _writer.WriteLine($"Execution started at: {timeStamp}");
         _writer.WriteLine("-----------------------------------------------------------");
         _writer.WriteLine($"Log folder path: {_config.LogDirectory}");
         _writer.WriteLine($"Tmp folder path: {_config.TmpDirectory}");
@@ -84,14 +82,16 @@ public class ExecutionLogger : IDisposable
             await LogLineAsync($"    Parsing ID: {id}");
         }
 
-        await LogLineAsync($"Bytes parsed: {stats.BytesParsed:N0}");
-        await LogLineAsync($"Byte speed: {stats.ByteSpeed:N2} bytes/second");
+        await LogLineAsync($"Records parsed: {stats.RecordsParsed:N0}");
 
         await LogLineAsync($"Lines parsed: {stats.LinesParsed:N0}");
         await LogLineAsync($"Line speed: {stats.LineSpeed:N2} lines/second");
+        
+        await LogLineAsync($"Bytes parsed: {stats.BytesParsed:N0}");
+        await LogLineAsync($"Byte speed: {stats.ByteSpeed:N2} bytes/second");
 
-        await LogLineAsync($"Execution start: {stats.ParsingStart}");
-        await LogLineAsync($"Execution end: {stats.ParsingEnd}");
+        await LogLineAsync($"Execution start: {stats.ExecutionStart.ToString("F", CultureInfo.InvariantCulture)}");
+        await LogLineAsync($"Execution end: {stats.ExecutionEnd.ToString("F", CultureInfo.InvariantCulture)}");
         await LogLineAsync($"Execution duration: {stats.Duration}");
     }
 
