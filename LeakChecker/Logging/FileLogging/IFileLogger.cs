@@ -6,7 +6,7 @@ namespace LeakChecker.Logging.FileLogging;
 
 public interface IFileLogger : IDisposable
 {
-    Guid ParsingId { get; }
+    Guid ParseId { get; }
     Guid ExecutionId { get; }
     DateTime ParseStart { get; }
     string SubjectFileName { get; }
@@ -19,6 +19,8 @@ public interface IFileLogger : IDisposable
     Task LogEncodingDetails(List<EncodingSegment> segments);
     Task LogContentHeader();
     Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int count);
+    Task LogSchemaDetectionHeader();
+    Task LogSample(string sample);
     Task LogSqlInsertHeader(string subject, IList<string> headers, string fullHeader);
     Task LogHeuristicData(SchemaHeuristic analyzer);
     Task LogDominantSchema(SchemaHeuristic analyzer, double threshold);
