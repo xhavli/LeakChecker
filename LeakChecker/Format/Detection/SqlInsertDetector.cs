@@ -145,11 +145,10 @@ public static class SqlInsertDetector
                             }
 
                             analyzer.AddLinePatterns(linePatterns);
-                            Console.WriteLine();
                             stringBuilder.Clear();
 
-                            //TODO
-                            // if (tuple.EndsWith(");") || tuple.EndsWith(") ;")) break;
+                            // End of Sql INSERT
+                            if (trimmed.EndsWith(");") || trimmed.EndsWith(") ;") || trimmed.EndsWith(")\t;")) { break; }
                         }
 
                         continue;
@@ -161,8 +160,9 @@ public static class SqlInsertDetector
                     stringBuilder.Append(c);
                 }
             }
-            //TODO
-            // if (tuple.EndsWith(");") || tuple.EndsWith(") ;")) break;
+            
+            // End of Sql INSERT
+            if (trimmed.EndsWith(");") || trimmed.EndsWith(") ;") || trimmed.EndsWith(")\t;")) { break; }
         }
 
         await logger.LogHeuristicData(analyzer);
