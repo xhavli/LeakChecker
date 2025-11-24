@@ -22,6 +22,7 @@ public class ContentProcessor : IDisposable
     private const int SqlSamplesLimit = 31;
     private const int CsvSamplesLimit = 103;
     private const int ThresholdPercent = 50;
+    private const long ParseLimit = long.MaxValue;
 
     private ContentProcessor(Encoding encoding, StreamReader reader, IFileLogger logger, FileStats stats)
     {
@@ -54,16 +55,28 @@ public class ContentProcessor : IDisposable
         _sw.Start();
         await _logger.Log("Content parsing started.\n");
 
-        while (await _reader.ReadLineAsync() is { } line)
+        while (await _reader.ReadLineWithEndingAsync() is { } originLine)
         {
-            // if (_recordsRead >= 150) break;
-            // if (_recordsRead >= 1_000_000) break; 
-
-            _linesRead++;
-            // line = line.ReplaceLineEndings("").Trim();
-            if (string.IsNullOrWhiteSpace(line) || string.IsNullOrEmpty(line)) { continue; }
+            if (_recordsRead >= ParseLimit) break;
             
-            if (line.StartsWith("INSERT INTO", StringComparison.OrdinalIgnoreCase))
+            string line = originLine.Trim();
+            
+            if (IsTrashOrEmpty(line))
+            {
+                _linesRead++;
+                _readerPosition += _encoding.GetByteCount(originLine);
+                continue;
+            }
+
+            if (IsSqlCreateTable(line))
+            {
+                _linesRead++;
+                _readerPosition += _encoding.GetByteCount(originLine);
+                await SkipSqlCreateTable();
+                continue;
+            }
+            
+            if (IsSqlInsertValues(line))
             {
                 await ProcessSqlInsert();
                 continue;
@@ -73,14 +86,14 @@ public class ContentProcessor : IDisposable
             if (line.Contains("<html", StringComparison.OrdinalIgnoreCase) ||   // looks like an HTML
                 line.Contains("<body", StringComparison.OrdinalIgnoreCase)) {}  // test if it really is a html and parse it
 
+            // Fallback
             await ProcessCsvFile();
         }
 
         _stats.LinesRead = _linesRead;
         _stats.BytesRead = _readerPosition;
-        _stats.RecordsCount = _recordsRead;
+        _stats.RecordsRead = _recordsRead;
 
-        Console.WriteLine();
         await _logger.Log($"Content processing finished successfully. Time taken: {_sw.Elapsed}, current DateTime: " +
                        $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Content);
         await _logger.Log($"Lines processed count: {_linesRead:N0}");
@@ -88,7 +101,6 @@ public class ContentProcessor : IDisposable
 
     private async Task ProcessSqlInsert()
     {
-        _linesRead--;
         long sqlInsertStart = _readerPosition;
         
         // Reset reader before INSERT INTO
@@ -102,7 +114,7 @@ public class ContentProcessor : IDisposable
         // Parse SQL INSERT block with header
         _reader.AdjustPosition(sqlInsertStart);
         SqlInsertProcessor processor = new(schema, _reader, _logger);
-        ParsingState result = await processor.ProcessSqlInsert(_linesRead);
+        ParsingState result = await processor.ProcessSqlInsert(_linesRead, ParseLimit);
         
         _recordsRead += result.RecordsRead;
         _linesRead += result.LinesRead;
@@ -111,10 +123,67 @@ public class ContentProcessor : IDisposable
         _stats.Formats.Add(FormatEnum.SqlInsert);
         _stats.Delimiters.Add(',');
     }
+    
+    private async Task SkipSqlCreateTable()
+    {
+        bool inSingle = false;
+        bool inDouble = false;
+        bool inBacktick = false;
+        bool inBracket = false; // [identifier] for T-SQL
+
+        while (await _reader.ReadLineWithEndingAsync() is { } line)
+        {
+            _linesRead++;
+
+            _readerPosition += _encoding.GetByteCount(line);
+            line = line.TrimOuterWhiteSpace();
+
+            ReadOnlySpan<char> span = line.AsSpan();
+
+            for (int i = 0; i < span.Length; i++)
+            {
+                char ch = span[i];
+
+                // toggle string/identifier states
+                switch (ch)
+                {
+                    case '\'':
+                        if (!inDouble && !inBacktick && !inBracket)
+                            inSingle = !inSingle;
+                        break;
+
+                    case '"':
+                        if (!inSingle && !inBacktick && !inBracket)
+                            inDouble = !inDouble;
+                        break;
+
+                    case '`':
+                        if (!inSingle && !inDouble && !inBracket)
+                            inBacktick = !inBacktick;
+                        break;
+
+                    case '[':
+                        if (!inSingle && !inDouble && !inBacktick)
+                            inBracket = true;
+                        break;
+
+                    case ']':
+                        if (inBracket)
+                            inBracket = false;
+                        break;
+
+                    case ';':
+                        // this ends CREATE TABLE *only if not inside quotes / identifiers*
+                        if (!inSingle && !inDouble && !inBacktick && !inBracket)
+                            return;
+                        break;
+                }
+            }
+        }
+    }
 
     private async Task ProcessCsvFile()
     {
-        _linesRead--;
         long csvFormatStart = _readerPosition;
 
         char delimiter;
@@ -126,10 +195,11 @@ public class ContentProcessor : IDisposable
         }
         else
         {
-            await _logger.Log("Delimiter detection failed. Setting default delimiter ':'", LogLevel.Warning, LogContext.Delimiter);
+            await _logger.Log("Delimiter detection failed. Setting default delimiter [:]", LogLevel.Warning, LogContext.Delimiter);
             delimiter = ';';
         }
 
+        // Reset reader before CSV start
         _reader.AdjustPosition(csvFormatStart);
         
         // Detect schema
@@ -141,7 +211,7 @@ public class ContentProcessor : IDisposable
         _reader.AdjustPosition(csvFormatStart);
         CsvFileProcessor csvFileProcessor = new(schema, _logger);
         ParsingState result;
-        if (schema.Values.All(v => v == ItemEnum.Other))    // if nothing reliable detected
+        if (schema.Values.All(v => v == ItemEnum.Other) || schema.Count == 0)    // if nothing reliable detected
         {
             result = await csvFileProcessor.ProcessCsvFile(_linesRead, delimiter, _reader, CsvSamplesLimit);
             _recordsRead += result.RecordsRead;
@@ -150,7 +220,7 @@ public class ContentProcessor : IDisposable
             
             return;
         }
-        result = await csvFileProcessor.ProcessCsvFile(_linesRead, delimiter, _reader, long.MaxValue);
+        result = await csvFileProcessor.ProcessCsvFile(_linesRead, delimiter, _reader, ParseLimit);
 
         _recordsRead += result.RecordsRead;
         _linesRead += result.LinesRead;
@@ -158,6 +228,52 @@ public class ContentProcessor : IDisposable
         
         _stats.Formats.Add(FormatEnum.Csv);
         _stats.Delimiters.Add(delimiter);
+    }
+
+    // INSERT [modifiers] INTO <table_name> [ (columns...) ] VALUES
+    // ( literal , literal , literal , ... );
+    private static bool IsSqlInsertValues(string line)
+    {
+        return line.StartsWith("INSERT ", StringComparison.OrdinalIgnoreCase) &&
+               line.IndexOf("INTO", StringComparison.OrdinalIgnoreCase) >= "INSERT ".Length &&
+               line.Contains("VALUES", StringComparison.OrdinalIgnoreCase);
+    }
+    
+    // CREATE [modifiers] TABLE [table_modifiers] <table_name>
+    // ( <column> <data_type> [column_constraint] ,
+    //   <column> <data_type> [column_constraint] ,
+    //   ...
+    // ) [table_options];
+    private static bool IsSqlCreateTable(string line)
+    {
+        return line.StartsWith("CREATE ", StringComparison.OrdinalIgnoreCase) &&
+               line.IndexOf("TABLE", StringComparison.OrdinalIgnoreCase) >= "CREATE ".Length;
+    }
+
+    private static bool IsTrashOrEmpty(string line)
+    {
+        return string.IsNullOrWhiteSpace(line) ||
+               line.Replace(" ", "").All(ch => char.GetUnicodeCategory(ch) == UnicodeCategory.DashPunctuation); // Sql comment boundary
+        
+        if (string.IsNullOrWhiteSpace(line)) return true;
+
+        StringBuilder sb = new();
+
+        foreach (char ch in line)
+        {
+            switch (ch)
+            {
+                case '-':
+                    continue;
+                case ' ':
+                    continue;
+                default:
+                    sb.Append(ch);
+                    return false;
+            }
+        }
+        
+        return sb.Length == 0;
     }
 
     public void Dispose()
