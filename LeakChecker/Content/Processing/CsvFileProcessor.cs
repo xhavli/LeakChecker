@@ -21,8 +21,8 @@ public class CsvFileProcessor(Dictionary<int, ItemEnum> schema, IFileLogger logg
             linesRead++;
             int lineBytes = encoding.GetByteCount(line);
         
-            line = line.ReplaceLineEndings("").Trim();
-            if (string.IsNullOrWhiteSpace(line) || string.IsNullOrEmpty(line)) { continue; }
+            line = line.TrimOuterWhiteSpace();
+            if (string.IsNullOrWhiteSpace(line)) { continue; }
 
             Console.WriteLine($"CSV file parsing line {startLine + linesRead}: {line}");
 
@@ -40,7 +40,6 @@ public class CsvFileProcessor(Dictionary<int, ItemEnum> schema, IFileLogger logg
             bytesRead += lineBytes;
             recordsRead++;
 
-            Console.WriteLine();
             if (recordsRead == parseLimit) break;
         }
         
@@ -84,34 +83,5 @@ public class CsvFileProcessor(Dictionary<int, ItemEnum> schema, IFileLogger logg
                 i++;
             }
         }
-    }
-
-    private static string[] SplitCsvLine(string line, char delimiter)
-    {
-        List<string> result = new();
-        StringBuilder current = new();
-        bool inQuote = false;
-
-        foreach (char c in line)
-        {
-            if (c == '"')
-            {
-                inQuote = !inQuote;
-                continue;
-            }
-
-            if (c == delimiter && !inQuote)
-            {
-                result.Add(current.ToString());
-                current.Clear();
-            }
-            else
-            {
-                current.Append(c);
-            }
-        }
-
-        result.Add(current.ToString());
-        return result.ToArray();
     }
 }
