@@ -4,9 +4,10 @@ public enum LogContext
 {
     Main,
     Encoding,
+    Delimiter,
     Format,
     Content,
-    Processing,
+    Parsing,
     PythonNerService,
     ExternalService,
 }
@@ -17,9 +18,10 @@ public static class LogContextStrings
     {
         { LogContext.Main, "[MAIN]" },
         { LogContext.Encoding, "[ENCODING]" },
+        { LogContext.Delimiter, "[DELIMITER]" },
         { LogContext.Format, "[FORMAT]" },
         { LogContext.Content, "[CONTENT]" },
-        { LogContext.Processing, "[PROCESSING]" },
+        { LogContext.Parsing, "[PARSING]" },
         { LogContext.PythonNerService, "[PYTHON-NER-SERVICE]" },
         { LogContext.ExternalService, "[EXTERNAL-SERVICE]" },
     };
