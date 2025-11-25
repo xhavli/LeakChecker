@@ -27,18 +27,18 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
             linesRead++;
             bytesRead += encoding.GetByteCount(line);
 
-            line = line.TrimOuterWhiteSpace();
+            line = line.Trim();
 
-            // Detect VALUES
+            // Detect VALUES position
             if (!afterValues)
             {
                 const string valuesKeyword = "VALUES";
                 int pos = line.IndexOf(valuesKeyword, StringComparison.OrdinalIgnoreCase);
 
-                if (pos < 0)
+                if (pos < 0)    // Wait for VALUES on another line
                     continue;
 
-                line = line[(pos + valuesKeyword.Length)..];
+                line = line.Substring(pos + valuesKeyword.Length);
                 afterValues = true;
             }
 
@@ -89,7 +89,7 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
                         {
                             string rawTuple = stringBuilder.ToString().Trim();
 
-                            string[] row = ParseTuple(rawTuple);
+                            string[] row = TupleToArray(rawTuple);
 
                             Console.WriteLine($"\nSQL insert parsing line {startLine + linesRead}: {line}");
                             if (row.Length != expectedFields)
@@ -133,12 +133,12 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
         };
     }
 
-    private static string[] ParseTuple(string tuple)
+    private static string[] TupleToArray(string tuple)
     {
         tuple = tuple.Trim();
 
         // remove wrapping parentheses
-        if (tuple.StartsWith("(") && tuple.EndsWith(")"))
+        if (tuple.StartsWith('(') && tuple.EndsWith(')'))
             tuple = tuple.Substring(1, tuple.Length - 2);
 
         List<string> fields = new();
@@ -172,7 +172,7 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
             // comma outside quotes = field separator
             if (ch == ',' && !inQuote)
             {
-                fields.Add(ParseField(sb.ToString()));
+                fields.Add(Normalize(sb.ToString()));
                 sb.Clear();
                 continue;
             }
@@ -182,14 +182,16 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
 
         // last field
         if (sb.Length > 0)
-            fields.Add(ParseField(sb.ToString()));
+            fields.Add(Normalize(sb.ToString()));
 
         return fields.ToArray();
     }
 
-    private static string ParseField(string raw)
+    private static string Normalize(string raw)
     {
         raw = raw.Trim();
+        
+        if (string.Equals(raw, "NULL", StringComparison.OrdinalIgnoreCase)) {return string.Empty;}
 
         // strip SQL quotes
         if (raw is ['\'', _, ..] && raw[^1] == '\'')
@@ -205,16 +207,14 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
     {
         for (int i = 0; i < row.Length; i++)
         {
-            string value = row[i];
-
             if (!schema.TryGetValue(i, out var schemaEntry))
             {
-                await logger.Log($"Unmapped field[{i}] = {value}", LogLevel.Warning, LogContext.Parsing);
+                await logger.Log($"Unmapped field[{i}] = {row[i]}", LogLevel.Warning, LogContext.Parsing);
                 continue;
             }
 
             // TODO: forward to content storage
-            Console.WriteLine($"[{i}] {schemaEntry} = {value}");
+            Console.WriteLine($"[{i}] {schemaEntry} = {row[i]}");
         }
     }
 }
