@@ -1,5 +1,4 @@
 using System.Text;
-using LeakChecker.Format.Detection;
 using LeakChecker.Logging;
 using LeakChecker.Logging.FileLogging;
 using LeakChecker.Utilities.Extensions;
@@ -12,92 +11,93 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
     {
         StringBuilder stringBuilder = new();
         Encoding encoding = reader.CurrentEncoding;
+
         int expectedFields = schema.Count == 0 ? 0 : schema.Keys.Max() + 1;
 
-        int parenDepth = 0;
-        bool inQuote = false;
         bool afterValues = false;
-        
+        bool inQuote = false;
+        int parenDepth = 0;
+
         long recordsRead = 0;
         long linesRead = 0;
         long bytesRead = 0;
-        
+
         while (await reader.ReadLineWithEndingAsync() is { } line)
         {
             linesRead++;
             bytesRead += encoding.GetByteCount(line);
+
             line = line.TrimOuterWhiteSpace();
-            
-            // Detect when VALUES starts
+
+            // Detect VALUES
             if (!afterValues)
             {
                 const string valuesKeyword = "VALUES";
-                int valuesPosition = line.IndexOf(valuesKeyword, StringComparison.OrdinalIgnoreCase);
-                
-                if (valuesPosition >= 0)
-                {
-                    // start processing *after* VALUES keyword
-                    line = line.Substring(valuesPosition + valuesKeyword.Length);
-                    afterValues = true;
-                }
-                else
-                {
-                    // still in header -> skip line
+                int pos = line.IndexOf(valuesKeyword, StringComparison.OrdinalIgnoreCase);
+
+                if (pos < 0)
                     continue;
-                }
+
+                line = line[(pos + valuesKeyword.Length)..];
+                afterValues = true;
             }
 
-            // Normal tuple parsing (respects inQuote)
+            // Parse characters
             for (int i = 0; i < line.Length; i++)
             {
                 char ch = line[i];
 
-                if (ch == '\'')
+                // Escaped SQL quote '' SHOULD NOT BE UNESCAPED HERE
+                if (ch == '\'' && inQuote)
                 {
-                    if (inQuote && i + 1 < line.Length && line[i + 1] == '\'')
+                    if (i + 1 < line.Length && line[i + 1] == '\'')
                     {
-                        stringBuilder.Append('\''); // escaped quote
+                        stringBuilder.Append("''"); // keep original SQL escape
                         i++;
                         continue;
                     }
+                }
+
+                // Normal quote toggler
+                if (ch == '\'')
+                {
                     inQuote = !inQuote;
                     stringBuilder.Append(ch);
                     continue;
                 }
 
+                // Parentheses tracking (only outside string literals)
                 if (!inQuote)
                 {
                     if (ch == '(')
                     {
-                        if (parenDepth == 0) stringBuilder.Clear();
-                        stringBuilder.Append(ch);
+                        if (parenDepth == 0)
+                            stringBuilder.Clear();
+
                         parenDepth++;
+                        stringBuilder.Append(ch);
                         continue;
                     }
-                    
+
                     if (ch == ')')
                     {
-                        stringBuilder.Append(ch);
                         parenDepth--;
+                        stringBuilder.Append(ch);
 
+                        // completed tuple
                         if (parenDepth == 0)
                         {
-                            string tuple = stringBuilder.ToString().Trim(',', ';', ' ');
-                            
-                            Console.WriteLine();
-                            Console.WriteLine($"SQL insert parsing line {startLine + linesRead}: {tuple}");
-                            
-                            string[] row = SqlInsertDetector.ParseTuple(tuple);
-                            
-                            int actualFields = row.Length;
-                            if (actualFields != expectedFields)
+                            string rawTuple = stringBuilder.ToString().Trim();
+
+                            string[] row = ParseTuple(rawTuple);
+
+                            Console.WriteLine($"\nSQL insert parsing line {startLine + linesRead}: {line}");
+                            if (row.Length != expectedFields)
                             {
-                                await logger.Log($"Bad row length: actual {actualFields}, expected {expectedFields}, " +
-                                                 $"line {startLine + linesRead}: {line}", LogLevel.Warning);
-                                // return (recordsProcessed, bytesRead, linesRead); //return in the middle
+                                await logger.Log($"Bad row length on line {startLine + linesRead}: expected {expectedFields}, got {row.Length} content: {line}", LogLevel.Warning);
                                 continue;
                             }
-                            
+
                             await ParseRow(row);
                             recordsRead++;
 
@@ -110,17 +110,15 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
                                     BytesRead = bytesRead,
                                 };
                             }
-                            
-                            stringBuilder.Clear();
                         }
+
                         continue;
                     }
                 }
 
-                if (parenDepth > 0 || inQuote)
-                {
+                // Normal character
+                if (parenDepth > 0)
                     stringBuilder.Append(ch);
-                }
             }
 
             // End of Sql INSERT
@@ -135,6 +133,74 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
         };
     }
 
+    private static string[] ParseTuple(string tuple)
+    {
+        tuple = tuple.Trim();
+
+        // remove wrapping parentheses
+        if (tuple.StartsWith("(") && tuple.EndsWith(")"))
+            tuple = tuple.Substring(1, tuple.Length - 2);
+
+        List<string> fields = new();
+        StringBuilder sb = new();
+
+        bool inQuote = false;
+
+        for (int i = 0; i < tuple.Length; i++)
+        {
+            char ch = tuple[i];
+
+            // escaped SQL quotes, keep them as text for ParseField
+            if (ch == '\'' && inQuote)
+            {
+                if (i + 1 < tuple.Length && tuple[i + 1] == '\'')
+                {
+                    sb.Append("''");
+                    i++;
+                    continue;
+                }
+            }
+
+            // toggle quoting
+            if (ch == '\'')
+            {
+                inQuote = !inQuote;
+                sb.Append(ch);
+                continue;
+            }
+
+            // comma outside quotes = field separator
+            if (ch == ',' && !inQuote)
+            {
+                fields.Add(ParseField(sb.ToString()));
+                sb.Clear();
+                continue;
+            }
+
+            sb.Append(ch);
+        }
+
+        // last field
+        if (sb.Length > 0)
+            fields.Add(ParseField(sb.ToString()));
+
+        return fields.ToArray();
+    }
+
+    private static string ParseField(string raw)
+    {
+        raw = raw.Trim();
+
+        // strip SQL quotes
+        if (raw is ['\'', _, ..] && raw[^1] == '\'')
+            raw = raw.Substring(1, raw.Length - 2);
+
+        // decode SQL escaping
+        raw = raw.Replace("''", "'");
+
+        return raw;
+    }
+
     private async Task ParseRow(string[] row)
     {
         for (int i = 0; i < row.Length; i++)
@@ -144,7 +210,6 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
             if (!schema.TryGetValue(i, out var schemaEntry))
             {
                 await logger.Log($"Unmapped field[{i}] = {value}", LogLevel.Warning, LogContext.Parsing);
-                //todo exception to higher logic for non valid sql insert and search for new pattern
                 continue;
             }
 
