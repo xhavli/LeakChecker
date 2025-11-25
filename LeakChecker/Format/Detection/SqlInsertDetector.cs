@@ -30,46 +30,51 @@ public static class SqlInsertDetector
 
             if (!inInsert)
             {
-                if (trimmed.StartsWith("INSERT INTO", StringComparison.OrdinalIgnoreCase))
+                // Detect INSERT [...] INTO
+                int intoPos = trimmed.IndexOf("INTO", StringComparison.OrdinalIgnoreCase);
+
+                if (trimmed.StartsWith("INSERT ", StringComparison.OrdinalIgnoreCase) &&
+                    intoPos >= "INSERT ".Length)
                 {
-                    inInsert = true;
+                    // Find column list parentheses
+                    int openParen = trimmed.IndexOf('(', intoPos);
+                    int closeParen = trimmed.IndexOf(')', openParen + 1);
 
-                    // Extract header columns
-                    int openParen = trimmed.IndexOf('(');
-                    int closeParen = trimmed.IndexOf(')');
-
-                    if (openParen > 0 && closeParen > openParen)
+                    if (openParen > intoPos && closeParen > openParen)
                     {
-                        // Extract SQL Insert subject
-                        string subject = string.Empty;
-                        int insertIntoPos = trimmed.IndexOf("INSERT INTO", StringComparison.OrdinalIgnoreCase);
-                        if (insertIntoPos >= 0 && openParen > insertIntoPos)
-                        {
-                            subject = trimmed.Substring(insertIntoPos + "INSERT INTO".Length,
-                                    openParen - (insertIntoPos + "INSERT INTO".Length))
-                                .Trim(' ', '`', '"');
-                        }
+                        inInsert = true;
 
-                        // Extract column list
+                        // Extract subject (table name)
+                        string subject = trimmed
+                            .Substring(intoPos + "INTO".Length, openParen - (intoPos + "INTO".Length))
+                            .Trim(' ', '`', '"', '[', ']');
+
+                        // Extract columns
                         string columnList = trimmed.Substring(openParen + 1, closeParen - openParen - 1);
-                        expectedColumns = columnList.Split(Delimiter).Select(c => c.Trim()).Count();
+
                         sqlHeaders = columnList
                             .Split(Delimiter)
-                            .Select(c => c.Trim().Trim('`'))
+                            .Select(h => h.Trim(' ', '`', '"', '[', ']'))
                             .ToList();
 
+                        expectedColumns = sqlHeaders.Count;
+
                         await logger.LogSqlInsertHeader(subject, sqlHeaders, trimmed);
-                    }
 
-
-                    // Jump to VALUES
-                    int valuesPos = trimmed.IndexOf("VALUES", StringComparison.OrdinalIgnoreCase);
-                    if (valuesPos >= 0)
-                    {
-                        line = line.Substring(valuesPos + 6);
+                        // Move to VALUES part, if present
+                        int valuesPos = trimmed.IndexOf("VALUES", StringComparison.OrdinalIgnoreCase);
+                        if (valuesPos >= 0)
+                        {
+                            line = trimmed.Substring(valuesPos + "VALUES".Length);
+                        }
+                        else
+                        {
+                            continue; // Wait for VALUES on following lines
+                        }
                     }
                     else
                     {
+                        // No column list -> skip
                         continue;
                     }
                 }
@@ -134,7 +139,7 @@ public static class SqlInsertDetector
                                 string value = row[j];
                                 if (string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value)) continue;
                                 ItemEnum item = await ContentDetector.DetectToken(value, logger);
-                                Console.WriteLine($"[{j}] {item} = {value}");
+                                // Console.WriteLine($"[{j}] {item} = {value}");
 
                                 linePatterns.Add(new SchemaHeuristicRecord
                                 {
@@ -180,20 +185,20 @@ public static class SqlInsertDetector
             }
         }
 
-        Console.WriteLine();
-        Console.Write("Sql Header is: "); //TODO remove this
-        foreach (var header in sqlHeaders)
-        {
-            Console.Write(header + ", ");
-        }
-        Console.WriteLine();
-        Console.WriteLine();
+        // Console.WriteLine();
+        // Console.Write("Sql Header is: "); //TODO remove this
+        // foreach (var header in sqlHeaders)
+        // {
+        //     Console.Write(header + ", ");
+        // }
+        // Console.WriteLine();
+        // Console.WriteLine();
 
         await logger.LogFinalSchema(schema);
         return schema;
     }
 
-    public static string[] ParseTuple(string tuple)
+    private static string[] ParseTuple(string tuple)
     {
         if (tuple.StartsWith('(') && tuple.EndsWith(')')) 
             tuple = tuple.Substring(1, tuple.Length - 2);
