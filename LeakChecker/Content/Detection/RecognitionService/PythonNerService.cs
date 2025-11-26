@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net;
 using LeakChecker.Logging;
 using LeakChecker.Logging.ExecutionLogging;
 
@@ -8,7 +9,7 @@ public class PythonNerService(ExecutionLogger logger)
 {
     private Process? _process = new();
 
-    public async Task Start()
+    public async Task Start(string pythonPath, string pythonArgs)
     {
         await logger.Log("PythonNerService: Starting...");
         
@@ -16,8 +17,8 @@ public class PythonNerService(ExecutionLogger logger)
         {
             var psi = new ProcessStartInfo
             {
-                FileName = "python",
-                Arguments = "main.py",  //TODO relative path
+                FileName = pythonPath,
+                Arguments = "main.py",
                 UseShellExecute = true,
                 CreateNoWindow = false
             };
@@ -36,36 +37,63 @@ public class PythonNerService(ExecutionLogger logger)
         await logger.Log("PythonNerService: Started");
     }
 
-    public async Task WaitForStart(int attempts = 10, int timeout = 5_000)
+    
+    public async Task WaitForStart(int csharpPort, int pythonPort, int timeoutMs)
     {
+        await logger.Log($"Waiting for READY: csharpPort {csharpPort}, pythonPort {pythonPort}, " +
+                         $"timeout {timeoutMs / 1000} seconds", LogLevel.Info, LogContext.PythonNerService);
+
+        using var listener = new HttpListener();
+        listener.Prefixes.Add($"http://localhost:{csharpPort}/");
+        listener.Start();
+
+        using var cts = new CancellationTokenSource(timeoutMs);
         using HttpClient client = new();
-        while (attempts > 0)
+
+        // Try to contact Python status endpoint if its already running
+        try
+        {
+            string statusUrl = $"http://localhost:{pythonPort}/status";
+            string status = await client.GetStringAsync(statusUrl, cts.Token);
+
+            if (status.Trim().Equals("ready", StringComparison.OrdinalIgnoreCase))
+            {
+                await logger.Log("Received READY via status endpoint", LogLevel.Success, LogContext.PythonNerService);
+                return;
+            }
+        }
+        catch
+        {
+            // ignored - Python not running yet
+        }
+
+        // Wait for Python start and send ready
+        while (!cts.IsCancellationRequested)
         {
             try
             {
-                    string statusUri = "http://localhost:8000/status";
-                    string status = await client.GetStringAsync(statusUri);
-                    if (status.Equals("ready", StringComparison.OrdinalIgnoreCase)) break;
-                        
+                var context = await listener.GetContextAsync();
+
+                using var reader = new StreamReader(context.Request.InputStream);
+                string body = await reader.ReadToEndAsync(cts.Token);
+
+                if (body.Trim().Equals("ready", StringComparison.OrdinalIgnoreCase))
+                {
+                    await logger.Log("Received READY via startup notification", LogLevel.Success, LogContext.PythonNerService);
+                    return; // exit immediately, no response required
+                }
+
+                // Ignore anything else and continue listening
             }
-            catch (Exception e)
+            catch (OperationCanceledException)
             {
-                    await logger.Log($"PythonNerService: Waiting. Attempts remaining {attempts}, timeout {timeout} milliseconds", LogLevel.Warning);
-                    await Task.Delay(timeout);
-                    attempts--;
+                break; // timeout
             }
         }
 
-        if (attempts == 0)
-        {
-            string exMessage = "PythonNerService: Failed on startup";
-            await logger.Log(exMessage, LogLevel.Exception, LogContext.PythonNerService);
-            throw new Exception(exMessage);
-        }
-        
-        await logger.Log("PythonNerService: Ready", LogLevel.Success, LogContext.PythonNerService);
+        throw new TimeoutException("Timed out waiting for Python READY.");
     }
-    
+
     public async Task Stop()
     {
         try
