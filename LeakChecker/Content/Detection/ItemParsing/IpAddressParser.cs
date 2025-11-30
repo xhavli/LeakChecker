@@ -66,14 +66,14 @@ public static class IpAddressParser
 
         if (ipV6InBrackets && addressPart.Equals(Localhost, StringComparison.OrdinalIgnoreCase))
         {
-            ipAddressType = ItemEnum.IpV6;
+            ipAddressType = ItemEnum.Ipv6;
             ipAddress = IPAddress.Parse(IpV6Localhost);
             return true;
         }
 
         if (addressPart.Equals(Localhost, StringComparison.OrdinalIgnoreCase))
         {
-            ipAddressType = ItemEnum.IpV4;
+            ipAddressType = ItemEnum.Ipv4;
             ipAddress = IPAddress.Parse(IpV4Localhost);
             return true;
         }
@@ -82,14 +82,14 @@ public static class IpAddressParser
         {
             if (ipAddr.AddressFamily == AddressFamily.InterNetwork && addressPart.Count(ch => ch == '.') == 3)
             {
-                ipAddressType = ItemEnum.IpV4;
+                ipAddressType = ItemEnum.Ipv4;
                 ipAddress = ipAddr;
                 return true;
             }
 
             if (ipAddr.AddressFamily == AddressFamily.InterNetworkV6)
             {
-                ipAddressType = ItemEnum.IpV6;
+                ipAddressType = ItemEnum.Ipv6;
                 ipAddress = ipAddr;
                 return true;
             }
