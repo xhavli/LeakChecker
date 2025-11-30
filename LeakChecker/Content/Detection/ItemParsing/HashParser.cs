@@ -60,17 +60,22 @@ public static class HashParser
 
         return normalizedName switch
         {
+            // MD4
+            "md4" => ItemEnum.MD4,
+            
             // MD5
             "md5" => ItemEnum.MD5,
             "half md5" => ItemEnum.HALF_MD5,
-            "md5(sha1($plaintext))" => ItemEnum.MD5_SHA1,
             "md5(md5($plaintext))" => ItemEnum.MD5_MD5_PLAINTEXT,
+            "md5(sha1($plaintext))" => ItemEnum.MD5_SHA1_PLAINTEXT,
             "md5($plaintext.$salt)" => ItemEnum.MD5_PLAINTEXT_SALT,
             "md5($salt.$plaintext)" => ItemEnum.MD5_SALT_PLAINTEXT,
             "apache $apr1$ md5, md5apr1, md5 (apr)" => ItemEnum.MD5_APR1,
             "md5(md5($plaintext).md5($salt))" => ItemEnum.MD5_MD5_PLAINTEXT_MD5_SALT,
             "md5($salt.md5($plaintext.$salt))" => ItemEnum.MD5_SALT_MD5_PLAINTEXT_SALT,
-            "md5crypt, MD5 (Unix), Cisco-IOS $1$ (MD5), Cisco-IOS $1$ (MD5)" => ItemEnum.MD5_CRYPT,
+            "md5(sha1($salt).md5($plaintext))" => ItemEnum.MD5_SHA1_SALT_MD5_PLAINTEXT,
+            "md5($salt.sha1($salt.$plaintext))" => ItemEnum.MD5_SALT_SHA1_SALT_PLAINTEXT,
+            "md5crypt, md5 (unix), cisco-ios $1$ (md5), cisco-ios $1$ (md5)" => ItemEnum.MD5_CRYPT,
             "md5(sha1($plaintext).md5($plaintext).sha1($plaintext))" => ItemEnum.MD5_SHA1_COMBO,
 
             // LANMAN / NT
@@ -86,10 +91,11 @@ public static class HashParser
             "sha1($salt.$plaintext)" => ItemEnum.SHA1_SALT_PLAINTEXT,
             "sha1($plaintext.$salt)" => ItemEnum.SHA1_PLAINTEXT_SALT,
             "sha1(utf16-le($plaintext))" => ItemEnum.SHA1_UTF16LE_PLAINTEXT, // Hashcat Hash-Name "sha1(utf16le($plaintext))"
+            "sha1(md5($plaintext.$salt))" => ItemEnum.SHA1_MD5_PLAINTEXT_SALT,
             "sha1(utf16le($plaintext).$salt)" => ItemEnum.SHA1_UTF16LE_PLAINTEXT_SALT,
             "sha1($salt.utf16le($plaintext))" => ItemEnum.SHA1_SALT_UTF16LE_PLAINTEXT,
-            "nsldap, sha-1(base64), netscape ldap sha" => ItemEnum.SHA1_BASE64_LDAP,
-            "nsldaps, ssha-1(base64), netscape ldap ssha" => ItemEnum.SSHA1_BASE64_LDAP,
+            "nsldap, sha-1(base64), netscape ldap sha" => ItemEnum.SHA1_BASE64_NSLDAP,
+            "nsldaps, ssha-1(base64), netscape ldap ssha" => ItemEnum.SSHA1_BASE64_NSLDAPS,
             "sha1($salt.sha1($plaintext.$salt))" => ItemEnum.SHA1_SALT_SHA1_PLAINTEXT_SALT,
             "sha1.substr(0, 32)" => ItemEnum.SHA1_SUBSTR32,
 
@@ -100,10 +106,12 @@ public static class HashParser
             // SHA2
             "sha224" => ItemEnum.SHA224,
             "sha256" => ItemEnum.SHA256,
+            "sha256(md5($plaintext))" => ItemEnum.SHA256_MD5_PLAINTEXT,
             "sha256($plaintext.$salt)" => ItemEnum.SHA256_PLAINTEXT_SALT,
             "sha256($salt.$plaintext)" => ItemEnum.SHA256_SALT_PLAINTEXT,
             "sha256crypt $5$, sha256 (unix)" => ItemEnum.SHA256_CRYPT,
-
+            "sha256($salt.$plaintext.$salt)" => ItemEnum.SHA256_SALT_PLAINTEXT_SALT,
+            "sha256(sha256($plaintext).$salt)" => ItemEnum.SHA256_SHA256_PLAINTEXT_SALT,
             "sha384" => ItemEnum.SHA384,
             "sha512" => ItemEnum.SHA512,
             "sha512crypt $6$, sha512 (unix)" => ItemEnum.SHA512_CRYPT,
@@ -141,17 +149,17 @@ public static class HashParser
             "bcrypt(sha256($plaintext))" => ItemEnum.BCRYPT_SHA256,
             "bcrypt $2*$, blowfish (unix)" => ItemEnum.BCRYPT_BLOWFISH_UNIX,
 
-            // KECCAK
-            "keccak-224" => ItemEnum.KECCAK224,
-            "keccak-256" => ItemEnum.KECCAK256,
-            "keccak-384" => ItemEnum.KECCAK384,
-            "keccak-512" => ItemEnum.KECCAK512,
-
             // SHA3
             "sha3-224" => ItemEnum.SHA3_224,
             "sha3-256" => ItemEnum.SHA3_256,
             "sha3-384" => ItemEnum.SHA3_384,
             "sha3-512" => ItemEnum.SHA3_512,
+            
+            // KECCAK
+            "keccak-224" => ItemEnum.KECCAK224,
+            "keccak-256" => ItemEnum.KECCAK256,
+            "keccak-384" => ItemEnum.KECCAK384,
+            "keccak-512" => ItemEnum.KECCAK512,
 
             // ELECTRUM WALLET
             "electrum wallet (salt-type 1-3)" => ItemEnum.ELECTRUM_WALLET_1_3,
