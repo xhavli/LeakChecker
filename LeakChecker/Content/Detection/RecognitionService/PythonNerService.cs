@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net;
+using System.Reflection.Metadata.Ecma335;
 using LeakChecker.Logging;
 using LeakChecker.Logging.ExecutionLogging;
 
@@ -7,7 +8,7 @@ namespace LeakChecker.Content.Detection.RecognitionService;
 
 public class PythonNerService(ExecutionLogger logger)
 {
-    private Process? _process = new();
+    private Process? _process;
 
     public async Task Start(string pythonPath, string pythonArgs)
     {
@@ -36,11 +37,10 @@ public class PythonNerService(ExecutionLogger logger)
         
         await logger.Log("PythonNerService: Started");
     }
-
     
     public async Task WaitForStart(int csharpPort, int pythonPort, int timeoutMs)
     {
-        await logger.Log($"Waiting for READY: csharpPort {csharpPort}, pythonPort {pythonPort}, " +
+        await logger.Log($"Waiting for READY signal: csharpPort {csharpPort}, pythonPort {pythonPort}, " +
                          $"timeout {timeoutMs / 1000} seconds", LogLevel.Info, LogContext.PythonNerService);
 
         using var listener = new HttpListener();
@@ -91,26 +91,30 @@ public class PythonNerService(ExecutionLogger logger)
             }
         }
 
-        throw new TimeoutException("Timed out waiting for Python READY.");
+        await logger.Log("Waiting for READY signal: Timed out", LogLevel.Exception, LogContext.PythonNerService);
+        throw new TimeoutException("Waiting for READY signal: Timed out.");
     }
 
     public async Task Stop()
     {
+        await logger.Log("Terminating Python subprocess", LogLevel.Info, LogContext.PythonNerService);
+        
+        if(_process == null) return;
+        
         try
         {
             if (_process is { HasExited: false })
             {
-                await logger.Log("PythonNerService: sending kill");
+                await logger.Log("Python subprocess: Sending kill", LogLevel.Info, LogContext.PythonNerService);
                 _process.Kill(entireProcessTree: true);
                 await _process.WaitForExitAsync();
                 _process.Dispose();
-                await logger.Log("PythonNerService: stopped");
+                await logger.Log("Python subprocess: Stopped successfully", LogLevel.Info, LogContext.PythonNerService);
             }
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            throw;
+            await logger.Log(e.ToString(), LogLevel.Exception, LogContext.PythonNerService);
         }
     }
 }
