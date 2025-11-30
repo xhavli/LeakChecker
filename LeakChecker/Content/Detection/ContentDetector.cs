@@ -252,8 +252,8 @@ public static class ContentDetector
         
         try
         {
-            var (isHash, withSalt, _) = await HashParser.TryParse(token);
-            if (isHash) return withSalt ? ItemEnum.SaltedHash : ItemEnum.Hash;
+            var (isHash, hashType) = await HashParser.TryParse(token);
+            if (isHash) return hashType;
         }
         catch (Exception e)
         {

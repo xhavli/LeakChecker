@@ -2,8 +2,13 @@ namespace LeakChecker.Content;
 
 public enum ItemEnum
 {
-    IpV4,
-    IpV6,
+    // Control
+    Previous,
+    Null,
+    
+    // Content
+    Ipv4,
+    Ipv6,
     Mac,
     PhoneNumber,
     Email,
@@ -24,7 +29,142 @@ public enum ItemEnum
     Id,
     Other,
     Empty,
-    Null,
     
-    Previous,
+    //////////////////////////////////////
+    //             Hash types           //
+    //////////////////////////////////////
+    // "plaintext" is "pass" in hashcat //
+    
+    // MD5
+    MD5,
+    HALF_MD5,
+    MD5_PLAINTEXT_SALT,
+    MD5_SALT_PLAINTEXT,
+    MD5_APR1,
+    MD5_CRYPT,
+    MD5_MD5_PLAINTEXT,
+    MD5_MD5_PLAINTEXT_MD5_SALT,
+    MD5_SALT_MD5_PLAINTEXT_SALT,
+    MD5_SHA1,
+    MD5_SHA1_COMBO,
+
+    // LANMAN / NT
+    LM,
+    NTLM,
+
+    // MySQL
+    MYSQL323,
+    MYSQL41_5,
+
+    // SHA1
+    SHA1,
+    SHA1_BASE64_LDAP,
+    SSHA1_BASE64_LDAP,
+    SHA1_SALT_PLAINTEXT,
+    SHA1_PLAINTEXT_SALT,
+    SHA1_SALT_SHA1_PLAINTEXT_SALT,
+    SHA1_UTF16LE_PLAINTEXT,
+    SHA1_UTF16LE_PLAINTEXT_SALT,
+    SHA1_SALT_UTF16LE_PLAINTEXT,
+    SHA1_SUBSTR32,
+
+    // MSSQL
+    MSSQL2005,
+    MSSQL2012_2014,
+
+    // SHA2
+    SHA224,
+    SHA256,
+    SHA256_PLAINTEXT_SALT,
+    SHA256_SALT_PLAINTEXT,
+    SHA256_CRYPT,
+    SHA384,
+    SHA512,
+    SHA512_PLAINTEXT_SALT,
+    SHA512_SALT_PLAINTEXT,
+    SHA512_CRYPT,
+
+    // HMAC
+    HMAC_MD5_PLAINTEXT,
+    HMAC_MD5_SALT,
+    HMAC_SHA1_SALT,
+    HMAC_SHA256_PLAINTEXT,
+    HMAC_SHA256_SALT,
+    HMAC_SHA256_SALT_PLAINTEXT_SECRET,
+    HMAC_SHA512_PLAINTEXT,
+    HMAC_SHA512_SALT,
+
+    // PBKDF2
+    PBKDF2_HMAC_MD5,
+    PBKDF2_HMAC_SHA1,
+    PBKDF2_HMAC_SHA256,
+    PBKDF2_HMAC_SHA512,
+
+    // PHP
+    PHPBB3_MD5,
+    PHPASS_WORDPRESS_MD5,
+    
+    // CMS
+    WORDPRESS_MD5,
+    JOOMLA_BEFORE_2_5_18,
+    VBULLETIN_BEFORE_3_8_5,
+    VBULLETIN_AFTER_3_8_5,
+    MYBB_IPB2,
+
+    // BCRYPT
+    BCRYPT_BLOWFISH_UNIX,
+    BCRYPT_MD5,
+    BCRYPT_SHA256,
+
+    // KECCAK
+    KECCAK224,
+    KECCAK256,
+    KECCAK384,
+    KECCAK512,
+    
+    // SHA3
+    SHA3_224,
+    SHA3_256,
+    SHA3_384,
+    SHA3_512,
+
+    // ELECTRUM WALLET
+    ELECTRUM_WALLET_1_3,
+    ELECTRUM_WALLET_4,
+    ELECTRUM_WALLET_5,
+    
+    // METAMASK WALLET
+    METAMASK_WALLET,
+    METAMASK_WALLET_SHORT,
+    
+    // DJANGO
+    DJANGO_SHA1,
+    DJANGO_PBKDF2_SHA256,
+    
+    // ETHEREUM WALLET
+    ETHEREUM_PRE_SALE_WALLET_PBKDF2_HMAC_SHA256,
+    ETHEREUM_WALLET_SCRYPT,
+    ETHEREUM_WALLET_PBKDF2_HMAC_SHA256,
+    
+    // APPLE
+    APPLE_KEYCHAIN,
+    APPLE_SECURE_NOTES,
+    APPLE_FILE_SYSTEM,
+    
+    // BITCOIN
+    BITCOIN_LITTLECOIN_WALLET_DAT,
+    
+    // OTHERS
+    JWT,
+    SMF,
+    OPENCART,
+    YESCRYPT,
+    WHIRLPOOL,
+    AUTHME_SHA256,
+    PASSWORDSAFE_V3,
+    WPA_PMKID_PBKDF2,
+    IPMI2_RAKP_HMAC_SHA1,
+    OSCOMMERCE_XTCOMMERCE,
+    BLOCKCHAIN_MY_WALLET_V2,
+    RUBY_ON_RAILS_RESTFUL_AUTHENTICATION,
 }
