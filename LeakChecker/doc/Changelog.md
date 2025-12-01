@@ -155,6 +155,7 @@ Author: Adam Havlík
   - [Microsoft Presidio](https://microsoft.github.io/presidio/) tested as orchestrator of previously used model and models from `2.10.2025` with no relevant results.  
   [NOTE] - Most models can recognize contextual data like "User login info: username: alice, password: p@ssW0rd123".  Pure credentials as content-free data are hard to recognize, detect and validate.
 - `27.10.2025` [IbanNet](https://github.com/skwasjer/IbanNet) - validation of some common formats
+- `30.11.2025` Hash types recognized properly
 
 ### Content Processing
 
@@ -179,6 +180,7 @@ Author: Adam Havlík
 - `14.10.2025` - Content.Detection.ItemParsing add 230 tests initial
 - `15.10.2025` - Content.Detection.ItemRecognition add 158 tests initial
 - `3.11.2025` - SqlHeaderGuesser 245 tests initial
+- `1.12.2025` - HashParserTests added 63 tests
 - `XX.11.2025` - Encodings.Detection tests
 - `XX.11.2025` - Encodings.Conversion tests
 - `XX.11.2025` - Format.Delimiter tests
@@ -194,14 +196,17 @@ Author: Adam Havlík
 
 ## TODOs
 
-- When row mismatch, parse it separately. When SampleLimit consecutive rows mismatch, recompute schema. 
+- Do proper parallelization
+- When row mismatch, parse it separately.
+- Add 490+ Hashcat hash types to ItemEnum and match it to hashes.com
+- When hash detected at [i], try [i+1] for salted hash 
 - ExcelDataParser - VelvetSweetShop obfuscation
 - Detect Username and plaintext Password. CredentialCandidate
 - Communication timeout for connection and request reply
+- SchemaCreation - When it looks like 1,2,7,8, cut 7,8, when its [1] 120, [2] 87, [3] 100, [4] 1 cut 4
 - Decide how to enum localhost IpV4/IpV6
 - Decide how to process a IpAddress ports
 - Decide if IpAddress parsing of cross mapped addresses are feature or limitation. Can be done by [Microsoft.Recognizers.Text.Sequence](https://github.com/microsoft/Recognizers-Text) automated recognition as Email, Guid and Urls are.
-- Test Excel serials in TimeStampParser and decide if its feature or limitation.
 - Test TimeStamps recognizer and parser for valid datetime range. What's the correct range?
 - Location GPS coordinates [parser](https://github.com/Tronald/CoordinateSharp)
 - NationalID and VAT [parsers](https://github.com/anghelvalentin/CountryValidator)
