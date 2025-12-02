@@ -21,6 +21,7 @@ public class HashParserTests
     // [InlineData("250920b3a5e31318806a032a4674df7e:1234", ItemEnum.MD5_MD5_PLAINTEXT_MD5_SALT)]   // hashes.com mismatch Possible algorithms: md5($plaintext.$salt)...
     // [InlineData("b4cb5c551a30f6c25d648560408df68a:1234", ItemEnum.MD5_SALT_MD5_PLAINTEXT_SALT)]  // hashes.com mismatch Possible algorithms: md5($plaintext.$salt)...
     // [InlineData("e69b7a7fe1bf2ad9ef116f79551ee919:baa038987e582431a6d", ItemEnum.MD5_SHA1_SALT_MD5_PLAINTEXT)]   // hashes.com mismatch Possible algorithms: md5($plaintext.$salt)...
+    // [InlineData("b8c385461bb9f9d733d3af832cf60b27", ItemEnum.MD5_STRTOUPPER_MD5_PLAINTEXT)]   // hashes.com mismatch Possible algorithms: MD5...
     // [InlineData("799dc7d9aa4d3f404cc21a4936dbdcde:68617368636174", ItemEnum.MD5_SALT_SHA1_SALT_PLAINTEXT)]   // hashes.com mismatch Possible algorithms: md5($plaintext.$salt)...
     [InlineData("$1$28772684$iEwNOgGugqO9.bIz5sk8k/", ItemEnum.MD5_CRYPT)]
     // [InlineData("100b3a4fc1dc8d60d9bf40688d8b740a", ItemEnum.MD5_SHA1_PLAINTEXT_MD5_PLAINTEXT_SHA1_PLAINTEXT)]   // hashes.com mismatch Possible algorithms: MD5
@@ -131,9 +132,20 @@ public class HashParserTests
     // APPLE
     [InlineData("$keychain$*74cd1efd49e54a8fdc8750288801e09fa26a33b1*66001ad4e0498dc7*5a084b7314971b728cb551ac40b2e50b7b5bd8b8496b902efe7af07538863a45394ead8399ec581681f7416003c49cc7", ItemEnum.APPLE_KEYCHAIN)]
     [InlineData("$ASN$*1*20000*80771171105233481004850004085037*d04b17af7f6b184346aad3efefe8bec0987ee73418291a41", ItemEnum.APPLE_SECURE_NOTES)]
-    // [InlineData("$fvde$2$16$58778104701476542047675521040224$20000$39602e86b7cea4a34f4ff69ff6ed706d68954ee474de1d2a9f6a6f2d24d172001e484c1d4eaa237d", ItemEnum.APPLE_FILE_SYSTEM)]   //
+    // [InlineData("$fvde$2$16$58778104701476542047675521040224$20000$39602e86b7cea4a34f4ff69ff6ed706d68954ee474de1d2a9f6a6f2d24d172001e484c1d4eaa237d", ItemEnum.APPLE_FILE_SYSTEM)]   // hashes.com mismatch Possible algorithms: FileVault 2...
     [InlineData("$itunes_backup$*9*b8e3f3a970239b22ac199b622293fe4237b9d16e74bad2c3c3568cd1bd3c471615a6c4f867265642*10000*4542263740587424862267232255853830404566**", ItemEnum.APPLE_ITUNES_BACKUP_BEFORE_10_0)]
     [InlineData("$itunes_backup$*10*8b715f516ff8e64442c478c2d9abb046fc6979ab079007d3dbcef3ddd84217f4c3db01362d88fa68*10000*2353363784073608264337337723324886300850*10000000*425b4bb4e200b5fd4c66979c9caca31716052063", ItemEnum.APPLE_ITUNES_BACKUP_AFTER_10_0)]
+    
+    // MS OFFICE
+    [InlineData("$office$*2007*20*128*16*411a51284e0d0200b131a8949aaaa5cc*117d532441c63968bee7647d9b7df7d6*df1d601ccf905b375575108f42ef838fb88e1cde", ItemEnum.MS_OFFICE_2007)]
+    [InlineData("$office$*2010*100000*128*16*77233201017277788267221014757262*b2d0ca4854ba19cf95a2647d5eee906c*e30cbbb189575cafb6f142a90c2622fa9e78d293c5b0c001517b3f5b82993557", ItemEnum.MS_OFFICE_2010)]
+    [InlineData("$office$*2013*100000*256*16*7dd611d7eb4c899f74816d1dec817b3b*948dc0b2c2c6c32f14b5995a543ad037*0b7ee0e48e935f937192a59de48a7d561ef2691d5c8a3ba87ec2d04402a94895", ItemEnum.MS_OFFICE_2013)]
+    [InlineData("$oldoffice$1*04477077758555626246182730342136*b1b72ff351e41a7c68f6b45c4e938bd6*0d95331895e99f73ef8b6fbc4a78ac1a", ItemEnum.MS_OFFICE_2003_MD5_RC4)]
+    // [InlineData("$oldoffice$0*55045061647456688860411218030058*e7e24d163fbd743992d4b8892bf3f2f7*493410dbc832557d3fe1870ace8397e2", ItemEnum.MS_OFFICE_2003_MD5_RC4_COLLIDER_1)]  // hashes.com mismatch Possible algorithms: MS Office <= 2003 $0/$1, MD5 + RC4...
+    // [InlineData("$oldoffice$0*55045061647456688860411218030058*e7e24d163fbd743992d4b8892bf3f2f7*493410dbc832557d3fe1870ace8397e2:91b2e062b9", ItemEnum.MS_OFFICE_2003_MD5_RC4_COLLIDER_2)]   // hashes.com API not detect and WEB mismatch Possible algorithms: MS Office <= 2003 $0/$1, MD5 + RC4...
+    // [InlineData("$oldoffice$3*83328705222323020515404251156288*2855956a165ff6511bc7f4cd77b9e101*941861655e73a09c40f7b1e9dfd0c256ed285acd", ItemEnum.MS_OFFICE_2003_SHA1_RC4)]    // hashes.com mismatch Possible algorithms: MS Office <= 2003 $0/$1, MD5 + RC4...
+    // [InlineData("$oldoffice$3*83328705222323020515404251156288*2855956a165ff6511bc7f4cd77b9e101*941861655e73a09c40f7b1e9dfd0c256ed285acd", ItemEnum.MS_OFFICE_2003_SHA1_RC4_COLLIDER_1)] // hashes.com mismatch Possible algorithms: MS Office <= 2003 $0/$1, MD5 + RC4...
+    // [InlineData("$oldoffice$3*83328705222323020515404251156288*2855956a165ff6511bc7f4cd77b9e101*941861655e73a09c40f7b1e9dfd0c256ed285acd:b8f63619ca", ItemEnum.MS_OFFICE_2003_SHA1_RC4_COLLIDER_2)]  // hashes.com API not detect and WEB mismatch Possible algorithms: MS Office <= 2003 $0/$1, MD5 + RC4...
     
     // AXCRYPT
     [InlineData("$axcrypt$*1*10000*aaf4a5b4a7185551fea2585ed69fe246*45c616e901e48c6cac7ff14e8cd99113393be259c595325e", ItemEnum.AXCRYPT)]
@@ -144,11 +156,14 @@ public class HashParserTests
     
     // OTHERS
     [InlineData("eyJhbGciOiJIUzI1NiJ9.eyIzNDM2MzQyMCI6NTc2ODc1NDd9.f1nXZ3V_Hrr6ee-AFCTLaHRnrkiKmio2t3JqwL32guY", ItemEnum.JWT)]
-    // [InlineData("ecf076ce9d6ed3624a9332112b1cd67b236fdd11:17782686", ItemEnum.SMF)]  // hashes.com mismatch Possible algorithms: sha1($plaintext.$salt)...
     [InlineData("$rar5$16$74575567518807622265582327032280$15$f8b4064de34ac02ecabfe9abdf93ed6a$8$9843834ed0f7c754", ItemEnum.RAR5)]
     [InlineData("$7z$0$19$0$salt$8$f6196259a7326e3f0000000000000000$185065650$112$98$f3bc2a88062c419a25acd40c0c2d75421cf23263f69c51b13f9b1aada41a8a09f9adeae45d67c60b56aad338f20c0dcc5eb811c7a61128ee0746f922cdb9c59096869f341c7a9cb1ac7bb7d771f546b82cf4e6f11a5ecd4b61751e4d8de66dd6e2dfb5b7d1022d2211e2d66ea1703f96", ItemEnum.SEVENZIP)]
     [InlineData("$zip2$*0*3*0*e3222d3b65b5a2785b192d31e39ff9de*1320*e*19648c3e063c82a9ad3ef08ed833*3135c79ecb86cd6f48fc*$/zip2$", ItemEnum.WINZIP)]
+    [InlineData("SCRYPT:1024:1:1:MDIwMzMwNTQwNDQyNQ==:5FW+zWivLxgCWj7qLiQbeC8zaNQ+qdO0NUinvqyFcfo=", ItemEnum.SCRYPT)]
+    [InlineData("$S$C33783772bRXEx1aCsvY.dqgaaSu76XmVlKrW9Qu8IQlvxHlmzLf", ItemEnum.DRUPAL7)]
     // [InlineData("6e36dcfc6151272c797165fce21e68e7c7737e40:472433673", ItemEnum.OPENCART)]    // hashes.com mismatch Possible algorithms: sha1($plaintext.$salt)...
+    [InlineData("{ssha1}06$bJbkFGJAB30L2e23$dCESGOsP7jaIIAJ1QAcmaGeG.kr", ItemEnum.AIX_SSHA1)]
+    [InlineData("admin::N46iSNekpT:08ca45b7d7ea58ee:88dcbe4446168966a153a0064958dac6:5c7830315c7830310000000000000b45c67103d07d7b95acd12ffa11230e0000000052920b85f78d013c31cdb3b92f5d765c783030", ItemEnum.NET_NTLM_V2)]
     // [InlineData("", ItemEnum.YESCRYPT)]  // Hashcat cant recognize this type of hash
     // [InlineData("7ca8eaaaa15eaa4c038b4c47b9313e92da827c06940e69947f85bc0fbef3eb8fd254da220ad9e208b6b28f6bb9be31dd760f1fdb26112d83f87d96b416a4d258", ItemEnum.WHIRLPOOL)] // hashes.com mismatch Possible algorithms: SHA512...
     [InlineData("$fvde$1$16$84286044060108438487434858307513$20000$f1620ab93192112f0a23eea89b5d4df065661f974b704191", ItemEnum.FILEVAULT_2)]
@@ -160,6 +175,10 @@ public class HashParserTests
     // [InlineData("374996a5e8a5e57fd97d893f7df79824:36", ItemEnum.OSCOMMERCE_XTCOMMERCE)]  // hashes.com mismatch Possible algorithms: md5($plaintext.$salt)...
     [InlineData("$blockchain$288$5420055827231730710301348670802335e45a6f5f631113cb1148a6e96ce645ac69881625a115fd35256636d0908217182f89bdd53256a764e3552d3bfe68624f4f89bb6de60687ff1ebb3cbf4e253ee3bea0fe9d12d6e8325ddc48cc924666dc017024101b7dfb96f1f45cfcf642c45c83228fe656b2f88897ced2984860bf322c6a89616f6ea5800aadc4b293ddd46940b3171a40e0cca86f66f0d4a487aa3a1beb82569740d3bc90bc1cb6b4a11bc6f0e058432cc193cb6f41e60959d03a84e90f38e54ba106fb7e2bfe58ce39e0397231f7c53a4ed4fd8d2e886de75d2475cc8fdc30bf07843ed6e3513e218e0bb75c04649f053a115267098251fd0079272ec023162505725cc681d8be12507c2d3e1c9520674c68428df1739944b8ac", ItemEnum.BLOCKCHAIN_MY_WALLET)]
     [InlineData("$blockchain$v2$5000$288$06063152445005516247820607861028813ccf6dcc5793dc0c7a82dcd604c5c3e8d91bea9531e628c2027c56328380c87356f86ae88968f179c366da9f0f11b09492cea4f4d591493a06b2ba9647faee437c2f2c0caaec9ec795026af51bfa68fc713eaac522431da8045cc6199695556fc2918ceaaabbe096f48876f81ddbbc20bec9209c6c7bc06f24097a0e9a656047ea0f90a2a2f28adfb349a9cd13852a452741e2a607dae0733851a19a670513bcf8f2070f30b115f8bcb56be2625e15139f2a357cf49d72b1c81c18b24c7485ad8af1e1a8db0dc04d906935d7475e1d3757aba32428fdc135fee63f40b16a5ea701766026066fb9fb17166a53aa2b1b5c10b65bfe685dce6962442ece2b526890bcecdeadffbac95c3e3ad32ba57c9e", ItemEnum.BLOCKCHAIN_MY_WALLET_V2)]
+    [InlineData("$9$2MJBozw/9R3UsU$2lFhcKvpghcyw8deP25GOfyZaagyUOGBymkryvOdfo6", ItemEnum.CISCO_IOS_SCRYPT)]
+    [InlineData("$8$TnGX/fE4KGHOVU$pEhnEvxrvaynpi8j4f.EMHr6M.FzU8xnZnBr/tJdFWk", ItemEnum.CISCO_IOS_PBKDF2_SHA256)]
+    // [InlineData("ecf076ce9d6ed3624a9332112b1cd67b236fdd11:17782686", ItemEnum.SMF_AFTER_1_1)]    // hashes.com mismatch Possible algorithms: sha1($plaintext.$salt)...
+    [InlineData("$krb5pa$23$user$realm$salt$4e751db65422b2117f7eac7b721932dc8aa0d9966785ecd958f971f622bf5c42dc0c70b532363138363631363132333238383835", ItemEnum.KERBEROS_5_AS_REQ_PRE_AUTH_ETYPE_23)]
     // [InlineData("d7d5ea3e09391da412b653ae6c8d7431ec273ea2:238769868762:8962783556527653675", ItemEnum.RUBY_ON_RAILS_RESTFUL_AUTHENTICATION)] // hashes.com mismatch Possible algorithms: sha1($plaintext.$salt)...
     
     // [InlineData("", ItemEnum.)]
