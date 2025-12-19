@@ -7,7 +7,7 @@ namespace LeakChecker.Content.Processing;
 
 public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader reader, IFileLogger logger)
 {
-    public async Task<ParsingState> ProcessSqlInsert(long startLine, long parseLimit)
+    public async Task<ParsingState> ProcessSqlInsert(long startLine, int malformedLimit, long parseLimit)
     {
         StringBuilder stringBuilder = new();
         Encoding encoding = reader.CurrentEncoding;
@@ -18,6 +18,8 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
         bool inQuote = false;
         int parenDepth = 0;
 
+        int malformedRecordsSequence = 0;
+        int malformedRecordsRead = 0;
         long recordsRead = 0;
         long linesRead = 0;
         long bytesRead = 0;
@@ -28,6 +30,7 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
             bytesRead += encoding.GetByteCount(line);
 
             line = line.Trim();
+            if (string.IsNullOrWhiteSpace(line)) continue;
 
             // Detect VALUES position
             if (!afterValues)
@@ -91,14 +94,22 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
 
                             string[] row = TupleToArray(rawTuple);
 
-                            Console.WriteLine($"\nSQL insert parsing line {startLine + linesRead}: {line}");
+                            // Console.WriteLine($"\nSQL insert parsing line {startLine + linesRead}: {line}");
                             if (row.Length != expectedFields)
                             {
                                 await logger.Log($"Bad row length on line {startLine + linesRead}: expected {expectedFields}, got {row.Length} content: {line}", LogLevel.Warning);
+                                malformedRecordsRead++;
+                                malformedRecordsSequence++;
+                                if (malformedRecordsSequence >= malformedLimit)
+                                {
+                                    await logger.Log($"Parsing reach malformed limit {malformedLimit}. Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
+                                    break;
+                                }
                                 continue;
                             }
 
                             await ParseRow(row);
+                            malformedRecordsSequence = 0;
                             recordsRead++;
 
                             if (recordsRead == parseLimit)
@@ -127,6 +138,7 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
 
         return new ParsingState
         {
+            MalformedRecordsRead = malformedRecordsRead,
             RecordsRead = recordsRead,
             LinesRead = linesRead,
             BytesRead = bytesRead,

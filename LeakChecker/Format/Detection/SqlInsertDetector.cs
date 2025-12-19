@@ -127,8 +127,8 @@ public static class SqlInsertDetector
                             // Validate column count
                             if (row.Length != expectedColumns)
                             {
-                                await logger.Log(
-                                    $"Bad row length on line {startLine}: expected {expectedColumns}, got {row.Length} content: {tuple}", LogLevel.Warning);
+                                await logger.Log($"Bad row length on line {startLine}: expected {expectedColumns}, got {row.Length} content: {tuple}", 
+                                    LogLevel.Warning);
                             }
                             
                             List<SchemaHeuristicRecord> linePatterns = new();
