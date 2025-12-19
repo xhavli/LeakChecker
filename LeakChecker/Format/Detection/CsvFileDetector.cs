@@ -18,10 +18,13 @@ public static class CsvFileDetector
         {
             if (samplesCount == detectSamples) break;
             
-            line = line.TrimOuterWhiteSpace().TrimOuterParenthesesAndComma().TrimOuterQuotes();
+            line = line.Trim();
+            line = line.TrimOuterParenthesesAndComma(); // For undetected SQL INSERT
+            line = line.TrimOuterQuotes();
+            
+            if (string.IsNullOrWhiteSpace(line)) { continue; }
             samplesCount++;
             await logger.LogSample($"CSV file sample {samplesCount} on line {startLine + samplesCount}: {line}");
-            if (string.IsNullOrWhiteSpace(line)) { continue; }
             analyzer.AddLinePatterns(await ContentDetector.DetectLine(line, delimiter, logger));
         }
         

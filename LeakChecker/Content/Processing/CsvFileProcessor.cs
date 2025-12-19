@@ -5,13 +5,15 @@ using LeakChecker.Utilities.Extensions;
 
 namespace LeakChecker.Content.Processing;
 
-public class CsvFileProcessor(Dictionary<int, ItemEnum> schema, IFileLogger logger)
+public class CsvFileProcessor(Dictionary<int, ItemEnum> schema, StreamReader reader, IFileLogger logger)
 {
-    public async Task<ParsingState> ProcessCsvFile(long startLine, char delimiter, StreamReader reader, long parseLimit)
+    public async Task<ParsingState> ProcessCsvFile(long startLine, char delimiter, int malformedLimit, long parseLimit)
     {
         Encoding encoding = reader.CurrentEncoding;
         int expectedFields = schema.Count == 0 ? 0 : schema.Keys.Max() + 1;
         
+        int malformedRecordsSequence = 0;
+        int malformedRecordsRead = 0;
         long recordsRead = 0;
         long linesRead = 0;
         long bytesRead = 0;
@@ -19,25 +21,30 @@ public class CsvFileProcessor(Dictionary<int, ItemEnum> schema, IFileLogger logg
         while (await reader.ReadLineWithEndingAsync() is { } line)
         {
             linesRead++;
-            int lineBytes = encoding.GetByteCount(line);
+            bytesRead += encoding.GetByteCount(line);
         
-            line = line.TrimOuterWhiteSpace();
-            if (string.IsNullOrWhiteSpace(line)) { continue; }
+            line = line.Trim();
+            if (string.IsNullOrWhiteSpace(line)) continue;
 
             Console.WriteLine($"CSV file parsing line {startLine + linesRead}: {line}");
 
             string[] row = line.Split(delimiter);
             
-            int actualFields = row.Length;
-            if (actualFields != expectedFields)
+            if (row.Length != expectedFields)
             {
-                await logger.Log($"Bad row length on line {startLine + linesRead}: expected {expectedFields}, got {actualFields} content: {line}", LogLevel.Warning);
-                // todo return (recordsProcessed, bytesRead, linesRead); //need to be tested
+                // await logger.Log($"Bad row length at line {startLine + linesRead}: expected {expectedFields}, got {row.Length} content: {line}", LogLevel.Warning);
+                malformedRecordsRead++;
+                malformedRecordsSequence++;
+                if (malformedRecordsSequence >= malformedLimit)
+                {
+                    await logger.Log($"Parsing reach malformed limit {malformedLimit}. Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
+                    break;
+                }
                 continue;
             }
 
             await ParseRow(delimiter, row);
-            bytesRead += lineBytes;
+            malformedRecordsSequence = 0;
             recordsRead++;
 
             if (recordsRead == parseLimit) break;
@@ -45,6 +52,7 @@ public class CsvFileProcessor(Dictionary<int, ItemEnum> schema, IFileLogger logg
         
         return new ParsingState
         {
+            MalformedRecordsRead = malformedRecordsRead,
             RecordsRead = recordsRead,
             LinesRead = linesRead,
             BytesRead = bytesRead,
@@ -77,8 +85,7 @@ public class CsvFileProcessor(Dictionary<int, ItemEnum> schema, IFileLogger logg
             else
             {
                 // No schema for this field -> log warning
-                string warnVal = row[i].Trim();
-                await logger.Log($"Unmapped CSV field[{i}] = {warnVal}", LogLevel.Warning, LogContext.Parsing);
+                await logger.Log($"Unmapped CSV field[{i}] = {value}", LogLevel.Warning, LogContext.Parsing);
                 //todo exception to higher logic to search for new pattern
                 i++;
             }
