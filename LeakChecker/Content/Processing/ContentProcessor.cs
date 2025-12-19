@@ -11,14 +11,19 @@ namespace LeakChecker.Content.Processing;
 
 public class ContentProcessor : IDisposable
 {
-    private long _linesRead;
+    // Parsing state
+    private long _malformedRecordsRead;
     private long _recordsRead;
+    private long _linesRead;
     private long _readerPosition;
-    private readonly Stopwatch _sw = new();
+    // Basics
     private readonly Encoding _encoding;
     private readonly StreamReader _reader;
+    // Logging and Statistics
+    private readonly Stopwatch _sw = new();
     private readonly IFileLogger _logger;
     private readonly FileStats _stats;
+    // Default constants
     private const int SqlSamplesLimit = 31;
     private const int CsvSamplesLimit = 103;
     private const int ThresholdPercent = 50;
@@ -90,9 +95,10 @@ public class ContentProcessor : IDisposable
             await ProcessCsvFile();
         }
 
+        _stats.MalformedRecordsRead = _malformedRecordsRead;
+        _stats.RecordsRead = _recordsRead;
         _stats.LinesRead = _linesRead;
         _stats.BytesRead = _readerPosition;
-        _stats.RecordsRead = _recordsRead;
 
         await _logger.Log($"Content processing finished successfully. Time taken: {_sw.Elapsed}, current DateTime: " +
                        $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Content);
@@ -114,16 +120,94 @@ public class ContentProcessor : IDisposable
         // Parse SQL INSERT block with header
         _reader.AdjustPosition(sqlInsertStart);
         SqlInsertProcessor processor = new(schema, _reader, _logger);
-        ParsingState result = await processor.ProcessSqlInsert(_linesRead, ParseLimit);
-        
-        _recordsRead += result.RecordsRead;
-        _linesRead += result.LinesRead;
-        _readerPosition += result.BytesRead;
+        ParsingState result = await processor.ProcessSqlInsert(_linesRead, SqlSamplesLimit, ParseLimit);
+        UpdateParsingState(result);
         
         _stats.Formats.Add(FormatEnum.SqlInsert);
         _stats.Delimiters.Add(',');
     }
+
+    private async Task ProcessCsvFile()
+    {
+        long csvFormatStart = _readerPosition;
+
+        char delimiter;
+        var delimiterResult = DelimiterHeuristic.Analyze(_reader);
+        if (delimiterResult.BestDelimiter.HasValue)
+        { 
+            delimiter = delimiterResult.BestDelimiter.Value;
+            await _logger.LogDelimiterHeuristic(delimiterResult, count: 5);
+        }
+        else
+        {
+            await _logger.Log("Delimiter detection failed. Setting default delimiter [:]", LogLevel.Warning, LogContext.Delimiter);
+            delimiter = ';';
+        }
+
+        // Reset reader before CSV start
+        _reader.AdjustPosition(csvFormatStart);
+        
+        // Detect schema
+        Stopwatch sw = Stopwatch.StartNew();
+        var schema = await CsvFileDetector.DetectFormat(_linesRead, delimiter, _reader, _logger, CsvSamplesLimit, ThresholdPercent);
+        await _logger.Log($"CSV file schema created in {sw.Elapsed}\n");
+        
+        // Parse CSV file
+        _reader.AdjustPosition(csvFormatStart);
+        CsvFileProcessor csvFileProcessor = new(schema, _reader, _logger);
+        ParsingState result;
+        if (schema.Values.All(v => v == ItemEnum.Other) || schema.Count == 0)    // if nothing reliable detected
+        {
+            result = await csvFileProcessor.ProcessCsvFile(_linesRead, delimiter, CsvSamplesLimit, CsvSamplesLimit);
+            UpdateParsingState(result);    //TODO decide how to handle this, have to be only bytesRead, linesRead, records 0 => malformed
+            
+            return;
+        }
+        result = await csvFileProcessor.ProcessCsvFile(_linesRead, delimiter, CsvSamplesLimit, ParseLimit);
+        UpdateParsingState(result);
+        
+        _stats.Formats.Add(FormatEnum.Csv);
+        _stats.Delimiters.Add(delimiter);
+    }
+
+    // INSERT [modifiers] INTO <table_name> [ (columns...) ] VALUES
+    // ( literal , literal , literal , literal ),
+    // ( ... );
+    private static bool IsSqlInsertValues(string line)
+    {
+        var start = line.IndexOf("INSERT ", StringComparison.OrdinalIgnoreCase);
+        if (start != 0)
+            return false;
+
+        var into = line.IndexOf(" INTO ", StringComparison.OrdinalIgnoreCase);
+        if (into < 0)
+            return false;
+
+        var values = line.IndexOf(" VALUES", StringComparison.OrdinalIgnoreCase);
+        if (values < 0)
+            return false;
+
+        return start < into && into < values;
+    }
     
+    // CREATE [modifiers] TABLE [modifiers] <table_name>
+    // ( <column> <data_type> [constraint] ,
+    //   <column> <data_type> [constraint] ,
+    //   ...
+    // ) [options];
+    private static bool IsSqlCreateTable(string line)
+    {
+        var create = line.IndexOf("CREATE ", StringComparison.OrdinalIgnoreCase);
+        if (create != 0)
+            return false;
+
+        var table = line.IndexOf(" TABLE ", StringComparison.OrdinalIgnoreCase);
+        if (table < 0)
+            return false;
+
+        return create < table;
+    }
+
     private async Task SkipSqlCreateTable()
     {
         bool inSingle = false;
@@ -136,7 +220,7 @@ public class ContentProcessor : IDisposable
             _linesRead++;
 
             _readerPosition += _encoding.GetByteCount(line);
-            line = line.TrimOuterWhiteSpace();
+            line = line.Trim();
 
             ReadOnlySpan<char> span = line.AsSpan();
 
@@ -182,74 +266,6 @@ public class ContentProcessor : IDisposable
         }
     }
 
-    private async Task ProcessCsvFile()
-    {
-        long csvFormatStart = _readerPosition;
-
-        char delimiter;
-        var delimiterResult = DelimiterHeuristic.Analyze(_reader);
-        if (delimiterResult.BestDelimiter.HasValue)
-        { 
-            delimiter = delimiterResult.BestDelimiter.Value;
-            await _logger.LogDelimiterHeuristic(delimiterResult, count: 5);
-        }
-        else
-        {
-            await _logger.Log("Delimiter detection failed. Setting default delimiter [:]", LogLevel.Warning, LogContext.Delimiter);
-            delimiter = ';';
-        }
-
-        // Reset reader before CSV start
-        _reader.AdjustPosition(csvFormatStart);
-        
-        // Detect schema
-        Stopwatch sw = Stopwatch.StartNew();
-        var schema = await CsvFileDetector.DetectFormat(_linesRead, delimiter, _reader, _logger, CsvSamplesLimit, ThresholdPercent);
-        await _logger.Log($"CSV file schema created in {sw.Elapsed}\n");
-        
-        // Parse CSV file
-        _reader.AdjustPosition(csvFormatStart);
-        CsvFileProcessor csvFileProcessor = new(schema, _logger);
-        ParsingState result;
-        if (schema.Values.All(v => v == ItemEnum.Other) || schema.Count == 0)    // if nothing reliable detected
-        {
-            result = await csvFileProcessor.ProcessCsvFile(_linesRead, delimiter, _reader, CsvSamplesLimit);
-            _recordsRead += result.RecordsRead;
-            _linesRead += result.LinesRead;
-            _readerPosition += result.BytesRead;
-            
-            return;
-        }
-        result = await csvFileProcessor.ProcessCsvFile(_linesRead, delimiter, _reader, ParseLimit);
-
-        _recordsRead += result.RecordsRead;
-        _linesRead += result.LinesRead;
-        _readerPosition += result.BytesRead;
-        
-        _stats.Formats.Add(FormatEnum.Csv);
-        _stats.Delimiters.Add(delimiter);
-    }
-
-    // INSERT [modifiers] INTO <table_name> [ (columns...) ] VALUES
-    // ( literal , literal , literal , ... );
-    private static bool IsSqlInsertValues(string line)
-    {
-        return line.StartsWith("INSERT ", StringComparison.OrdinalIgnoreCase) &&
-               line.IndexOf("INTO", StringComparison.OrdinalIgnoreCase) >= "INSERT ".Length &&
-               line.Contains("VALUES", StringComparison.OrdinalIgnoreCase);
-    }
-    
-    // CREATE [modifiers] TABLE [table_modifiers] <table_name>
-    // ( <column> <data_type> [column_constraint] ,
-    //   <column> <data_type> [column_constraint] ,
-    //   ...
-    // ) [table_options];
-    private static bool IsSqlCreateTable(string line)
-    {
-        return line.StartsWith("CREATE ", StringComparison.OrdinalIgnoreCase) &&
-               line.IndexOf("TABLE", StringComparison.OrdinalIgnoreCase) >= "CREATE ".Length;
-    }
-
     private static bool IsTrashOrEmpty(string line)
     {
         return string.IsNullOrWhiteSpace(line) ||
@@ -276,6 +292,14 @@ public class ContentProcessor : IDisposable
         return sb.Length == 0;
     }
 
+    private void UpdateParsingState(ParsingState state)
+    {
+        _malformedRecordsRead += state.MalformedRecordsRead;
+        _recordsRead += state.RecordsRead;
+        _linesRead += state.LinesRead;
+        _readerPosition += state.BytesRead;
+    }
+    
     public void Dispose()
     {
         _reader.Dispose();
@@ -285,6 +309,7 @@ public class ContentProcessor : IDisposable
 
 public class ParsingState
 {
+    public long MalformedRecordsRead = 0;
     public long RecordsRead = 0;
     public long LinesRead = 0;
     public long BytesRead = 0;
