@@ -83,6 +83,8 @@ public class ExecutionLogger : IDisposable
         }
 
         await LogLineAsync($"Records parsed: {stats.RecordsParsed:N0}");
+        await LogLineAsync($"Malformed records parsed: {stats.MalformedRecordsRead:N0}");
+        await LogLineAsync($"Parse accuracy (correct vs malformed): {stats.Accuracy:N2} %");
 
         await LogLineAsync($"Lines parsed: {stats.LinesParsed:N0}");
         await LogLineAsync($"Line speed: {stats.LineSpeed:N2} lines/second");
