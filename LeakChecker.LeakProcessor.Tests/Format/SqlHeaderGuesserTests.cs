@@ -7,31 +7,31 @@ public class SqlHeaderGuesserTests
 {
     // ---------------- IpV4 ----------------
     [Theory]
-    [InlineData("ip", ItemEnum.IpV4)]
-    [InlineData("ip4", ItemEnum.IpV4)]
-    [InlineData("ipv4", ItemEnum.IpV4)]
-    [InlineData("IpV4", ItemEnum.IpV4)]
-    [InlineData("client_ip", ItemEnum.IpV4)]
-    [InlineData("player_ip", ItemEnum.IpV4)]
-    [InlineData("srcIp", ItemEnum.IpV4)]
-    [InlineData("server_ip4_addr", ItemEnum.IpV4)]
-    [InlineData("userIpV4", ItemEnum.IpV4)]
-    [InlineData("device-ip4", ItemEnum.IpV4)]
+    [InlineData("ip", ItemEnum.Ipv4)]
+    [InlineData("ip4", ItemEnum.Ipv4)]
+    [InlineData("ipv4", ItemEnum.Ipv4)]
+    [InlineData("IpV4", ItemEnum.Ipv4)]
+    [InlineData("client_ip", ItemEnum.Ipv4)]
+    [InlineData("player_ip", ItemEnum.Ipv4)]
+    [InlineData("srcIp", ItemEnum.Ipv4)]
+    [InlineData("server_ip4_addr", ItemEnum.Ipv4)]
+    [InlineData("userIpV4", ItemEnum.Ipv4)]
+    [InlineData("device-ip4", ItemEnum.Ipv4)]
     public void ShouldGuess_IpV4(string header, ItemEnum expected)
         => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
 
     // ---------------- IpV6 ----------------
     [Theory]
-    [InlineData("ip6", ItemEnum.IpV6)]
-    [InlineData("ipv6", ItemEnum.IpV6)]
-    [InlineData("IpV6", ItemEnum.IpV6)]
-    [InlineData("client_ip6", ItemEnum.IpV6)]
-    [InlineData("sourceIp6", ItemEnum.IpV6)]
-    [InlineData("destinationIPV6", ItemEnum.IpV6)]
-    [InlineData("server_ip6_addr", ItemEnum.IpV6)]
-    [InlineData("userIpv6", ItemEnum.IpV6)]
-    [InlineData("device-ip6", ItemEnum.IpV6)]
-    [InlineData("networkIpv6", ItemEnum.IpV6)]
+    [InlineData("ip6", ItemEnum.Ipv6)]
+    [InlineData("ipv6", ItemEnum.Ipv6)]
+    [InlineData("IpV6", ItemEnum.Ipv6)]
+    [InlineData("client_ip6", ItemEnum.Ipv6)]
+    [InlineData("sourceIp6", ItemEnum.Ipv6)]
+    [InlineData("destinationIPV6", ItemEnum.Ipv6)]
+    [InlineData("server_ip6_addr", ItemEnum.Ipv6)]
+    [InlineData("userIpv6", ItemEnum.Ipv6)]
+    [InlineData("device-ip6", ItemEnum.Ipv6)]
+    [InlineData("networkIpv6", ItemEnum.Ipv6)]
     public void ShouldGuess_IpV6(string header, ItemEnum expected)
         => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
 

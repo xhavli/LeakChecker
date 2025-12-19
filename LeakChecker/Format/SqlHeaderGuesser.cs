@@ -16,7 +16,7 @@ public static class SqlHeaderGuesser
     private static readonly Dictionary<ItemEnum, List<HeaderKeyword>> Synonyms = new()
     {
         {
-            ItemEnum.IpV4, [
+            ItemEnum.Ipv4, [
                 new("ip", MatchPolicy.Token),
                 new("ip4", MatchPolicy.Substring),
                 new("ipv4", MatchPolicy.Substring),
@@ -26,7 +26,7 @@ public static class SqlHeaderGuesser
             ]
         },
         {
-            ItemEnum.IpV6, [
+            ItemEnum.Ipv6, [
                 new("ip6", MatchPolicy.Substring),
                 new("ipv6", MatchPolicy.Substring),
                 new("ipv6addr", MatchPolicy.Substring),
