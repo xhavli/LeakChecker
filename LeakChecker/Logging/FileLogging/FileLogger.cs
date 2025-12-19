@@ -9,7 +9,7 @@ namespace LeakChecker.Logging.FileLogging;
 
 public class FileLogger : IFileLogger
 {
-    public Guid ParsingId {get; init;}
+    public Guid ParseId {get; init;}
     public Guid ExecutionId {get; init;}
     public DateTime ParseStart { get; }
     public string SubjectFileName { get; }
@@ -19,14 +19,14 @@ public class FileLogger : IFileLogger
     private readonly StreamWriter _writer;
 
     private FileLogger(
-        Guid parsingId,
+        Guid parseId,
         Guid executionId,
         DateTime parseStart,
         string subjectFilePath,
         string tmpFilePath,
         StreamWriter writer)
     {
-        ParsingId = parsingId;
+        ParseId = parseId;
         ExecutionId = executionId;
         ParseStart = parseStart;
         SubjectFileName = Path.GetFileName(subjectFilePath);
@@ -37,15 +37,15 @@ public class FileLogger : IFileLogger
 
     public static async Task<IFileLogger> CreateAsync(
         AppConfig config,
-        Guid parsingId,
+        Guid parseId,
         Guid executionId,
-        DateTime parsingStart,
+        DateTime parseStart,
         string subjectFilePath)
     {
         string subjectFileName = Path.GetFileName(subjectFilePath);
 
-        string fileTimeStamp = $"{parsingStart:yyyy-M-dTHH-mm-ss}";
-        string logFileName = $"{fileTimeStamp}_{subjectFileName}_{parsingId}.txt";
+        string fileTimeStamp = $"{parseStart:yyyy-M-dTHH-mm-ss}";
+        string logFileName = $"{fileTimeStamp}_{subjectFileName}_{parseId}.txt";
         string logFilePath = Path.Combine(config.LogDirectory, logFileName);
         string tmpFilePath = Path.Combine(config.TmpDirectory, logFileName);
 
@@ -56,7 +56,7 @@ public class FileLogger : IFileLogger
         };
 
         var logger = new FileLogger(
-            parsingId, executionId, parsingStart, subjectFilePath, tmpFilePath, writer);
+            parseId, executionId, parseStart, subjectFilePath, tmpFilePath, writer);
         await logger.CreateLogHeaderAsync();
 
         return logger;
@@ -105,7 +105,7 @@ public class FileLogger : IFileLogger
         double sizeMb = fileSize / (1024.0 * 1024);
         double sizeGb = fileSize / (1024.0 * 1024 * 1024);
 
-        await LogLineAsync($"File parsing start at: {timeStamp}");
+        await LogLineAsync($"File parse start at: {timeStamp}");
         await LogLineAsync($"File path: {fileInfo.FullName}");
         await LogLineAsync($"File name: {fileInfo.Name}");
         await LogLineAsync($"File size: {sizeGb:F2} GB / {sizeMb:F2} MB / {fileSize:N0} bytes ");
@@ -184,7 +184,7 @@ public class FileLogger : IFileLogger
     {
         await LogLineAsync();
         await LogLineAsync("---------------------------------------------");
-        await LogLineAsync("           [X] CONTENT PARSING [X]");
+        await LogLineAsync("            [X] CONTENT PARSE [X]");
         await LogLineAsync("---------------------------------------------");
     }
     
@@ -204,21 +204,31 @@ public class FileLogger : IFileLogger
 
     public async Task LogSqlInsertHeader(string subject, IList<string> headers, string fullHeader)
     {
-        await Log(fullHeader);
-        await LogLineAsync($"SQL Insert subject: {subject}");
+        await Log($"SQL INSERT header: {fullHeader}");
+        await LogLineAsync($"SQL INSERT subject: {subject}");
 
         for (int i = 0; i < headers.Count; i++)
             await LogLineAsync($"[{i}] {headers[i]}");
         
         await LogLineAsync();
     }
-    
-    public async Task LogHeuristicData(SchemaHeuristic analyzer)
+
+    public async Task LogSchemaDetectionHeader()
     {
         await LogLineAsync();
         await LogLineAsync("---------------------------------------------");
         await LogLineAsync("           [X] SCHEMA DETECTION [X]");
         await LogLineAsync("---------------------------------------------");
+    }
+
+    public async Task LogSample(string sample)
+    {
+        await LogLineAsync(sample);
+    }
+    
+    public async Task LogHeuristicData(SchemaHeuristic analyzer)
+    {
+        await LogLineAsync();
         await LogLineAsync("Heuristic data:");
 
         foreach (var kvp in analyzer.AttributeCountsPerPosition.OrderBy(x => x.Key))
@@ -286,12 +296,11 @@ public class FileLogger : IFileLogger
     {
         await LogLineAsync();
         await LogLineAsync("------------------------------------------------");
-        await LogLineAsync("           [X] FILE PARSING STATS [X]");
+        await LogLineAsync("             [X] FILE PARSE STATS [X]");
         await LogLineAsync("------------------------------------------------");
-        await LogLineAsync("Parsing ID: 7112daac-b524-43a6-98ba-9d92f29f8383");
 
         await LogLineAsync($"File: {stats.FileName}");
-        await LogLineAsync($"Parsing ID: {stats.ParsingId}");
+        await LogLineAsync($"Parse ID: {stats.ParseId}");
 
         string originEnc = string.IsNullOrEmpty(stats.Encoding?.WebName) ? "NULL" : stats.Encoding.WebName;
         await LogLineAsync($"Origin encoding: [{originEnc}]");
@@ -306,14 +315,17 @@ public class FileLogger : IFileLogger
         foreach (var format in stats.Formats)
             await LogLineAsync($"   {format}");
 
-        await LogLineAsync($"Records parsed: {stats.RecordsCount:N0}");
-        await LogLineAsync($"Bytes parsed: {stats.BytesRead:N0}");
-        await LogLineAsync($"Byte speed: {stats.ByteSpeed:F2} bytes/sec");
+        await LogLineAsync($"Malformed records read: {stats.MalformedRecordsRead:N0}");
+        await LogLineAsync($"Records read: {stats.RecordsRead:N0}");
+        await LogLineAsync($"Parse accuracy (correct vs malformed): {stats.Accuracy:F2} %");
+        await LogLineAsync($"Lines read: {stats.LinesRead:N0}");
         await LogLineAsync($"Line speed: {stats.LineSpeed:F2} lines/sec");
+        await LogLineAsync($"Bytes read: {stats.BytesRead:N0}");
+        await LogLineAsync($"Byte speed: {stats.ByteSpeed:F2} bytes/sec");
 
-        await LogLineAsync($"Parsing start: {stats.ParsingStart}");
-        await LogLineAsync($"Parsing end: {stats.ParsingEnd}");
-        await LogLineAsync($"Parsing time: {stats.Duration}");
+        await LogLineAsync($"Parse start: {stats.ParseStart.ToString("F", CultureInfo.InvariantCulture)}");
+        await LogLineAsync($"Parse end: {stats.ParseEnd.ToString("F", CultureInfo.InvariantCulture)}");
+        await LogLineAsync($"Parse time: {stats.Duration}");
         await LogLineAsync();
     }
 

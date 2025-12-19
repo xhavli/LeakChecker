@@ -11,6 +11,7 @@ public class FileStats
     public string? FileName { get; init; }
     public string? FilePath { get; init; }
     public long FileSize { get; init; }
+    public long MalformedRecordsRead { get; set; }
     public long LinesRead { get; set; }
     public long BytesRead { get; set; }
     public long RecordsRead { get; set; }
@@ -23,5 +24,7 @@ public class FileStats
     public TimeSpan Duration => ParseEnd - ParseStart;
     public double ByteSpeed => Duration.TotalSeconds > 0 ? BytesRead / Duration.TotalSeconds : 0;
     public double LineSpeed => Duration.TotalSeconds > 0 ? LinesRead / Duration.TotalSeconds : 0;
+    public double Accuracy =>
+        RecordsRead <= 0 ? 0 : Math.Max(0, (double)(RecordsRead - MalformedRecordsRead) / RecordsRead * 100);
 }
 
