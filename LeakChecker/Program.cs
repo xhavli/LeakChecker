@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using LeakChecker.Content.Detection.RecognitionService;
 using LeakChecker.Content.Processing;
@@ -17,7 +16,7 @@ namespace LeakChecker;
 
 public static class Program
 {
-    private static ExecutionLogger? ExeLogger { get; set; }
+    private static ExecutionLogger? ExecutionLogger { get; set; }
 
     public static async Task<int> Main()
     {
@@ -36,8 +35,6 @@ public static class Program
             Console.WriteLine("Program will exit with exit code 1.");
             return 1;
         }
-
-        Stopwatch sw = Stopwatch.StartNew();
         
         var services = new ServiceCollection();
         services.AddSingleton(config);
@@ -46,14 +43,22 @@ public static class Program
         services.AddSingleton<ExecutionLogger>();
         
         var provider = services.BuildServiceProvider();
-        ExeLogger = provider.GetRequiredService<ExecutionLogger>();
+        ExecutionLogger = provider.GetRequiredService<ExecutionLogger>();
         var loggerFactory = provider.GetRequiredService<IFileLoggerFactory>();
         Guid executionId = Guid.NewGuid();
         var stats = new ExecutionStats(executionId);
         
-        PythonNerService pythonNerService = new PythonNerService(ExeLogger);
-        // await pythonNerService.Start();
-        await pythonNerService.WaitForStart();   //TODO
+        PythonNerService pythonNerService = new PythonNerService(ExecutionLogger);
+        try
+        {
+            // await pythonNerService.Start(config.PythonNerService, config.PythonNerServArgs);
+            await pythonNerService.WaitForStart(config.CsharpPort, config.PythonPort, config.ConnectionTimeout);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return 1;
+        }
         
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         Encoding utf8 = new UTF8Encoding(false); // false = no BOM
@@ -70,7 +75,7 @@ public static class Program
             }
             catch (Exception e)
             {
-                await ExeLogger.Log(e.Message, LogLevel.Warning, LogContext.Parsing);
+                await ExecutionLogger.Log(e.Message, LogLevel.Warning, LogContext.Main);
                 return;
             }
             
@@ -101,39 +106,33 @@ public static class Program
                 await parseLogger.LogFileStats(parseStats);
                 
                 stats.FilesParsed.Add(parseStats.ParseId);
+                stats.MalformedRecordsRead += parseStats.MalformedRecordsRead;
                 stats.RecordsParsed += parseStats.RecordsRead;
                 stats.LinesParsed += parseStats.LinesRead;
                 stats.BytesParsed += parseStats.BytesRead;
             }
             catch (Exception e)
             {
-                await ExeLogger.Log($"{filePath}: {e}", LogLevel.Exception, LogContext.Main);
+                await ExecutionLogger.Log($"{filePath}: {e}", LogLevel.Exception, LogContext.Main);
             }
             finally
             {
                 if (File.Exists(parseLogger.SubjectTmpFilePath))
-                {
                     File.Delete(parseLogger.SubjectTmpFilePath);
-                }
-                else
-                {
-                    await ExeLogger.Log($"Temporary parse file for delete not found: {filePath}", LogLevel.Warning);
-                }
             }
         });
 
         await Task.WhenAll(tasks);
-        
-        // pythonNerService.Stop();
+        await pythonNerService.Stop();
         
         Console.WriteLine();
         stats.ExecutionEnd = DateTime.Now;
-        await ExeLogger.LogExecutionStats(stats);
+        await ExecutionLogger.LogExecutionStats(stats);
         Console.WriteLine();
         
-        await ExeLogger.Log($"Execution finished successfully. Parsed {data.Keys.Count} files. Time taken {sw.Elapsed}, current DateTime is " +
+        await ExecutionLogger.Log($"Execution finished successfully. Parsed {data.Keys.Count} files. Current DateTime is " +
                          $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Main);
-        await ExeLogger.Log("Program will exit with exit code 0");
+        await ExecutionLogger.Log("Program will exit with exit code 0");
         return 0;
     }
 
