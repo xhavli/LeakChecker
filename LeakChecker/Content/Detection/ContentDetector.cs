@@ -2,7 +2,7 @@ using System.Net.Mail;
 using LeakChecker.Content.Detection.ItemParsing;
 using LeakChecker.Content.Detection.ItemRecognition;
 using LeakChecker.Content.Detection.RecognitionService;
-using LeakChecker.Format;
+using LeakChecker.Format.Schema;
 using LeakChecker.Logging;
 using LeakChecker.Logging.FileLogging;
 using LeakChecker.Utilities.Extensions;
@@ -15,9 +15,7 @@ public static class ContentDetector
     {
         List<SchemaHeuristicRecord> linePatterns = new();
         string originLine = line;
-        line = line.Trim().TrimOuterParenthesesAndComma().TrimOuterWhiteSpace().TrimOuterQuotes();
-        
-        //TODO if (string.IsNullOrEmpty(line)) return linePatterns;
+        // line = line.Trim().TrimOuterParenthesesAndComma().TrimOuterQuotes();
         
         if (WebRecognizer.TryRecognize(line, out List<string> stringUris, out List<Uri> uris))
         {
@@ -178,28 +176,15 @@ public static class ContentDetector
 
             if (itemType != ItemEnum.Other)
             {
-                int position = CountDelimitersBefore(originLine, token, delimiter);
-                Console.WriteLine($"[{position}] {itemType} = {token}");
-                
-                linePatterns.Add(new SchemaHeuristicRecord
-                {
-                    Attribute = itemType,
-                    Position = position,
-                    DelimitersInside = token.Count(ch => ch == delimiter)
-                });
+                // Console.WriteLine($"[{i}] {itemType} = {token}");
             }
-            else
+            
+            linePatterns.Add(new SchemaHeuristicRecord
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"[{i}] [UNRECOGNIZED TOKEN]: {token}");
-                Console.ResetColor();
-                linePatterns.Add(new SchemaHeuristicRecord
-                {
-                    Attribute = itemType,
-                    Position = i,
-                    DelimitersInside = token.Count(ch => ch == delimiter)
-                });
-            }
+                Attribute = itemType,
+                Position = i,
+                DelimitersInside = token.Count(ch => ch == delimiter)
+            });
         }
         
         return linePatterns;
@@ -207,9 +192,6 @@ public static class ContentDetector
     
     public static async Task<ItemEnum> DetectToken(string token, IFileLogger logger)
     {
-        //TODO how to handle empty im heuristic analysis if it will be None, Empty or Other
-        // if (string.IsNullOrEmpty(token) || string.IsNullOrWhiteSpace(token)) return ItemEnum.Other;
-        
         if (WebRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Web;
         if (EmailRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Email;
         if (TimeStampRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.TimeStamp;
@@ -241,10 +223,9 @@ public static class ContentDetector
         if (PhoneNumberParser.TryParse(token, out _)) return ItemEnum.PhoneNumber;
         if (MacAddressParser.TryParse(token, out _)) return ItemEnum.Mac;
         if (IbanParser.TryParse(token)) return ItemEnum.Iban;
-
-
+        
+        if (TimeStampParser.TryParse(token, out _)) return ItemEnum.TimeStamp;
         // TODO bypass for faster detection in development because www.hashes.com responds take a while
-        // if (TimeStampParser.TryParse(token, out _)) return ItemEnum.TimeStamp;
         // Console.ForegroundColor = ConsoleColor.Red;
         // Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");
         // Console.ResetColor();
