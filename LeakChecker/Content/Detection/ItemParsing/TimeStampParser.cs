@@ -7,6 +7,8 @@ public static class TimeStampParser
     // private static readonly DateTime MinDate = new DateTime(2001, 9, 9, 1, 46, 40, DateTimeKind.Utc); // Min UnixSeconds: 1 000 000 000
     private static readonly DateTime MaxDate = DateTime.UtcNow.AddYears(10);
     
+    //TODO remove prints in production
+    
     public static bool TryParse(string token, out DateTime dateTime)
     {
         dateTime = default;
@@ -17,7 +19,12 @@ public static class TimeStampParser
         try
         {
             var dt = DateTimeOffset.FromUnixTimeSeconds(raw).UtcDateTime;
-            if (IsInRange(dt)) { dateTime = dt; Console.WriteLine("UnixSeconds"); return true; }  // MinDate = 946 684 800
+            if (IsInRange(dt)) 
+            { 
+                dateTime = dt; 
+                Console.WriteLine("UnixSeconds"); 
+                return true; 
+            }  // MinDate = 946 684 800
         }
         catch
         {
@@ -27,7 +34,12 @@ public static class TimeStampParser
         try
         {
             var dt = DateTimeOffset.FromUnixTimeMilliseconds(raw).UtcDateTime;
-            if (IsInRange(dt)) { dateTime = dt; Console.WriteLine("UnixMilliseconds"); return true; }  // MinDate = 946 684 800 000
+            if (IsInRange(dt))
+            {
+                dateTime = dt; 
+                Console.WriteLine("UnixMilliseconds");
+                return true;
+            }  // MinDate = 946 684 800 000
         }
         catch
         {
@@ -38,7 +50,12 @@ public static class TimeStampParser
         {
             // Try Windows FILETIME
             var dt = DateTime.FromFileTimeUtc(raw);
-            if (IsInRange(dt)) { dateTime = dt; Console.WriteLine("FileTime"); return true; }  // MinDate = 125 911 584 000 000 000
+            if (IsInRange(dt))
+            {
+                dateTime = dt;
+                Console.WriteLine("FileTime");
+                return true;
+            }  // MinDate = 125 911 584 000 000 000
         }
         catch
         {
@@ -49,7 +66,12 @@ public static class TimeStampParser
         {
             // Try .NET ticks
             var dt = new DateTime(raw, DateTimeKind.Utc);
-            if (IsInRange(dt)) { dateTime = dt; Console.WriteLine(".Net ticks"); return true; }  // MinDate = 630 822 816 000 000 000
+            if (IsInRange(dt))
+            {
+                dateTime = dt;
+                Console.WriteLine(".Net ticks");
+                return true;
+            }  // MinDate = 630 822 816 000 000 000
         }
         catch
         {
