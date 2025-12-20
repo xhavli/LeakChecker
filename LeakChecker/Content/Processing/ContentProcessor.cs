@@ -16,7 +16,7 @@ public class ContentProcessor : IDisposable
     private long _recordsRead;
     private long _linesRead;
     private long _readerPosition;
-    // Basics
+    // Data read
     private readonly Encoding _encoding;
     private readonly StreamReader _reader;
     // Logging and Statistics
@@ -88,6 +88,7 @@ public class ContentProcessor : IDisposable
             }
             
             if (line.StartsWith('{') || line.StartsWith('[')) {} // looks like a JSON - test if it really is a json and parse it
+            
             if (line.Contains("<html", StringComparison.OrdinalIgnoreCase) ||   // looks like an HTML
                 line.Contains("<body", StringComparison.OrdinalIgnoreCase)) {}  // test if it really is a html and parse it
 
@@ -131,6 +132,7 @@ public class ContentProcessor : IDisposable
     {
         long csvFormatStart = _readerPosition;
 
+        // Detect delimiter
         char delimiter;
         var delimiterResult = DelimiterHeuristic.Analyze(_reader);
         if (delimiterResult.BestDelimiter.HasValue)
@@ -140,8 +142,8 @@ public class ContentProcessor : IDisposable
         }
         else
         {
-            await _logger.Log("Delimiter detection failed. Setting default delimiter [:]", LogLevel.Warning, LogContext.Delimiter);
-            delimiter = ';';
+            delimiter = ':';
+            await _logger.Log($"Delimiter detection failed. Setting default delimiter [{delimiter}]", LogLevel.Warning, LogContext.Delimiter);
         }
 
         // Reset reader before CSV start
@@ -271,8 +273,6 @@ public class ContentProcessor : IDisposable
         return string.IsNullOrWhiteSpace(line) ||
                line.Replace(" ", "").All(ch => char.GetUnicodeCategory(ch) == UnicodeCategory.DashPunctuation); // Sql comment boundary
         
-        if (string.IsNullOrWhiteSpace(line)) return true;
-
         StringBuilder sb = new();
 
         foreach (char ch in line)
@@ -305,12 +305,4 @@ public class ContentProcessor : IDisposable
         _reader.Dispose();
         _reader.BaseStream.Dispose();
     }
-}
-
-public class ParsingState
-{
-    public long MalformedRecordsRead = 0;
-    public long RecordsRead = 0;
-    public long LinesRead = 0;
-    public long BytesRead = 0;
 }
