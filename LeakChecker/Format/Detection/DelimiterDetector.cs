@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 
-namespace LeakChecker.Format;
+namespace LeakChecker.Format.Detection;
 
 public sealed class DelimiterCandidate
 {

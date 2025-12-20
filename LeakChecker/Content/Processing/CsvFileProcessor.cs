@@ -32,7 +32,7 @@ public class CsvFileProcessor(Dictionary<int, ItemEnum> schema, StreamReader rea
             
             if (row.Length != expectedFields)
             {
-                // await logger.Log($"Bad row length at line {startLine + linesRead}: expected {expectedFields}, got {row.Length} content: {line}", LogLevel.Warning);
+                await logger.Log($"Bad row length at line {startLine + linesRead}: expected {expectedFields}, got {row.Length} content: {line}", LogLevel.Warning);
                 malformedRecordsRead++;
                 malformedRecordsSequence++;
                 if (malformedRecordsSequence >= malformedLimit)

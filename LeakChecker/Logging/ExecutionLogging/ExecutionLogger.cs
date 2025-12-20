@@ -82,7 +82,7 @@ public class ExecutionLogger : IDisposable
             await LogLineAsync($"    Parsing ID: {id}");
         }
 
-        await LogLineAsync($"Records parsed: {stats.RecordsParsed:N0}");
+        await LogLineAsync($"Correct records parsed: {stats.RecordsParsed:N0}");
         await LogLineAsync($"Malformed records parsed: {stats.MalformedRecordsRead:N0}");
         await LogLineAsync($"Parse accuracy (correct vs malformed): {stats.Accuracy:N2} %");
 
@@ -94,7 +94,7 @@ public class ExecutionLogger : IDisposable
 
         await LogLineAsync($"Execution start: {stats.ExecutionStart.ToString("F", CultureInfo.InvariantCulture)}");
         await LogLineAsync($"Execution end: {stats.ExecutionEnd.ToString("F", CultureInfo.InvariantCulture)}");
-        await LogLineAsync($"Execution duration: {stats.Duration}");
+        await LogLineAsync($"Execution time: {stats.Duration}");
     }
 
     public void Dispose()

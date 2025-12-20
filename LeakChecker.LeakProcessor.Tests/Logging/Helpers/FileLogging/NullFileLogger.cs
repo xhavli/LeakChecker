@@ -1,6 +1,7 @@
 using LeakChecker.Content;
 using LeakChecker.Encodings;
-using LeakChecker.Format;
+using LeakChecker.Format.Detection;
+using LeakChecker.Format.Schema;
 using LeakChecker.Logging;
 using LeakChecker.Logging.FileLogging;
 

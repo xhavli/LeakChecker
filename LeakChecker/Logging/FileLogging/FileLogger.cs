@@ -2,7 +2,8 @@ using System.Globalization;
 using System.Text;
 using LeakChecker.Content;
 using LeakChecker.Encodings;
-using LeakChecker.Format;
+using LeakChecker.Format.Detection;
+using LeakChecker.Format.Schema;
 using LeakChecker.Utilities.Configuration;
 
 namespace LeakChecker.Logging.FileLogging;
@@ -315,11 +316,13 @@ public class FileLogger : IFileLogger
         foreach (var format in stats.Formats)
             await LogLineAsync($"   {format}");
 
-        await LogLineAsync($"Malformed records read: {stats.MalformedRecordsRead:N0}");
-        await LogLineAsync($"Records read: {stats.RecordsRead:N0}");
+        await LogLineAsync($"Correct records parsed: {stats.RecordsRead:N0}");
+        await LogLineAsync($"Malformed records parsed: {stats.MalformedRecordsRead:N0}");
         await LogLineAsync($"Parse accuracy (correct vs malformed): {stats.Accuracy:F2} %");
+        
         await LogLineAsync($"Lines read: {stats.LinesRead:N0}");
         await LogLineAsync($"Line speed: {stats.LineSpeed:F2} lines/sec");
+        
         await LogLineAsync($"Bytes read: {stats.BytesRead:N0}");
         await LogLineAsync($"Byte speed: {stats.ByteSpeed:F2} bytes/sec");
 

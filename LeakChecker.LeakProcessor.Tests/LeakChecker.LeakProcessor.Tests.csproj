@@ -8,6 +8,7 @@
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <RootNamespace>LeakProcessor.Tests</RootNamespace>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -26,9 +27,9 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Configuration\" />
       <Folder Include="Content\Processing\" />
       <Folder Include="Encodings\Conversion\" />
-      <Folder Include="Encodings\Detection\" />
     </ItemGroup>
 
 </Project>
