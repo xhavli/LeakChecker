@@ -7,9 +7,10 @@ public static class TimeStampParser
     // private static readonly DateTime MinDate = new DateTime(2001, 9, 9, 1, 46, 40, DateTimeKind.Utc); // Min UnixSeconds: 1 000 000 000
     private static readonly DateTime MaxDate = DateTime.UtcNow.AddYears(10);
     
-    public static bool TryParse(string token, out DateTime dateTime)
+    public static bool TryParse(string token, out ItemEnum itemEnum, out DateTime dateTime)
     {
         dateTime = default;
+        itemEnum = ItemEnum.Null;
         
         if (!long.TryParse(token, out long raw) || raw < 0)
             return false;
@@ -19,8 +20,8 @@ public static class TimeStampParser
             var dt = DateTimeOffset.FromUnixTimeSeconds(raw).UtcDateTime;
             if (IsInRange(dt)) 
             { 
-                dateTime = dt; 
-                // Console.WriteLine("UnixSeconds"); 
+                dateTime = dt;
+                itemEnum = ItemEnum.UnixSeconds;
                 return true; 
             }  // MinDate = 946 684 800
         }
@@ -35,7 +36,7 @@ public static class TimeStampParser
             if (IsInRange(dt))
             {
                 dateTime = dt; 
-                // Console.WriteLine("UnixMilliseconds");
+                itemEnum = ItemEnum.UnixMilliseconds;
                 return true;
             }  // MinDate = 946 684 800 000
         }
@@ -51,7 +52,7 @@ public static class TimeStampParser
             if (IsInRange(dt))
             {
                 dateTime = dt;
-                // Console.WriteLine("FileTime");
+                itemEnum = ItemEnum.FileTime;
                 return true;
             }  // MinDate = 125 911 584 000 000 000
         }
@@ -67,7 +68,7 @@ public static class TimeStampParser
             if (IsInRange(dt))
             {
                 dateTime = dt;
-                // Console.WriteLine(".Net ticks");
+                itemEnum = ItemEnum.NetTicks;
                 return true;
             }  // MinDate = 630 822 816 000 000 000
         }

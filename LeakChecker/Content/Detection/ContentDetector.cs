@@ -224,7 +224,7 @@ public static class ContentDetector
         if (MacAddressParser.TryParse(token, out _)) return ItemEnum.Mac;
         if (IbanParser.TryParse(token)) return ItemEnum.Iban;
         
-        if (TimeStampParser.TryParse(token, out _)) return ItemEnum.TimeStamp;
+        if (TimeStampParser.TryParse(token, out ItemEnum timeType, out _)) return timeType;
         // TODO bypass for faster detection in development because www.hashes.com responds take a while
         // Console.ForegroundColor = ConsoleColor.Red;
         // Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");

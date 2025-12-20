@@ -14,6 +14,10 @@ public enum ItemEnum
     Email,
     Web,
     TimeStamp,
+    UnixSeconds,
+    UnixMilliseconds,
+    NetTicks,
+    FileTime,
     Location,
     Organization,
     Name,
@@ -23,12 +27,10 @@ public enum ItemEnum
     Username,
     Password,
     Hash,
-    SaltedHash,
     Salt,
     Token,
     Id,
     Other,
-    Empty,
     
     //////////////////////////////////////
     //             Hash types           //
