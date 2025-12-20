@@ -24,7 +24,7 @@ public static class ContentDetector
                 foreach (var uri in stringUris.OrderByDescending(s => s.Length))
                 {
                     int position = CountDelimitersBefore(originLine, uri, delimiter);
-                    Console.WriteLine($"[{position}] {ItemEnum.Web} = {uri}");
+                    // Console.WriteLine($"[{position}] {ItemEnum.Web} = {uri}");
 
                     linePatterns.Add(new SchemaHeuristicRecord
                     {
@@ -48,7 +48,7 @@ public static class ContentDetector
                 foreach (var email in stringEmails)
                 {
                     int position = CountDelimitersBefore(originLine, email, delimiter);
-                    Console.WriteLine($"[{position}] {ItemEnum.Email} = {email}");
+                    // Console.WriteLine($"[{position}] {ItemEnum.Email} = {email}");
 
                     linePatterns.Add(new SchemaHeuristicRecord
                     {
@@ -72,7 +72,7 @@ public static class ContentDetector
                 foreach (var timeStamp in stringTimeStamps.OrderByDescending(ts => ts.Length))
                 {
                     int position = CountDelimitersBefore(originLine, timeStamp, delimiter);
-                    Console.WriteLine($"[{position}] {ItemEnum.TimeStamp} = {timeStamp}");
+                    // Console.WriteLine($"[{position}] {ItemEnum.TimeStamp} = {timeStamp}");
 
                     linePatterns.Add(new SchemaHeuristicRecord
                     {
@@ -127,7 +127,7 @@ public static class ContentDetector
                         throw new Exception($"Unknown entity type: {entityType} returned from PythonNerService");
                 }
 
-                Console.WriteLine($"[{position}] {entityType} = {item}");
+                // Console.WriteLine($"[{position}] {entityType} = {item}");
             }
 
             foreach (var entity in analyzeResults.OrderByDescending(e => e.Start))
@@ -147,7 +147,7 @@ public static class ContentDetector
                 foreach (var guid in stringGuids)
                 {
                     int position = CountDelimitersBefore(originLine, guid, delimiter);
-                    Console.WriteLine($"[{position}] {ItemEnum.Id} = {guid}");
+                    // Console.WriteLine($"[{position}] {ItemEnum.Id} = {guid}");
 
                     linePatterns.Add(new SchemaHeuristicRecord
                     {
@@ -241,11 +241,9 @@ public static class ContentDetector
             await logger.Log($"Communication with www.hashes.com failed. {e.Message}", LogLevel.Exception, LogContext.Content);
         }
         
-        if (TimeStampParser.TryParse(token, out _)) return ItemEnum.TimeStamp;
-
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");
-        Console.ResetColor();
+        // Console.ForegroundColor = ConsoleColor.Red;
+        // Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");
+        // Console.ResetColor();
         return ItemEnum.Other;
     }
 

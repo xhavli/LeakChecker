@@ -226,7 +226,7 @@ public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader r
             }
 
             // TODO: forward to content storage
-            Console.WriteLine($"[{i}] {schemaEntry} = {row[i]}");
+            // Console.WriteLine($"[{i}] {schemaEntry} = {row[i]}");
         }
     }
 }

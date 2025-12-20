@@ -26,7 +26,7 @@ public class CsvFileProcessor(Dictionary<int, ItemEnum> schema, StreamReader rea
             line = line.Trim();
             if (string.IsNullOrWhiteSpace(line)) continue;
 
-            Console.WriteLine($"CSV file parsing line {startLine + linesRead}: {line}");
+            // Console.WriteLine($"\nCSV file parsing line {startLine + linesRead}: {line}");
 
             string[] row = line.Split(delimiter);
             
