@@ -1,5 +1,6 @@
 using LeakChecker.Content;
 using LeakChecker.Content.Detection;
+using LeakChecker.Format.Schema;
 using LeakChecker.Logging.FileLogging;
 using LeakChecker.Utilities.Extensions;
 
@@ -17,15 +18,19 @@ public static class CsvFileDetector
         while (await reader.ReadLineAsync() is { } line)
         {
             if (samplesCount == detectSamples) break;
-            
-            line = line.Trim();
-            line = line.TrimOuterParenthesesAndComma(); // For undetected SQL INSERT
-            line = line.TrimOuterQuotes();
+
+            line = line.Trim()
+                .TrimOuterQuotes()
+                .TrimOuterParentheses()
+                .TrimOuterParenthesesAndComma();    // For undetected SQL INSERT
             
             if (string.IsNullOrWhiteSpace(line)) { continue; }
+            
             samplesCount++;
             await logger.LogSample($"CSV file sample {samplesCount} on line {startLine + samplesCount}: {line}");
-            analyzer.AddLinePatterns(await ContentDetector.DetectLine(line, delimiter, logger));
+            var linePatterns = await ContentDetector.DetectLine(line, delimiter, logger);
+            int lineDelimitersCount = line.Count(ch => ch == delimiter);
+            analyzer.AddLinePatterns(linePatterns, lineDelimitersCount);
         }
         
         await logger.LogHeuristicData(analyzer);

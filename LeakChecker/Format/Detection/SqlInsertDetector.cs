@@ -1,6 +1,7 @@
 using System.Text;
 using LeakChecker.Content;
 using LeakChecker.Content.Detection;
+using LeakChecker.Format.Schema;
 using LeakChecker.Logging;
 using LeakChecker.Logging.FileLogging;
 
@@ -149,7 +150,8 @@ public static class SqlInsertDetector
                                 });
                             }
 
-                            analyzer.AddLinePatterns(linePatterns);
+                            int lineDelimitersCount = line.Count(ch => ch == Delimiter) - 1;    // -1 for "," separating each insert "( )", not direct values
+                            analyzer.AddLinePatterns(linePatterns, lineDelimitersCount);
                             stringBuilder.Clear();
 
                             // End of Sql INSERT
