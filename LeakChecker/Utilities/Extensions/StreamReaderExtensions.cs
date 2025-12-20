@@ -10,8 +10,7 @@ public static class StreamReaderExtensions
     /// </summary>
     public static async ValueTask<string?> ReadLineWithEndingAsync(this StreamReader? reader)
     {
-        if (reader is null)
-            throw new ArgumentNullException(nameof(reader));
+        ArgumentNullException.ThrowIfNull(reader);
 
         if (reader.EndOfStream)
             return null;
@@ -99,8 +98,7 @@ public static class StreamReaderExtensions
     /// </exception>
     public static void AdjustPosition(this StreamReader? reader, long offset)
     {
-        if (reader is null)
-            throw new ArgumentNullException(nameof(reader));
+        ArgumentNullException.ThrowIfNull(reader);
 
         if (offset < 0)
             throw new ArgumentOutOfRangeException(nameof(offset), "Offset cannot be negative.");
