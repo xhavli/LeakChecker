@@ -52,10 +52,15 @@ Author: Adam Havlík
 - `21.9.2025` - HeuristicAnalyzer  
   Heuristic analyzer created with some helper methods. First shot of Pattern or Schema dramatically boost performance by decade or two.
 - `29.9.2025` - SqlInsertDetector  
-  read and detect predefined number (23) of Sql Insert records, and return back heuristic schema.
+  Read and detect predefined number (31) of Sql Insert records, and return back heuristic schema.
 - `9.10.2025` - CsvFileDetector  
-  read and detect predefined number (47) of lines, and return back heuristic schema.
-- `3.11.2025` - SqlHeaderGuesser guessing predefined and hardcoded values and try to match it on ItemEnum
+  Read and detect predefined number (103) of lines, and return back heuristic schema.
+- `3.11.2025` - SqlHeaderGuesser  
+  Guessing predefined and hardcoded values and try to match it on ItemEnum
+- `18.11.2025` - CsvCredentialAssigner  
+  Assigning username to only first position if is detected as other and password on second undetected position which can be higher than 0.
+- `20.12.2025` - SchemaHeuristic length normalization  
+  Set final schema length to most frequent length based on delimiters count per each line. Cut in case it computed longer, fill with ItemEnum.Other if computed shorter than normalized length.
 
 ## Content
 
@@ -102,7 +107,7 @@ Author: Adam Havlík
 - `18.8.2025` - Named Entity Recognition of Name, Location and Organization  
   - [Microsoft Presidio](https://microsoft.github.io/presidio/) with [flair/ner-english-large](https://huggingface.co/flair/ner-english-large) model integrated after google close issue with sentencepiece used by flair.
 - `11.9.2025` - Automated recognition from text where item may contain delimiter 
-  - NuGet - [Microsoft.Recognizers.Text.DateTime](https://github.com/microsoft/Recognizers-Text) integrated for recognition of wide scale of TimeStamps in text and conversion to C# DateTime format.  
+  - NuGet - [Microsoft.Recognizers.Text.DateTime](https://github.com/microsoft/Recognizers-Text) integrated for recognition of wide scale of Timestamps in text and conversion to C# DateTime format.  
     [NOTE] It can detect and convert 4/15/2018 12:00:00 AM from Facebook leak and also natural language like first of October 2018 15:32:18. It also detects a time range what we don't want to.
   - NuGet - [Microsoft.Recognizers.Text.Sequence](https://github.com/microsoft/Recognizers-Text) for recognition and conversion to C# structures  
     - Email + [MailAddress.TryCreate()](https://learn.microsoft.com/en-us/dotnet/api/system.net.mail.mailaddress.trycreate?view=net-10.0) for extra validation
@@ -118,7 +123,7 @@ Author: Adam Havlík
     if (normalizedToken.Length == 12 && normalizedToken.All(char.IsAsciiHexDigit))
     if (mac.GetAddressBytes().Length == 6)
     ```
-- `28.9.2025` - TimeStamp parser
+- `28.9.2025` - Timestamp parser
   - Unix seconds since epoch (1970-01-01 UTC) - 1284982477 is 2010-09-20 18:34:37 UTC
   - Unix milliseconds since epoch (1970-01-01 UTC)
   - Windows FileTime - 100-nanosecond intervals since 1601-01-01 00:00:00 UTC
@@ -155,14 +160,18 @@ Author: Adam Havlík
   - [Microsoft Presidio](https://microsoft.github.io/presidio/) tested as orchestrator of previously used model and models from `2.10.2025` with no relevant results.  
   [NOTE] - Most models can recognize contextual data like "User login info: username: alice, password: p@ssW0rd123".  Pure credentials as content-free data are hard to recognize, detect and validate.
 - `27.10.2025` [IbanNet](https://github.com/skwasjer/IbanNet) - validation of some common formats
-- `30.11.2025` Hash types recognized properly
+- `30.11.2025` Hash type recognition done with <www.hashes.com> 
 
 ### Content Processing
 
 - `30.9.2025` Sql Insert processor  
-  SqlInsertProcessor added for processing Sql Insert records with given schema
+  SqlInsertProcessor added for processing Sql Insert records with given schema.
 - `10.10.2025` Csv file processor  
-  CsvFileProcessor added for processing Csv file lines with given schema
+  CsvFileProcessor added for processing Csv file lines with given schema.
+- `19.12.2025` Malformed lines sequence check  
+  Processors count sequence of lines with fields count different from expected. When reached the limit, then return back to recompute the schema.
+- `21.12.2025` Channel threading initial  
+  To avoid context switching when parsing large amount of files.
 
 ## Utilities
 
@@ -170,8 +179,10 @@ Author: Adam Havlík
 - `6.8.2025` - Logging utilities improvement.
 - `19.8.2025` - Detailed file processing logging added
 - `13.9.2025` - Detailed execution logging added
-- `19.9.2025` - StringExtension added for custom and performance trimming of quoted text `content`` / 'content' / "content" or SQL line (content),
-- `28.9.2025` - StreamReaderExtensions added for custom ReadLineWithEndingAsync return line with newline to measure of read bytes
+- `19.9.2025` - StringExtension  
+  Custom and performance trimming of quoted text `content`` / 'content' / "content" or SQL line (content),.
+- `28.9.2025` - StreamReaderExtensions  
+  Custom ReadLineWithEndingAsync return line with newline to measure of read bytes.
 
 ## Tests
 
@@ -181,10 +192,11 @@ Author: Adam Havlík
 - `15.10.2025` - Content.Detection.ItemRecognition add 158 tests initial
 - `3.11.2025` - SqlHeaderGuesser 245 tests initial
 - `1.12.2025` - HashParserTests added 63 tests
-- `XX.11.2025` - Encodings.Detection tests
-- `XX.11.2025` - Encodings.Conversion tests
-- `XX.11.2025` - Format.Delimiter tests
-- `XX.11.2025` - Format.Schema tests
+- `2.12.2025` - HashParserTests added 13 tests
+- `XX.2.2026` - Encodings.Detection tests
+- `XX.2.2026` - Encodings.Conversion tests
+- `XX.2.2026` - Format.Delimiter tests
+- `XX.2.2026` - Format.Schema tests
 
 ### Module tests
 
@@ -196,18 +208,16 @@ Author: Adam Havlík
 
 ## TODOs
 
-- Do proper parallelization
 - When row mismatch, parse it separately.
-- Add 490+ Hashcat hash types to ItemEnum and match it to hashes.com
+- Add ~400 Hashcat hash types to ItemEnum and match it to <www.hashes.com>
 - When hash detected at [i], try [i+1] for salted hash 
 - ExcelDataParser - VelvetSweetShop obfuscation
 - Detect Username and plaintext Password. CredentialCandidate
 - Communication timeout for connection and request reply
-- SchemaCreation - When it looks like 1,2,7,8, cut 7,8, when its [1] 120, [2] 87, [3] 100, [4] 1 cut 4
 - Decide how to enum localhost IpV4/IpV6
 - Decide how to process a IpAddress ports
 - Decide if IpAddress parsing of cross mapped addresses are feature or limitation. Can be done by [Microsoft.Recognizers.Text.Sequence](https://github.com/microsoft/Recognizers-Text) automated recognition as Email, Guid and Urls are.
-- Test TimeStamps recognizer and parser for valid datetime range. What's the correct range?
+- Test Timestamps recognizer and parser for valid datetime range. What's the correct range?
 - Location GPS coordinates [parser](https://github.com/Tronald/CoordinateSharp)
 - NationalID and VAT [parsers](https://github.com/anghelvalentin/CountryValidator)
 - Bank cards ???
