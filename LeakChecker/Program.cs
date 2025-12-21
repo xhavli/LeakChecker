@@ -56,18 +56,17 @@ public static class Program
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            await ExecutionLogger.Log(e.Message, LogLevel.Exception, LogContext.PythonNerService);
             return 1;
         }
         
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        Encoding utf8 = new UTF8Encoding(false); // false = no BOM
+        Encoding utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false); // false = no BOM
         Console.InputEncoding = utf8;   // Enforce UTF8 encoding which can handle cyrilic characters 
         Console.OutputEncoding = utf8;
 
-        var data = FilesDelimiters.FilesDelimitersDictRaw;
-        var filePaths = data.Keys.ToList();
-        var tasks = filePaths.Select(async filePath =>
+        var data = FilePaths.FilesPathsUtf8;
+        var tasks = data.Select(async filePath =>
         {
             try
             {
@@ -79,12 +78,12 @@ public static class Program
                 return;
             }
             
-            Guid parsingId = Guid.NewGuid();
+            Guid parseId = Guid.NewGuid();
             DateTime parseStart = DateTime.Now;
-            using var parseLogger = await loggerFactory.CreateAsync(parsingId, executionId, parseStart, filePath);
+            using var parseLogger = await loggerFactory.CreateAsync(parseId, executionId, parseStart, filePath);
             FileStats parseStats = new()
             {
-                ParseId = parsingId,
+                ParseId = parseId,
                 ExecutionId = executionId,
                 ParseStart = parseStart,
                 FileName = Path.GetFileName(filePath),
@@ -130,7 +129,7 @@ public static class Program
         await ExecutionLogger.LogExecutionStats(stats);
         Console.WriteLine();
         
-        await ExecutionLogger.Log($"Execution finished successfully. Parsed {data.Keys.Count} files. Current DateTime is " +
+        await ExecutionLogger.Log($"Execution finished successfully. Parsed {data.Length} files. Current DateTime is " +
                          $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Main);
         await ExecutionLogger.Log("Program will exit with exit code 0");
         return 0;
