@@ -65,7 +65,7 @@ public static class ContentDetector
             }
         }
         
-        if (TimeStampRecognizer.TryRecognize(line, out List<string> stringTimeStamps, out List<DateTime> timeStamps))
+        if (TimestampRecognizer.TryRecognize(line, out List<string> stringTimeStamps, out List<DateTime> timeStamps))
         {
             if (stringTimeStamps.Count == timeStamps.Count)
             {
@@ -76,7 +76,7 @@ public static class ContentDetector
 
                     linePatterns.Add(new SchemaHeuristicRecord
                     {
-                        Attribute = ItemEnum.TimeStamp,
+                        Attribute = ItemEnum.Timestamp,
                         Position = position,
                         DelimitersInside = timeStamp.Count(ch => ch == delimiter)
                     });
@@ -194,7 +194,7 @@ public static class ContentDetector
     {
         if (WebRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Web;
         if (EmailRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Email;
-        if (TimeStampRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.TimeStamp;
+        if (TimestampRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Timestamp;
         
         try
         {
@@ -224,7 +224,7 @@ public static class ContentDetector
         if (MacAddressParser.TryParse(token, out _)) return ItemEnum.Mac;
         if (IbanParser.TryParse(token)) return ItemEnum.Iban;
         
-        if (TimeStampParser.TryParse(token, out ItemEnum timeType, out _)) return timeType;
+        if (TimestampParser.TryParse(token, out ItemEnum timeType, out _)) return timeType;
         // TODO bypass for faster detection in development because www.hashes.com responds take a while
         // Console.ForegroundColor = ConsoleColor.Red;
         // Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");
