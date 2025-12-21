@@ -215,6 +215,7 @@ public static class HashParser
         ["FileVault 2"] = ItemEnum.FILEVAULT_2,
         ["AuthMe sha256"] = ItemEnum.AUTHME_SHA256,
         ["GOST R 34.11-94"] = ItemEnum.GOST_R_34_11_94,
+        ["Base64 Encoded String"] = ItemEnum.BASE64,
         ["Password Safe v3 pwsafe3"] = ItemEnum.PASSWORDSAFE_V3, // Hashcat Hash-Name "Password Safe v3"
         ["Android FDE (Samsung DEK)"] = ItemEnum.ANDROID_FDE_SAMSUNG_DEK,
         ["WPA-PMKID-PBKDF2"] = ItemEnum.WPA_PMKID_PBKDF2,
