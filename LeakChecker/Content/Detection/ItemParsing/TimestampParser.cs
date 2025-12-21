@@ -1,6 +1,6 @@
 namespace LeakChecker.Content.Detection.ItemParsing;
 
-public static class TimeStampParser
+public static class TimestampParser
 {
     // Set valid range
     private static readonly DateTime MinDate = new DateTime(2000, 1, 1);

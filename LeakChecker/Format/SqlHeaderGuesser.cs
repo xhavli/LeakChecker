@@ -44,7 +44,7 @@ public static class SqlHeaderGuesser
             ]
         },
         {
-            ItemEnum.TimeStamp, [
+            ItemEnum.Timestamp, [
                 new("at", MatchPolicy.Token),
                 new("ts", MatchPolicy.Token),
                 new("time", MatchPolicy.Substring),

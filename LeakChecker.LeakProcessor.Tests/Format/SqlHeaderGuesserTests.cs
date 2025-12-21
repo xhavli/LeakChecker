@@ -52,16 +52,16 @@ public class SqlHeaderGuesserTests
 
     // ---------------- TimeStamp ----------------
     [Theory]
-    [InlineData("ts", ItemEnum.TimeStamp)]
-    [InlineData("time", ItemEnum.TimeStamp)]
-    [InlineData("timestamp", ItemEnum.TimeStamp)]
-    [InlineData("ban_created", ItemEnum.TimeStamp)]
-    [InlineData("updated", ItemEnum.TimeStamp)]
-    [InlineData("insertdate", ItemEnum.TimeStamp)]
-    [InlineData("date_time", ItemEnum.TimeStamp)]
-    [InlineData("lastModified", ItemEnum.TimeStamp)]
-    [InlineData("accountCreatedAt", ItemEnum.TimeStamp)]
-    [InlineData("user_insert_date", ItemEnum.TimeStamp)]
+    [InlineData("ts", ItemEnum.Timestamp)]
+    [InlineData("time", ItemEnum.Timestamp)]
+    [InlineData("timestamp", ItemEnum.Timestamp)]
+    [InlineData("ban_created", ItemEnum.Timestamp)]
+    [InlineData("updated", ItemEnum.Timestamp)]
+    [InlineData("insertdate", ItemEnum.Timestamp)]
+    [InlineData("date_time", ItemEnum.Timestamp)]
+    [InlineData("lastModified", ItemEnum.Timestamp)]
+    [InlineData("accountCreatedAt", ItemEnum.Timestamp)]
+    [InlineData("user_insert_date", ItemEnum.Timestamp)]
     public void ShouldGuess_TimeStamp(string header, ItemEnum expected)
         => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
 
