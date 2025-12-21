@@ -320,10 +320,10 @@ public class FileLogger : IFileLogger
         await LogLineAsync($"Malformed records parsed: {stats.MalformedRecordsRead:N0}");
         await LogLineAsync($"Parse accuracy (correct vs malformed): {stats.Accuracy:F2} %");
         
-        await LogLineAsync($"Lines read: {stats.LinesRead:N0}");
+        await LogLineAsync($"Lines parsed: {stats.LinesRead:N0}");
         await LogLineAsync($"Line speed: {stats.LineSpeed:F2} lines/sec");
         
-        await LogLineAsync($"Bytes read: {stats.BytesRead:N0}");
+        await LogLineAsync($"Bytes parsed: {stats.BytesRead:N0}");
         await LogLineAsync($"Byte speed: {stats.ByteSpeed:F2} bytes/sec");
 
         await LogLineAsync($"Parse start: {stats.ParseStart.ToString("F", CultureInfo.InvariantCulture)}");

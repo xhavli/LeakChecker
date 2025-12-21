@@ -6,23 +6,21 @@ namespace LeakChecker.Logging.ExecutionLogging;
 
 public class ExecutionLogger : IDisposable
 {
-    private readonly AppConfig _config;
-    private readonly DateTime _startTime;
+    public readonly DateTime StartTime;
     private readonly StreamWriter _writer;
 
     public ExecutionLogger(AppConfig config)
     {
-        _config = config;
-        _startTime = DateTime.Now;
+        StartTime = DateTime.Now;
         
-        string fileTimeStamp = $"{_startTime:yyyy-M-dTHH-mm-ss}";
+        string fileTimeStamp = $"{StartTime:yyyy-M-dTHH-mm-ss}";
         string reportFileName = $"{fileTimeStamp}.txt";
-        string reportFilePath = Path.Combine(_config.LogDirectory, reportFileName);
+        string reportFilePath = Path.Combine(config.LogDirectory, reportFileName);
 
         _writer = new StreamWriter(reportFilePath, append: true, encoding: Encoding.UTF8);
         _writer.AutoFlush = true;
         
-        CreateReportHeader();
+        CreateReportHeader(config);
     }
     
     private async Task LogLineAsync(string message = "")
@@ -61,13 +59,26 @@ public class ExecutionLogger : IDisposable
         Console.ResetColor();
     }
 
-    private void CreateReportHeader()
+    private void CreateReportHeader(AppConfig config)
     {
+        _writer.WriteLine($"Execution start: {StartTime.ToString("F", CultureInfo.InvariantCulture)}");
         _writer.WriteLine("-----------------------------------------------------------");
-        _writer.WriteLine($"Log folder path: {_config.LogDirectory}");
-        _writer.WriteLine($"Tmp folder path: {_config.TmpDirectory}");
-        _writer.WriteLine($"Input folder path: {_config.InputDirectory}");
-        _writer.WriteLine($"Output folder path: {_config.OutputDirectory}");
+        _writer.WriteLine($"Log folder path: {config.LogDirectory}");
+        _writer.WriteLine($"Tmp folder path: {config.TmpDirectory}");
+        _writer.WriteLine($"Input folder path: {config.InputDirectory}");
+        _writer.WriteLine($"Output folder path: {config.OutputDirectory}");
+        _writer.WriteLine("--");
+        _writer.WriteLine($"Csharp port: {config.CsharpPort}");
+        _writer.WriteLine($"Python port: {config.PythonPort}");
+        _writer.WriteLine("--");
+        _writer.WriteLine($"Connection timeout: {config.ConnectionTimeout}");
+        _writer.WriteLine("--");
+        _writer.WriteLine($"Threads capacity: {config.ThreadsCapacity}");
+        _writer.WriteLine($"Channel capacity: {config.ChannelCapacity}");
+        _writer.WriteLine("--");
+        _writer.WriteLine($"Schema accuracy: {config.SchemaThreshold}");
+        _writer.WriteLine("--");
+        _writer.WriteLine($"Environment: {config.Environment}");
         _writer.WriteLine("-----------------------------------------------------------");
     }
     

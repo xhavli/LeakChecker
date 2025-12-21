@@ -2,7 +2,7 @@ using System.Runtime.InteropServices.JavaScript;
 
 namespace LeakChecker.Logging.ExecutionLogging;
 
-public class ExecutionStats(Guid executionId)
+public class ExecutionStats(Guid executionId, DateTime startTime)
 {
     public Guid ExecutionId { get; } = executionId;
     public List<Guid> FilesParsed { get; set; } = new();
@@ -10,7 +10,7 @@ public class ExecutionStats(Guid executionId)
     public long RecordsParsed { get; set; }
     public long LinesParsed { get; set; }
     public long BytesParsed { get; set; }
-    public DateTime ExecutionStart { get; init; } = DateTime.Now;
+    public DateTime ExecutionStart { get; init; } = startTime;
     public DateTime ExecutionEnd { get; set; }
     public TimeSpan Duration => ExecutionEnd - ExecutionStart;
     public double LineSpeed => Duration.TotalSeconds > 0 ? LinesParsed / Duration.TotalSeconds : 0;
