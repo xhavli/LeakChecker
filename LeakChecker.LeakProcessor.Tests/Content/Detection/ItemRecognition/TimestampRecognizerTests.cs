@@ -2,7 +2,7 @@ using LeakChecker.Content.Detection.ItemRecognition;
 
 namespace LeakProcessor.Tests.Content.Detection.ItemRecognition;
 
-public class TimeStampRecognizerTests
+public class TimestampRecognizerTests
 {
     [Theory]
     // Dates with dots
@@ -12,7 +12,7 @@ public class TimeStampRecognizerTests
     public void TryRecognize_ShouldFindDotDates(string input, string expectedText)
     {
         // Act
-        var ok = TimeStampRecognizer.TryRecognize(input, out List<string> foundTexts, out List<DateTime> times);
+        var ok = TimestampRecognizer.TryRecognize(input, out List<string> foundTexts, out List<DateTime> times);
 
         Assert.True(ok);
         Assert.Contains(expectedText, foundTexts);
@@ -27,7 +27,7 @@ public class TimeStampRecognizerTests
     public void TryRecognize_ShouldFindSlashDates(string input, string expectedText)
     {
         // Act
-        var ok = TimeStampRecognizer.TryRecognize(input, out List<string> foundTexts, out List<DateTime> times);
+        var ok = TimestampRecognizer.TryRecognize(input, out List<string> foundTexts, out List<DateTime> times);
 
         Assert.True(ok);
         Assert.Contains(expectedText, foundTexts);
@@ -42,7 +42,7 @@ public class TimeStampRecognizerTests
     public void TryRecognize_ShouldFindDashedOrSpacedDates(string input, string expectedText)
     {
         // Act
-        var ok = TimeStampRecognizer.TryRecognize(input, out List<string> foundTexts, out List<DateTime> times);
+        var ok = TimestampRecognizer.TryRecognize(input, out List<string> foundTexts, out List<DateTime> times);
 
         Assert.True(ok);
         Assert.Contains(expectedText, foundTexts);
@@ -57,7 +57,7 @@ public class TimeStampRecognizerTests
     public void TryRecognize_ShouldFindDayMonthDates(string input, string expectedText)
     {
         // Act
-        var ok = TimeStampRecognizer.TryRecognize(input, out List<string> stringTimeStamps, out List<DateTime> dts);
+        var ok = TimestampRecognizer.TryRecognize(input, out List<string> stringTimeStamps, out List<DateTime> dts);
 
         Assert.True(ok);
         Assert.Contains(expectedText, stringTimeStamps);
@@ -72,7 +72,7 @@ public class TimeStampRecognizerTests
     public void TryRecognize_ShouldFindBirthDates(string input, string expectedText)
     {
         // Act
-        var ok = TimeStampRecognizer.TryRecognize(input, out List<string> stringTimeStamps, out List<DateTime> dts);
+        var ok = TimestampRecognizer.TryRecognize(input, out List<string> stringTimeStamps, out List<DateTime> dts);
 
         Assert.True(ok);
         Assert.Contains(expectedText, stringTimeStamps);
@@ -89,7 +89,7 @@ public class TimeStampRecognizerTests
     public void TryRecognize_ShouldFindTimes(string input, string expectedText)
     {
         // Act
-        var ok = TimeStampRecognizer.TryRecognize(input, out List<string> stringTimeStamps, out List<DateTime> dts);
+        var ok = TimestampRecognizer.TryRecognize(input, out List<string> stringTimeStamps, out List<DateTime> dts);
 
         Assert.True(ok);
         Assert.Contains(expectedText, stringTimeStamps, StringComparer.OrdinalIgnoreCase);
@@ -108,7 +108,7 @@ public class TimeStampRecognizerTests
     public void TryRecognize_ShouldFindFullTimestamps(string input, string expectedText)
     {
         // Act
-        var ok = TimeStampRecognizer.TryRecognize(input, out List<string> stringTimeStamps, out List<DateTime> dts);
+        var ok = TimestampRecognizer.TryRecognize(input, out List<string> stringTimeStamps, out List<DateTime> dts);
 
         Assert.True(ok);
         Assert.Contains(expectedText, stringTimeStamps, StringComparer.OrdinalIgnoreCase);
@@ -125,7 +125,7 @@ public class TimeStampRecognizerTests
     public void TryRecognize_ShouldFindTextualDayMonthDates(string input, string expectedText)
     {
         // Act
-        var ok = TimeStampRecognizer.TryRecognize(input, out List<string> stringTimeStamps, out List<DateTime> dts);
+        var ok = TimestampRecognizer.TryRecognize(input, out List<string> stringTimeStamps, out List<DateTime> dts);
 
         Assert.True(ok, $"Recognizer should find a textual date in: {input}");
         Assert.Contains(expectedText, stringTimeStamps, StringComparer.InvariantCultureIgnoreCase);
@@ -150,7 +150,7 @@ public class TimeStampRecognizerTests
     public void TryRecognize_ShouldFindMultipleTimestamps(string input, string[] expectedTexts)
     {
         // Act
-        var ok = TimeStampRecognizer.TryRecognize(input, out List<string> stringTimeStamps, out List<DateTime> dts);
+        var ok = TimestampRecognizer.TryRecognize(input, out List<string> stringTimeStamps, out List<DateTime> dts);
 
         // Assert
         Assert.True(ok, $"Recognizer should detect multiple timestamps in: {input}");
@@ -178,7 +178,7 @@ public class TimeStampRecognizerTests
     public void TryRecognize_ShouldRejectInvalidFormats(string input)
     {
         // Act
-        var ok = TimeStampRecognizer.TryRecognize(input, out List<string> stringTimeStamps, out List<DateTime> dts);
+        var ok = TimestampRecognizer.TryRecognize(input, out List<string> stringTimeStamps, out List<DateTime> dts);
 
         Assert.False(ok, $"Recognizer should NOT detect a valid TimeStamp in: {input}");
         Assert.True(stringTimeStamps == null || stringTimeStamps.Count == 0, "No timestamp text should be returned.");

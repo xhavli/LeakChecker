@@ -13,7 +13,7 @@ public enum ItemEnum
     PhoneNumber,
     Email,
     Web,
-    TimeStamp,
+    Timestamp,
     UnixSeconds,
     UnixMilliseconds,
     NetTicks,

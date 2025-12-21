@@ -2,7 +2,7 @@ using Microsoft.Recognizers.Text.DateTime;
 
 namespace LeakChecker.Content.Detection.ItemRecognition;
 
-public static class TimeStampRecognizer
+public static class TimestampRecognizer
 {
     private const string Culture = Microsoft.Recognizers.Text.Culture.English; // or Culture.EnglishOthers
     
