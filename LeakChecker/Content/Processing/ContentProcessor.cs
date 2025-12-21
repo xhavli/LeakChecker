@@ -28,16 +28,18 @@ public class ContentProcessor : IDisposable
     private const int CsvSamplesLimit = 103;
     private const int ThresholdPercent = 50;
     private const long ParseLimit = long.MaxValue;
+    private readonly int _thresholdPercent;
 
-    private ContentProcessor(Encoding encoding, StreamReader reader, IFileLogger logger, FileStats stats)
+    private ContentProcessor(int thresholdPercent, Encoding encoding, StreamReader reader, IFileLogger logger, FileStats stats)
     {
+        _thresholdPercent = thresholdPercent;
         _encoding = encoding;
         _reader = reader;
         _logger = logger;
         _stats = stats;
     }
 
-    public static async Task<ContentProcessor> CreateAsync(IFileLogger logger, FileStats stats, Encoding? encoding = null)
+    public static async Task<ContentProcessor> CreateAsync(IFileLogger logger, FileStats stats, Encoding? encoding, int thresholdPercent)
     {
         await logger.LogContentHeader();
         if (encoding == null)
@@ -52,7 +54,7 @@ public class ContentProcessor : IDisposable
         var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: false);
         
-        return new ContentProcessor(encoding, reader, logger, stats);
+        return new ContentProcessor(thresholdPercent, encoding, reader, logger, stats);
     }
     
     public async Task ProcessFile()
@@ -115,7 +117,7 @@ public class ContentProcessor : IDisposable
         
         // Detect schema
         Stopwatch sw = Stopwatch.StartNew();
-        var schema = await SqlInsertDetector.DetectFormat(_linesRead, _reader, _logger, SqlSamplesLimit, ThresholdPercent);
+        var schema = await SqlInsertDetector.DetectFormat(_linesRead, _reader, _logger, SqlSamplesLimit, _thresholdPercent);
         await _logger.Log($"SQL INSERT schema created in {sw.Elapsed}\n");
 
         // Parse SQL INSERT block with header
@@ -151,7 +153,7 @@ public class ContentProcessor : IDisposable
         
         // Detect schema
         Stopwatch sw = Stopwatch.StartNew();
-        var schema = await CsvFileDetector.DetectFormat(_linesRead, delimiter, _reader, _logger, CsvSamplesLimit, ThresholdPercent);
+        var schema = await CsvFileDetector.DetectFormat(_linesRead, delimiter, _reader, _logger, CsvSamplesLimit, _thresholdPercent);
         await _logger.Log($"CSV file schema created in {sw.Elapsed}\n");
         
         // Parse CSV file

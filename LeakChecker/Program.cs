@@ -46,7 +46,7 @@ public static class Program
         ExecutionLogger = provider.GetRequiredService<ExecutionLogger>();
         var loggerFactory = provider.GetRequiredService<IFileLoggerFactory>();
         Guid executionId = Guid.NewGuid();
-        var stats = new ExecutionStats(executionId);
+        var stats = new ExecutionStats(executionId, ExecutionLogger.StartTime);
         
         PythonNerService pythonNerService = new PythonNerService(ExecutionLogger);
         try
@@ -100,6 +100,7 @@ public static class Program
                 
                 using ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(parseLogger, parseStats, utf8);
                 await contentProcessor.ProcessFile();
+                    using ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(parseLogger, parseStats, utf8, config.SchemaThreshold);
 
                 parseStats.ParseEnd = DateTime.Now;
                 await parseLogger.LogFileStats(parseStats);

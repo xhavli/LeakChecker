@@ -11,5 +11,8 @@ public record AppConfig
     public int CsharpPort { get; init; }
     public int PythonPort { get; init; }
     public int ConnectionTimeout { get; init; }
+    public int ThreadsCapacity { get; init; }
+    public int ChannelCapacity { get; init; }
+    public int SchemaThreshold { get; init; }
     public string Environment { get; init; } = "Production";
 }

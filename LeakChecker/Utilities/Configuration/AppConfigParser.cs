@@ -29,13 +29,20 @@ public static class AppConfigParser
 
     private static void Validate(AppConfig config)
     {
-        ValidateDir(config.InputDirectory, nameof(config.InputDirectory), mustExist: true);
-        ValidateDir(config.LogDirectory, nameof(config.LogDirectory), mustExist: false);
-        ValidateDir(config.OutputDirectory, nameof(config.OutputDirectory), mustExist: true);
-        ValidateDir(config.TmpDirectory, nameof(config.TmpDirectory), mustExist: false);
+        ValidateDirectory(config.InputDirectory, nameof(config.InputDirectory), mustExist: true);
+        ValidateDirectory(config.LogDirectory, nameof(config.LogDirectory), mustExist: false);
+        ValidateDirectory(config.OutputDirectory, nameof(config.OutputDirectory), mustExist: true);
+        ValidateDirectory(config.TmpDirectory, nameof(config.TmpDirectory), mustExist: false);
+        
+        ValidateNotNegative(config.CsharpPort);
+        ValidateNotNegative(config.PythonPort);
+        ValidateNotNegative(config.ConnectionTimeout);
+        ValidateNotNegative(config.ThreadsCapacity);
+        ValidateNotNegative(config.ChannelCapacity);
+        ValidateNotNegative(config.SchemaThreshold);
     }
 
-    private static void ValidateDir(string? path, string name, bool mustExist)
+    private static void ValidateDirectory(string? path, string name, bool mustExist)
     {
         if (string.IsNullOrWhiteSpace(path))
             throw new ArgumentException($"Config value '{name}' is missing or empty");
@@ -47,5 +54,11 @@ public static class AppConfigParser
 
             Directory.CreateDirectory(path); // for Log + Tmp paths
         }
+    }
+
+    private static void ValidateNotNegative(int value)
+    {
+        if (value < 0)
+            throw new ArgumentOutOfRangeException(nameof(value), "Value must be zero or greater.");
     }
 }
