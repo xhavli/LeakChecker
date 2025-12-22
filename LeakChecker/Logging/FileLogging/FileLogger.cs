@@ -10,13 +10,13 @@ namespace LeakChecker.Logging.FileLogging;
 
 public class FileLogger : IFileLogger
 {
-    public Guid ParseId {get; init;}
-    public Guid ExecutionId {get; init;}
+    public Guid ParseId {get; }
+    public Guid ExecutionId {get; }
     public DateTime ParseStart { get; }
     public string SubjectFileName { get; }
     public string SubjectFilePath { get; }
     public string SubjectTmpFilePath { get; }
-    private bool EnableConsole { get; } = true;
+    private bool Verbose { get; }
     private readonly StreamWriter _writer;
 
     private FileLogger(
@@ -25,7 +25,8 @@ public class FileLogger : IFileLogger
         DateTime parseStart,
         string subjectFilePath,
         string tmpFilePath,
-        StreamWriter writer)
+        StreamWriter writer,
+        bool verbose)
     {
         ParseId = parseId;
         ExecutionId = executionId;
@@ -34,6 +35,7 @@ public class FileLogger : IFileLogger
         SubjectFilePath = subjectFilePath;
         SubjectTmpFilePath = tmpFilePath;
         _writer = writer;
+        Verbose = verbose;
     }
 
     public static async Task<IFileLogger> CreateAsync(
@@ -50,14 +52,14 @@ public class FileLogger : IFileLogger
         string logFilePath = Path.Combine(config.LogDirectory, logFileName);
         string tmpFilePath = Path.Combine(config.TmpDirectory, logFileName);
 
-        var writer = new StreamWriter(
-            logFilePath, append: true, encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
+        bool isDevelopment = string.Equals(config.Environment.Trim(), "Development", StringComparison.OrdinalIgnoreCase);
+        var writer = new StreamWriter(logFilePath, append: true, encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
         {
-            AutoFlush = true
+            AutoFlush = isDevelopment
         };
 
         var logger = new FileLogger(
-            parseId, executionId, parseStart, subjectFilePath, tmpFilePath, writer);
+            parseId, executionId, parseStart, subjectFilePath, tmpFilePath, writer, config.Verbose);
         await logger.CreateLogHeaderAsync();
 
         return logger;
@@ -65,7 +67,7 @@ public class FileLogger : IFileLogger
     
     private async Task LogLineAsync(string message = "")
     {
-        if (EnableConsole) Console.WriteLine(message);
+        if (Verbose) Console.WriteLine(message);
         
         await _writer.WriteLineAsync(message);
     }
@@ -79,7 +81,7 @@ public class FileLogger : IFileLogger
                 consoleColor = ConsoleColor.DarkBlue;
                 break;
             case LogLevel.Warning:
-                consoleColor = ConsoleColor.Yellow;
+                consoleColor = ConsoleColor.DarkYellow;
                 break;
             case LogLevel.Success:
                 consoleColor = ConsoleColor.Green;

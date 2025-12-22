@@ -8,11 +8,12 @@ public record AppConfig
     public required string TmpDirectory { get; init; }
     public required string PythonNerService { get; init; }
     public required string PythonNerServArgs { get; init; }
-    public int CsharpPort { get; init; }
-    public int PythonPort { get; init; }
-    public int ConnectionTimeout { get; init; }
-    public int ThreadsCapacity { get; init; }
-    public int ChannelCapacity { get; init; }
-    public int SchemaThreshold { get; init; }
-    public string Environment { get; init; } = "Production";
+    public required int CsharpPort { get; init; }
+    public required int PythonPort { get; init; }
+    public required int ConnectionTimeout { get; init; }
+    public required int ThreadsCapacity { get; init; }
+    public required int ChannelCapacity { get; init; }
+    public required int SchemaThreshold { get; init; }
+    public required string Environment { get; init; }
+    public required bool Verbose { get; init; }
 }
