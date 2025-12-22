@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text;
+using System.Threading.Channels;
 using LeakChecker.Content.Detection.RecognitionService;
 using LeakChecker.Content.Processing;
 using LeakChecker.Data;
@@ -64,65 +65,109 @@ public static class Program
         Encoding utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false); // false = no BOM
         Console.InputEncoding = utf8;   // Enforce UTF8 encoding which can handle cyrilic characters 
         Console.OutputEncoding = utf8;
-
+        
         var data = FilePaths.FilesPathsUtf8;
-        var tasks = data.Select(async filePath =>
+        
+        int threads = config.ThreadsCapacity;   // Degree of parallelism
+        int capacity = config.ChannelCapacity;  // Channel capacity
+
+        // Bounded channel = backpressure + stable memory
+        var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(capacity)
+        {
+            FullMode = BoundedChannelFullMode.Wait,
+            SingleWriter = true,
+            SingleReader = false
+        });
+
+        // Producer: enqueue file paths
+        var producer = Task.Run(async () =>
         {
             try
             {
-                ValidateFileReadability(filePath);
-            }
-            catch (Exception e)
-            {
-                await ExecutionLogger.Log(e.Message, LogLevel.Warning, LogContext.Main);
-                return;
-            }
-            
-            Guid parseId = Guid.NewGuid();
-            DateTime parseStart = DateTime.Now;
-            using var parseLogger = await loggerFactory.CreateAsync(parseId, executionId, parseStart, filePath);
-            FileStats parseStats = new()
-            {
-                ParseId = parseId,
-                ExecutionId = executionId,
-                ParseStart = parseStart,
-                FileName = Path.GetFileName(filePath),
-                FilePath = filePath,
-                FileSize = new FileInfo(filePath).Length,
-            };
+                foreach (var filePath in data)
+                {
+                    await channel.Writer.WriteAsync(filePath);
+                }
 
-            try
-            {
-                EncodingDetector encodingDetector = new(parseLogger, parseStats);
-                List<EncodingSegment> encodingSegments = await encodingDetector.DetectFileEncodings();
-                
-                await EncodingConverter.ConvertFileToUtf8(parseLogger, encodingSegments);
-                
-                using ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(parseLogger, parseStats, utf8);
-                await contentProcessor.ProcessFile();
-                    using ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(parseLogger, parseStats, utf8, config.SchemaThreshold);
-
-                parseStats.ParseEnd = DateTime.Now;
-                await parseLogger.LogFileStats(parseStats);
-                
-                stats.FilesParsed.Add(parseStats.ParseId);
-                stats.MalformedRecordsRead += parseStats.MalformedRecordsRead;
-                stats.RecordsParsed += parseStats.RecordsRead;
-                stats.LinesParsed += parseStats.LinesRead;
-                stats.BytesParsed += parseStats.BytesRead;
+                channel.Writer.TryComplete();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                await ExecutionLogger.Log($"{filePath}: {e}", LogLevel.Exception, LogContext.Main);
-            }
-            finally
-            {
-                if (File.Exists(parseLogger.SubjectTmpFilePath))
-                    File.Delete(parseLogger.SubjectTmpFilePath);
+                channel.Writer.TryComplete(ex);
+                throw;
             }
         });
 
-        await Task.WhenAll(tasks);
+        // Consumers: process files with bounded concurrency (threads)
+        var consumers = Enumerable.Range(0, threads).Select(_ => Task.Run(async () =>
+        {
+            await foreach (var filePath in channel.Reader.ReadAllAsync())
+            {
+                try
+                {
+                    ValidateFileReadability(filePath);
+                }
+                catch (Exception e)
+                {
+                    await ExecutionLogger.Log(e.Message, LogLevel.Warning, LogContext.Main);
+                    continue;
+                }
+
+                Guid parseId = Guid.NewGuid();
+                DateTime parseStart = DateTime.Now;
+                using var parseLogger = await loggerFactory.CreateAsync(parseId, executionId, parseStart, filePath);
+
+                FileStats parseStats = new()
+                {
+                    ParseId = parseId,
+                    ExecutionId = executionId,
+                    ParseStart = parseStart,
+                    FileName = Path.GetFileName(filePath),
+                    FilePath = filePath,
+                    FileSize = new FileInfo(filePath).Length,
+                };
+
+                try
+                {
+                    EncodingDetector encodingDetector = new(parseLogger, parseStats);
+                    List<EncodingSegment> encodingSegments = await encodingDetector.DetectFileEncodings();
+                    
+                    await EncodingConverter.ConvertFileToUtf8(parseLogger, encodingSegments);
+                    
+                    using ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(parseLogger, parseStats, utf8, config.SchemaThreshold);
+                    await contentProcessor.ProcessFile();
+
+                    parseStats.ParseEnd = DateTime.Now;
+                    await parseLogger.LogFileStats(parseStats);
+                    
+                    lock (stats)
+                    {
+                        stats.MalformedRecordsRead += parseStats.MalformedRecordsRead;
+                        stats.RecordsParsed += parseStats.RecordsRead;
+                        stats.LinesParsed += parseStats.LinesRead;
+                        stats.BytesParsed += parseStats.BytesRead;
+                        stats.FilesParsed.Add(parseStats.ParseId);
+                    }
+                }
+                catch (Exception e)
+                {
+                    await ExecutionLogger.Log($"{parseId} : {parseLogger.SubjectFileName}: {e}", LogLevel.Exception, LogContext.Main);
+                }
+                finally
+                {
+                    try
+                    {
+                        File.Delete(parseLogger.SubjectTmpFilePath);
+                    }
+                    catch (Exception e)
+                    {
+                        await ExecutionLogger.Log($"{parseId} : {parseLogger.SubjectFileName}: {e}", LogLevel.Warning, LogContext.Main);
+                    }
+                }
+            }
+        })).ToArray();
+
+        await Task.WhenAll(consumers.Append(producer));
         await pythonNerService.Stop();
         
         Console.WriteLine();
