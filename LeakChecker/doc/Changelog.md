@@ -208,12 +208,14 @@ Author: Adam Havlík
 
 ## TODOs
 
-- When row mismatch, parse it separately.
 - Add ~400 Hashcat hash types to ItemEnum and match it to <www.hashes.com>
 - When hash detected at [i], try [i+1] for salted hash 
-- ExcelDataParser - VelvetSweetShop obfuscation
-- Detect Username and plaintext Password. CredentialCandidate
 - Communication timeout for connection and request reply
+- When row mismatch, parse it separately.
+- ExcelDataParser - VelvetSweetShop obfuscation
+- Unify loggers behavior, abstract class...
+- Refactor Python NER Service
+- Detect Username and plaintext Password. CredentialCandidate
 - Decide how to enum localhost IpV4/IpV6
 - Decide how to process a IpAddress ports
 - Decide if IpAddress parsing of cross mapped addresses are feature or limitation. Can be done by [Microsoft.Recognizers.Text.Sequence](https://github.com/microsoft/Recognizers-Text) automated recognition as Email, Guid and Urls are.
