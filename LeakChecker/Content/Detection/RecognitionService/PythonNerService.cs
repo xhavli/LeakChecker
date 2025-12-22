@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Net;
-using System.Reflection.Metadata.Ecma335;
 using LeakChecker.Logging;
 using LeakChecker.Logging.ExecutionLogging;
 
@@ -31,7 +30,7 @@ public class PythonNerService(ExecutionLogger logger)
         }
         catch (Exception e)
         {
-            await logger.Log($"PythonNerService: Failure at startup. {e.Message}", LogLevel.Exception, LogContext.PythonNerService); 
+            await logger.Log($"PythonNerService: Failure at startup. {e.Message}", LogLevel.Failure, LogContext.PythonNerService); 
             throw;
         }
         
@@ -40,7 +39,7 @@ public class PythonNerService(ExecutionLogger logger)
     
     public async Task WaitForStart(int csharpPort, int pythonPort, int timeoutMs)
     {
-        await logger.Log($"Waiting for READY signal: csharpPort {csharpPort}, pythonPort {pythonPort}, " +
+        await logger.Log($"Sending status check. CsharpPort {csharpPort}, PythonPort {pythonPort}, " +
                          $"timeout {timeoutMs / 1000} seconds", LogLevel.Info, LogContext.PythonNerService);
 
         using var listener = new HttpListener();
@@ -66,6 +65,8 @@ public class PythonNerService(ExecutionLogger logger)
         {
             // ignored - Python not running yet
         }
+        
+        await logger.Log("Waiting for READY notification", LogLevel.Warning, LogContext.PythonNerService);
 
         // Wait for Python start and send ready
         while (!cts.IsCancellationRequested)
@@ -91,7 +92,7 @@ public class PythonNerService(ExecutionLogger logger)
             }
         }
 
-        await logger.Log("Waiting for READY signal: Timed out", LogLevel.Exception, LogContext.PythonNerService);
+        await logger.Log("Waiting for READY signal: Timed out", LogLevel.Failure, LogContext.PythonNerService);
         throw new TimeoutException("Waiting for READY signal: Timed out.");
     }
 
@@ -114,7 +115,7 @@ public class PythonNerService(ExecutionLogger logger)
         }
         catch (Exception e)
         {
-            await logger.Log(e.ToString(), LogLevel.Exception, LogContext.PythonNerService);
+            await logger.Log(e.ToString(), LogLevel.Failure, LogContext.PythonNerService);
         }
     }
 }

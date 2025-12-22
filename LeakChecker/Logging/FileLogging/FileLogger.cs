@@ -18,6 +18,10 @@ public class FileLogger : IFileLogger
     public string SubjectTmpFilePath { get; }
     private bool Verbose { get; }
     private readonly StreamWriter _writer;
+    private const ConsoleColor InfoColor = ConsoleColor.DarkBlue;
+    private const ConsoleColor WarningColor = ConsoleColor.DarkYellow;
+    private const ConsoleColor SuccessColor = ConsoleColor.Green;
+    private const ConsoleColor ExceptionColor = ConsoleColor.Red;
 
     private FileLogger(
         Guid parseId,
@@ -53,13 +57,11 @@ public class FileLogger : IFileLogger
         string tmpFilePath = Path.Combine(config.TmpDirectory, logFileName);
 
         bool isDevelopment = string.Equals(config.Environment.Trim(), "Development", StringComparison.OrdinalIgnoreCase);
-        var writer = new StreamWriter(logFilePath, append: true, encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
-        {
-            AutoFlush = isDevelopment
-        };
-
-        var logger = new FileLogger(
-            parseId, executionId, parseStart, subjectFilePath, tmpFilePath, writer, config.Verbose);
+        var writer = new StreamWriter(logFilePath, append: true, encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        writer.AutoFlush = isDevelopment;
+        
+        var logger = new FileLogger(parseId, executionId, parseStart, subjectFilePath, tmpFilePath, writer, config.Verbose);
+        
         await logger.CreateLogHeaderAsync();
 
         return logger;
@@ -68,7 +70,6 @@ public class FileLogger : IFileLogger
     private async Task LogLineAsync(string message = "")
     {
         if (Verbose) Console.WriteLine(message);
-        
         await _writer.WriteLineAsync(message);
     }
     
@@ -78,16 +79,16 @@ public class FileLogger : IFileLogger
         switch (level)
         {
             case LogLevel.Info:
-                consoleColor = ConsoleColor.DarkBlue;
+                consoleColor = InfoColor;
                 break;
             case LogLevel.Warning:
-                consoleColor = ConsoleColor.DarkYellow;
+                consoleColor = WarningColor;
                 break;
             case LogLevel.Success:
-                consoleColor = ConsoleColor.Green;
+                consoleColor = SuccessColor;
                 break;
-            case LogLevel.Exception:
-                consoleColor = ConsoleColor.Red;
+            case LogLevel.Failure:
+                consoleColor = ExceptionColor;
                 break;
             default:
                 Console.ResetColor();
@@ -108,7 +109,7 @@ public class FileLogger : IFileLogger
         double sizeMb = fileSize / (1024.0 * 1024);
         double sizeGb = fileSize / (1024.0 * 1024 * 1024);
 
-        await LogLineAsync($"File parse start at: {timeStamp}");
+        await LogLineAsync($"File parse start: {timeStamp}");
         await LogLineAsync($"File path: {fileInfo.FullName}");
         await LogLineAsync($"File name: {fileInfo.Name}");
         await LogLineAsync($"File size: {sizeGb:F2} GB / {sizeMb:F2} MB / {fileSize:N0} bytes ");
@@ -302,7 +303,7 @@ public class FileLogger : IFileLogger
         await LogLineAsync("             [X] FILE PARSE STATS [X]");
         await LogLineAsync("------------------------------------------------");
 
-        await LogLineAsync($"File: {stats.FileName}");
+        await LogLineAsync($"File name: {stats.FileName}");
         await LogLineAsync($"Parse ID: {stats.ParseId}");
 
         string originEnc = string.IsNullOrEmpty(stats.Encoding?.WebName) ? "NULL" : stats.Encoding.WebName;

@@ -5,7 +5,7 @@ public enum LogLevel
     Info,
     Success,
     Warning,
-    Exception
+    Failure
 }
 
 public static class LogLevelStrings
@@ -15,7 +15,7 @@ public static class LogLevelStrings
         { LogLevel.Info, "[INFO]" },
         { LogLevel.Success, "[SUCCESS]" },
         { LogLevel.Warning, "[WARNING]" },
-        { LogLevel.Exception, "[EXCEPTION]" }
+        { LogLevel.Failure, "[FAILURE]" }
     };
 
     public static string GetString(this LogLevel level) => Map[level];

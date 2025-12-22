@@ -6,26 +6,33 @@ namespace LeakChecker.Logging.ExecutionLogging;
 
 public class ExecutionLogger : IDisposable
 {
-    public readonly DateTime StartTime;
+    public readonly DateTime ExecutionStart;
+    private bool Verbose { get; }
     private readonly StreamWriter _writer;
+    private const ConsoleColor InfoColor = ConsoleColor.DarkBlue;
+    private const ConsoleColor WarningColor = ConsoleColor.DarkYellow;
+    private const ConsoleColor SuccessColor = ConsoleColor.Green;
+    private const ConsoleColor ExceptionColor = ConsoleColor.Red;
 
     public ExecutionLogger(AppConfig config)
     {
-        StartTime = DateTime.Now;
+        ExecutionStart = DateTime.Now;
         
-        string fileTimeStamp = $"{StartTime:yyyy-M-dTHH-mm-ss}";
+        string fileTimeStamp = $"{ExecutionStart:yyyy-M-dTHH-mm-ss}";
         string reportFileName = $"{fileTimeStamp}.txt";
         string reportFilePath = Path.Combine(config.LogDirectory, reportFileName);
 
         _writer = new StreamWriter(reportFilePath, append: true, encoding: Encoding.UTF8);
         _writer.AutoFlush = true;
         
+        Verbose = config.Verbose;
+        
         CreateReportHeader(config);
     }
     
     private async Task LogLineAsync(string message = "")
     {
-        Console.WriteLine(message);
+        if (Verbose) Console.WriteLine(message);
         await _writer.WriteLineAsync(message);
     }
     
@@ -35,33 +42,32 @@ public class ExecutionLogger : IDisposable
         switch (level)
         {
             case LogLevel.Info:
-                consoleColor = ConsoleColor.DarkBlue;
+                consoleColor = InfoColor;
                 break;
             case LogLevel.Warning:
-                consoleColor = ConsoleColor.Yellow;
+                consoleColor = WarningColor;
                 break;
             case LogLevel.Success:
-                consoleColor = ConsoleColor.Green;
+                consoleColor = SuccessColor;
                 break;
-            case LogLevel.Exception:
-                consoleColor = ConsoleColor.Red;
+            case LogLevel.Failure:
+                consoleColor = ExceptionColor;
                 break;
             default:
                 Console.ResetColor();
                 break;
         }
 
-        string log = context is null ? $"[{DateTime.Now:T}] {level.GetString()} {message}"
-                                     : $"[{DateTime.Now:T}] {level.GetString()} {context.Value.GetString()} {message}";
         
         Console.ForegroundColor = consoleColor;
-        await LogLineAsync(log);
+        await LogLineAsync(context is null ? $"[{DateTime.Now:T}] {level.GetString()} {message}"
+                                           : $"[{DateTime.Now:T}] {level.GetString()} {context.Value.GetString()} {message}");
         Console.ResetColor();
     }
 
     private void CreateReportHeader(AppConfig config)
     {
-        _writer.WriteLine($"Execution start: {StartTime.ToString("F", CultureInfo.InvariantCulture)}");
+        _writer.WriteLine($"Execution start: {ExecutionStart.ToString("F", CultureInfo.InvariantCulture)}");
         _writer.WriteLine("-----------------------------------------------------------");
         _writer.WriteLine($"Log folder path: {config.LogDirectory}");
         _writer.WriteLine($"Tmp folder path: {config.TmpDirectory}");
@@ -78,7 +84,11 @@ public class ExecutionLogger : IDisposable
         _writer.WriteLine("--");
         _writer.WriteLine($"Schema accuracy: {config.SchemaThreshold}");
         _writer.WriteLine("--");
-        _writer.WriteLine($"Environment: {config.Environment}");
+        _writer.WriteLine(
+            string.Equals(config.Environment?.Trim(), "Development", StringComparison.OrdinalIgnoreCase)
+                ? $"Environment: {config.Environment} - AutoFlush = ON"
+                : $"Environment: {config.Environment} - AutoFlush = OFF");
+        _writer.WriteLine($"Verbose: {config.Verbose}");
         _writer.WriteLine("-----------------------------------------------------------");
     }
     
@@ -103,7 +113,7 @@ public class ExecutionLogger : IDisposable
         await LogLineAsync($"Bytes parsed: {stats.BytesParsed:N0}");
         await LogLineAsync($"Byte speed: {stats.ByteSpeed:N2} bytes/second");
 
-        await LogLineAsync($"Execution start: {stats.ExecutionStart.ToString("F", CultureInfo.InvariantCulture)}");
+        await LogLineAsync($"Execution start: {ExecutionStart.ToString("F", CultureInfo.InvariantCulture)}");
         await LogLineAsync($"Execution end: {stats.ExecutionEnd.ToString("F", CultureInfo.InvariantCulture)}");
         await LogLineAsync($"Execution time: {stats.Duration}");
     }

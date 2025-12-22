@@ -47,7 +47,7 @@ public static class Program
         ExecutionLogger = provider.GetRequiredService<ExecutionLogger>();
         var loggerFactory = provider.GetRequiredService<IFileLoggerFactory>();
         Guid executionId = Guid.NewGuid();
-        var stats = new ExecutionStats(executionId, ExecutionLogger.StartTime);
+        var stats = new ExecutionStats(executionId, ExecutionLogger.ExecutionStart);
         
         PythonNerService pythonNerService = new PythonNerService(ExecutionLogger);
         try
@@ -57,7 +57,7 @@ public static class Program
         }
         catch (Exception e)
         {
-            await ExecutionLogger.Log(e.Message, LogLevel.Exception, LogContext.PythonNerService);
+            await ExecutionLogger.Log(e.Message, LogLevel.Failure, LogContext.PythonNerService);
             return 1;
         }
         
@@ -151,7 +151,7 @@ public static class Program
                 }
                 catch (Exception e)
                 {
-                    await ExecutionLogger.Log($"{parseId} : {parseLogger.SubjectFileName}: {e}", LogLevel.Exception, LogContext.Main);
+                    await ExecutionLogger.Log($"{parseId} : {parseLogger.SubjectFileName}: {e}", LogLevel.Failure, LogContext.Main);
                 }
                 finally
                 {

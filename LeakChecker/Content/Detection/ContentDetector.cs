@@ -137,7 +137,7 @@ public static class ContentDetector
         }
         catch (Exception e)
         {
-            await logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Exception,LogContext.Content);
+            await logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Failure,LogContext.Content);
         }
         
         if (GuidRecognizer.TryRecognize(line, out List<string> stringGuids, out List<Guid> guids))
@@ -213,7 +213,7 @@ public static class ContentDetector
         }
         catch (Exception e)
         {
-            await logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Exception, LogContext.Content);
+            await logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Failure, LogContext.Content);
         }
         
         if (GuidRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Id;
@@ -238,7 +238,7 @@ public static class ContentDetector
         }
         catch (Exception e)
         {
-            await logger.Log($"Communication with www.hashes.com failed. {e.Message}", LogLevel.Exception, LogContext.Content);
+            await logger.Log($"Communication with www.hashes.com failed. {e.Message}", LogLevel.Failure, LogContext.Content);
         }
         
         // Console.ForegroundColor = ConsoleColor.Red;
