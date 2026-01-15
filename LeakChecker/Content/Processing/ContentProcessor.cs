@@ -269,28 +269,16 @@ public class ContentProcessor : IDisposable
         }
     }
 
-    private static bool IsTrashOrEmpty(string line)
+    private bool IsTrashOrEmpty(string line)
     {
-        return string.IsNullOrWhiteSpace(line) ||
-               line.Replace(" ", "").All(ch => char.GetUnicodeCategory(ch) == UnicodeCategory.DashPunctuation); // Sql comment boundary
+        line = line.Trim();
+        if (string.IsNullOrWhiteSpace(line)) return true;
         
-        StringBuilder sb = new();
-
-        foreach (char ch in line)
-        {
-            switch (ch)
-            {
-                case '-':
-                    continue;
-                case ' ':
-                    continue;
-                default:
-                    sb.Append(ch);
-                    return false;
-            }
-        }
+        if (line.LastIndexOf("--", StringComparison.Ordinal) == 0 && _stats.Formats.Last() == FormatEnum.SqlInsert) return true;    // Sql comment
+        if (line == ";" && _stats.Formats.Last() == FormatEnum.SqlInsert) return true;
         
-        return sb.Length == 0;
+        return line.Replace(" ", "").All(ch => char.GetUnicodeCategory(ch) == UnicodeCategory.DashPunctuation 
+                                     && _stats.Formats.Last() == FormatEnum.SqlInsert); // Sql comment boundary
     }
 
     private void UpdateParsingState(ParsingState state)
