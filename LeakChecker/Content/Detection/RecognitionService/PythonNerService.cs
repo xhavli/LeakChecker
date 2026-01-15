@@ -98,9 +98,9 @@ public class PythonNerService(ExecutionLogger logger)
 
     public async Task Stop()
     {
-        await logger.Log("Terminating Python subprocess", LogLevel.Info, LogContext.PythonNerService);
-        
         if(_process == null) return;
+        
+        await logger.Log("Terminating Python subprocess", LogLevel.Info, LogContext.PythonNerService);
         
         try
         {
