@@ -19,6 +19,7 @@ public class FileStats
     public List<EncodingSegment> EncodingSegments { get; set; } = new();
     public List<char> Delimiters { get; set; } = new();
     public List<FormatEnum> Formats { get; set; } = new();
+    public List<string> Subjects { get; set; } = new();
     public DateTime ParseStart { get; init; } = DateTime.Now;
     public DateTime ParseEnd { get; set; }
     public TimeSpan Duration => ParseEnd - ParseStart;
