@@ -3,8 +3,8 @@ namespace LeakChecker.Utilities;
 public static class SizeEnum
 {
     public const long Byte = 1L;
-    public const long Kilobyte = Byte * 1024L;
-    public const long Megabyte = Kilobyte * 1024L;
-    public const long Gigabyte = Megabyte * 1024L;
-    public const long Terabyte = Gigabyte * 1024L;
+    public const long KiloByte = Byte * 1024L;
+    public const long MegaByte = KiloByte * 1024L;
+    public const long GigaByte = MegaByte * 1024L;
+    public const long TeraByte = GigaByte * 1024L;
 }
