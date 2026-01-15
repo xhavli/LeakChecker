@@ -27,8 +27,7 @@ public class EncodingDetector(IFileLogger logger, FileStats stats)
         if (encSegments.Count == 1)
         {
             message = $"Encoding detection finished successfully. Detected consistent [{encSegments[0].Encoding!.WebName}] " +
-                      $"with [{encSegments[0].Confidence:F2}] confidence. Time taken: {_stopWatch.Elapsed}, " +
-                      $"current DateTime: {DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}";
+                      $"with [{encSegments[0].Confidence:F2}] confidence. Time taken: {_stopWatch.Elapsed}";
             
             await logger.Log(message, LogLevel.Success, LogContext.Encoding);
         }
@@ -41,15 +40,13 @@ public class EncodingDetector(IFileLogger logger, FileStats stats)
             int differentEncodings = set.Count;
 
             message = $"Encoding detection finished successfully. Detected concatenated encoding with " +
-                      $"{differentEncodings} different encodings. Time taken: {_stopWatch.Elapsed}, " +
-                      $"current DateTime: {DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}";
+                      $"{differentEncodings} different encodings. Time taken: {_stopWatch.Elapsed}";
             
             await logger.Log(message, LogLevel.Success, LogContext.Encoding);
         }
         else
         {
-            message = $"Encoding detection failed. Detector did not detect any encoding. Time taken: {_stopWatch.Elapsed}, " +
-                      $"current DateTime: {DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}";
+            message = $"Encoding detection failed. Detector did not detect any encoding. Time taken: {_stopWatch.Elapsed}";
             
             await logger.Log(message, LogLevel.Warning, LogContext.Encoding);
         }
