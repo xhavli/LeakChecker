@@ -35,8 +35,6 @@ public static class HashParser
             return (isHash, hashType);
         }
 
-        // string? message = root.GetProperty("message").GetString();
-        // Console.WriteLine($"Token is not hash, token: '{token}'");
         return (false, ItemEnum.Null);
     }
 
