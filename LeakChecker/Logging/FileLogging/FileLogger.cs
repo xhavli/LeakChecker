@@ -4,6 +4,7 @@ using LeakChecker.Content;
 using LeakChecker.Encodings;
 using LeakChecker.Format.Detection;
 using LeakChecker.Format.Schema;
+using LeakChecker.Utilities;
 using LeakChecker.Utilities.Configuration;
 
 namespace LeakChecker.Logging.FileLogging;
@@ -75,6 +76,15 @@ public class FileLogger : IFileLogger
     
     public async Task Log(string? message, LogLevel level = LogLevel.Info, LogContext? context = null )
     {
+        string log = context is null ? $"[{DateTime.Now:T}] {level.GetString()} {message}"
+                                     : $"[{DateTime.Now:T}] {level.GetString()} {context.Value.GetString()} {message}";
+        
+        if (!Verbose)   // Log without colored console print
+        {
+            await LogLineAsync(log);
+            return;
+        }
+        
         ConsoleColor consoleColor = Console.ForegroundColor;
         switch (level)
         {
@@ -96,8 +106,7 @@ public class FileLogger : IFileLogger
         }
 
         Console.ForegroundColor = consoleColor;
-        await LogLineAsync(context is null ? $"[{DateTime.Now:T}] {level.GetString()} {message}"
-                                           : $"[{DateTime.Now:T}] {level.GetString()} {context.Value.GetString()} {message}");
+        await LogLineAsync(log);
         Console.ResetColor();
     }
 
@@ -106,13 +115,13 @@ public class FileLogger : IFileLogger
         string timeStamp = ParseStart.ToString("F", CultureInfo.InvariantCulture);
         FileInfo fileInfo = new FileInfo(SubjectFilePath);
         long fileSize = fileInfo.Length;
-        double sizeMb = fileSize / (1024.0 * 1024);
-        double sizeGb = fileSize / (1024.0 * 1024 * 1024);
+        double sizeMb = (double) fileSize / SizeEnum.MegaByte;
+        double sizeGb = (double) fileSize / SizeEnum.GigaByte;
 
-        await LogLineAsync($"File parse start: {timeStamp}");
+        await LogLineAsync($"Parse start: {timeStamp}");
         await LogLineAsync($"File path: {fileInfo.FullName}");
         await LogLineAsync($"File name: {fileInfo.Name}");
-        await LogLineAsync($"File size: {sizeGb:F2} GB / {sizeMb:F2} MB / {fileSize:N0} bytes ");
+        await LogLineAsync($"File size: {sizeGb:F2} GiB / {sizeMb:F2} MiB / {fileSize:N0} Bytes");
     }
     
     public async Task LogEncodingHeader()
@@ -138,7 +147,7 @@ public class FileLogger : IFileLogger
             .Count();
         await LogLineAsync($"Different encodings count: {distinctEncodingCount}");
         
-        await LogLineAsync("--");
+        await LogLineAsync();
         await LogLineAsync("Encodings by segment count:");
         var encodingCounts = segments
             .GroupBy(s => s.Encoding?.WebName)
@@ -146,10 +155,10 @@ public class FileLogger : IFileLogger
         foreach (var group in encodingCounts)
         {
             string encName = string.IsNullOrWhiteSpace(group.Key) ? "[NULL]" : group.Key;
-            await LogLineAsync($"{encName,-15} : {group.Count()} segments");
+            await LogLineAsync($"   {encName,-15} : {group.Count()} segments");
         }
         
-        await LogLineAsync("--");
+        await LogLineAsync();
         await LogLineAsync("Encodings by total size:");
         var encodingSizes = segments
             .GroupBy(s => s.Encoding?.WebName)
@@ -158,17 +167,18 @@ public class FileLogger : IFileLogger
         {
             string encName = string.IsNullOrWhiteSpace(group.Key) ? "[NULL]" : group.Key;
             long totalBytes = group.Sum(s => s.Length);
-            await LogLineAsync($"{encName,-15} : {totalBytes:N0} bytes");
+            await LogLineAsync($"   {encName,-15} : {totalBytes:N0} bytes");
         }
         
-        await LogLineAsync("--");
-        await LogLineAsync("Largest encoding segments:");
+        await LogLineAsync();
+        int count = 5;
+        await LogLineAsync($"Top {count} largest encoding segments:");
         var largestSegments = segments
             .OrderByDescending(s => s.Length)
-            .Take(5)
+            .Take(count)
             .ToList();
         foreach (var seg in largestSegments)
-            await LogLineAsync($"{seg.ToByteString()}");
+            await LogLineAsync($"   {seg.ToByteString()}");
     }
 
     public async Task LogEncodingDetails(List<EncodingSegment> segments)
@@ -183,13 +193,22 @@ public class FileLogger : IFileLogger
             await LogLineAsync(segment.ToByteString());
         }
     }
-    
+
+    public async Task LogEncodingConversion(string message)
+    {
+        await LogLineAsync();
+        await LogLineAsync("---------------------------------------------");
+        await LogLineAsync("         [X] ENCODING CONVERSION [X]");
+        await LogLineAsync("---------------------------------------------");
+        await Log(message);
+    }
     public async Task LogContentHeader()
     {
         await LogLineAsync();
         await LogLineAsync("---------------------------------------------");
         await LogLineAsync("            [X] CONTENT PARSE [X]");
         await LogLineAsync("---------------------------------------------");
+        await Log("Content parsing started");
     }
     
     public async Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int count = 5)
@@ -200,8 +219,9 @@ public class FileLogger : IFileLogger
         await LogLineAsync("---------------------------------------------");
         await Log($"Best delimiter: [{result.BestDelimiter}]");
         await LogLineAsync($"Sampled {result.SampledLines:N0} lines (~{result.SampledBytes} chars) in {result.Duration} seconds");
+        await LogLineAsync($"Top {count} delimiter candidates detail:");
         foreach (var candidate in result.Candidates.Take(count))
-            await LogLineAsync(candidate.ToString());
+            await LogLineAsync($"    {candidate}");
 
         await LogLineAsync();
     }
@@ -254,7 +274,7 @@ public class FileLogger : IFileLogger
                 await LogLineAsync($"      {rec.Attribute} = {rec.Count} ({pct:0.##}%)");
             }
         }
-        await LogLineAsync("--");
+        await LogLineAsync();
     }
     
     public async Task LogDominantSchema(SchemaHeuristic analyzer, double threshold)
@@ -262,28 +282,28 @@ public class FileLogger : IFileLogger
         await LogLineAsync($"Dominant schema (SuccessRate >= {threshold}%):");
 
         // Expanded schema contains Previous entries
-        var fullSchema = analyzer.GetDominantSchema(threshold);
+        var dominantSchema = analyzer.GetDominantSchema(threshold);
 
         // Cached % for the leading positions (no recompute)
-        var dominant = analyzer.GetDominantStats(threshold);
+        var dominantStats = analyzer.GetDominantStats(threshold);
 
-        foreach (var kvp in fullSchema.OrderBy(x => x.Key))
+        foreach (var kvp in dominantSchema.OrderBy(x => x.Key))
         {
-            int pos = kvp.Key;
-            var attr = kvp.Value;
+            int position = kvp.Key;
+            var attribute = kvp.Value;
 
-            if (attr == ItemEnum.Previous)
+            if (attribute == ItemEnum.Previous)
             {
-                await LogLineAsync($"   Position {pos} = ({attr})");
+                await LogLineAsync($"   Position {position} = ({attribute})");
                 continue;
             }
 
             // Use cached percentage if available
-            double pct = dominant.TryGetValue(pos, out var tuple) ? tuple.percent : 0.0;
+            double percent = dominantStats.TryGetValue(position, out var tuple) ? tuple.percent : 0.0;
 
-            await LogLineAsync($"   Position {pos} = {attr} - {pct:0.##}%");
+            await LogLineAsync($"   Position {position} = {attribute} - {percent:0.##}%");
         }
-        await LogLineAsync("--");
+        await LogLineAsync();
     }
     
     public async Task LogFinalSchema(Dictionary<int, ItemEnum> schema)
@@ -306,10 +326,10 @@ public class FileLogger : IFileLogger
         await LogLineAsync($"File name: {stats.FileName}");
         await LogLineAsync($"Parse ID: {stats.ParseId}");
 
-        string originEnc = string.IsNullOrEmpty(stats.Encoding?.WebName) ? "NULL" : stats.Encoding.WebName;
-        await LogLineAsync($"Origin encoding: [{originEnc}]");
-        string? originEncCount = Convert.ToString(stats.EncodingSegments.Count == 0 ? "NULL" : stats.EncodingSegments.Count);
-        await LogLineAsync($"Encoding segments: [{originEncCount}]");
+        string originEnc = string.IsNullOrEmpty(stats.Encoding?.WebName) ? "[NULL]" : stats.Encoding.WebName;
+        await LogLineAsync($"Origin encoding: {originEnc}");
+        string? originEncCount = Convert.ToString(stats.EncodingSegments.Count == 0 ? "[NULL]" : stats.EncodingSegments.Count);
+        await LogLineAsync($"Encoding segments: {originEncCount}");
 
         await LogLineAsync("Delimiters:");
         foreach (var delimiter in stats.Delimiters)
@@ -318,6 +338,10 @@ public class FileLogger : IFileLogger
         await LogLineAsync("Formats:");
         foreach (var format in stats.Formats)
             await LogLineAsync($"   {format}");
+        
+        await LogLineAsync("Subjects:");
+        foreach (var subject in stats.Subjects)
+            await LogLineAsync($"   {subject}");
 
         await LogLineAsync($"Correct records parsed: {stats.RecordsRead:N0}");
         await LogLineAsync($"Malformed records parsed: {stats.MalformedRecordsRead:N0}");
@@ -330,7 +354,7 @@ public class FileLogger : IFileLogger
         await LogLineAsync($"Byte speed: {stats.ByteSpeed:F2} bytes/sec");
 
         await LogLineAsync($"Parse start: {stats.ParseStart.ToString("F", CultureInfo.InvariantCulture)}");
-        await LogLineAsync($"Parse end: {stats.ParseEnd.ToString("F", CultureInfo.InvariantCulture)}");
+        await LogLineAsync($"Parse ended: {stats.ParseEnd.ToString("F", CultureInfo.InvariantCulture)}");
         await LogLineAsync($"Parse time: {stats.Duration}");
         await LogLineAsync();
     }
