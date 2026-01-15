@@ -24,7 +24,6 @@ public static class HashParser
             var algorithms = root.GetProperty("algorithms").EnumerateArray();
             
             string hashName = algorithms.First().ToString();
-            // isSalted = hashName.Contains("salt", StringComparison.InvariantCultureIgnoreCase);
             
             if (hashName.Trim().StartsWith("Base64", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -32,21 +31,12 @@ public static class HashParser
             }
             
             ItemEnum hashType = HashTypeMap.GetValueOrDefault(hashName.Trim(), ItemEnum.Null);
-            Console.WriteLine($"Token {token} detected as hash type: {hashName}, item enum: {hashType}");
             
-            Console.WriteLine($"Possible hash algorithms for '{token}':");
-            foreach (var algorithm in algorithms)
-            {
-                Console.WriteLine($"- {algorithm.GetString()}");
-            }
             return (isHash, hashType);
         }
-        else
-        {
-            // string? message = root.GetProperty("message").GetString();
-            Console.WriteLine($"Token is not hash, token: '{token}'");
-        }
-        
+
+        // string? message = root.GetProperty("message").GetString();
+        // Console.WriteLine($"Token is not hash, token: '{token}'");
         return (false, ItemEnum.Null);
     }
 
