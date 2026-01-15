@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using LeakChecker.Logging;
 using LeakChecker.Logging.FileLogging;
@@ -15,11 +16,13 @@ public static class EncodingConverter
     {
         string inputFilePath = logger.SubjectFilePath;
         string outputFilePath = logger.SubjectTmpFilePath;
+        Stopwatch sw = Stopwatch.StartNew();
         
         // If file is already in UTF-8 as a single UTF-8 segment, just copy
         if (encodingSegments is [{ Encoding: not null }] && Equals(encodingSegments[0].Encoding?.WebName, Encoding.UTF8.WebName))
         {
             File.Copy(inputFilePath, outputFilePath, overwrite: true);
+            await logger.Log($"File is already in UTF-8 encoding. Copy takes {sw.Elapsed}", LogLevel.Info, LogContext.Encoding);
             return;
         }
 
@@ -32,8 +35,7 @@ public static class EncodingConverter
         {
             if (segment.Encoding == null)
             {
-                await logger.Log($"Encoding missing for encoding segment [{segment.ToByteString()}]. Set UTF-8 as default.", 
-                    LogLevel.Warning, LogContext.Encoding);
+                await logger.LogEncodingConversion($"Encoding missing for encoding segment [{segment.ToByteString()}]. Set UTF-8 as default.");
                 segment.Encoding = Encoding.UTF8;
             }
 
@@ -58,5 +60,6 @@ public static class EncodingConverter
         }
 
         await outputStream.FlushAsync();
+        await logger.LogEncodingConversion($"{encodingSegments.Count} encoding segments conversion takes {sw.Elapsed}");
     }
 }
