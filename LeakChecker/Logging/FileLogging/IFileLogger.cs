@@ -18,6 +18,7 @@ public interface IFileLogger : IDisposable
     Task LogEncodingHeader();
     Task LogEncodingStats(List<EncodingSegment> segments);
     Task LogEncodingDetails(List<EncodingSegment> segments);
+    Task LogEncodingConversion(string message);
     Task LogContentHeader();
     Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int count);
     Task LogSchemaDetectionHeader();

@@ -20,6 +20,7 @@ public sealed class NullFileLogger(string path) : IFileLogger
     public Task LogEncodingHeader() => Task.CompletedTask;
     public Task LogEncodingStats(List<EncodingSegment> segments) => Task.CompletedTask;
     public Task LogEncodingDetails(List<EncodingSegment> segments) => Task.CompletedTask;
+    public Task LogEncodingConversion(string message) => Task.CompletedTask;
     public Task LogContentHeader() => Task.CompletedTask;
     public Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int count) => Task.CompletedTask;
     public Task LogSchemaDetectionHeader() => Task.CompletedTask;
