@@ -60,7 +60,6 @@ public class ContentProcessor : IDisposable
     public async Task ProcessFile()
     {
         _sw.Start();
-        await _logger.Log("Content parsing started.\n");
 
         while (await _reader.ReadLineWithEndingAsync() is { } originLine)
         {
@@ -103,9 +102,7 @@ public class ContentProcessor : IDisposable
         _stats.LinesRead = _linesRead;
         _stats.BytesRead = _readerPosition;
 
-        await _logger.Log($"Content processing finished successfully. Time taken: {_sw.Elapsed}, current DateTime: " +
-                       $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Content);
-        await _logger.Log($"Lines processed count: {_linesRead:N0}");
+        await _logger.Log($"Content processing finished successfully. Time taken: {_sw.Elapsed}", LogLevel.Success, LogContext.Content);
     }
 
     private async Task ProcessSqlInsert()
@@ -163,7 +160,9 @@ public class ContentProcessor : IDisposable
         if (schema.Values.All(v => v == ItemEnum.Other) || schema.Count == 0)    // if nothing reliable detected
         {
             result = await csvFileProcessor.ProcessCsvFile(_linesRead, delimiter, CsvSamplesLimit, CsvSamplesLimit);
-            UpdateParsingState(result);    //TODO decide how to handle this, have to be only bytesRead, linesRead, records 0 => malformed
+            result.LinesRead = 0;
+            result.MalformedRecordsRead = CsvSamplesLimit;
+            UpdateParsingState(result);
             
             return;
         }
