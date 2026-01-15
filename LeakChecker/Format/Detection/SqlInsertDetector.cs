@@ -162,10 +162,7 @@ public static class SqlInsertDetector
                     }
                 }
 
-                if (parenDepth > 0 || inQuote)
-                {
-                    stringBuilder.Append(c);
-                }
+                if (parenDepth > 0 || inQuote) { stringBuilder.Append(c); }
             }
             
             // End of Sql INSERT
@@ -186,15 +183,6 @@ public static class SqlInsertDetector
                 schema[idx] = guess;
             }
         }
-
-        // Console.WriteLine();
-        // Console.Write("Sql Header is: "); //TODO remove this
-        // foreach (var header in sqlHeaders)
-        // {
-        //     Console.Write(header + ", ");
-        // }
-        // Console.WriteLine();
-        // Console.WriteLine();
 
         await logger.LogFinalSchema(schema);
         return schema;
