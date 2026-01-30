@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Globalization;
 using System.Text;
 using LeakChecker.Logging;
 using LeakChecker.Logging.FileLogging;
@@ -27,7 +26,7 @@ public class EncodingDetector(IFileLogger logger, FileStats stats)
         if (encSegments.Count == 1)
         {
             message = $"Encoding detection finished successfully. Detected consistent [{encSegments[0].Encoding!.WebName}] " +
-                      $"with [{encSegments[0].Confidence:F2}] confidence. Time taken: {_stopWatch.Elapsed}";
+                      $"with [{encSegments[0].Confidence:F2}] confidence. Time taken: {_stopWatch.Elapsed}.";
             
             await logger.Log(message, LogLevel.Success, LogContext.Encoding);
         }
@@ -40,13 +39,13 @@ public class EncodingDetector(IFileLogger logger, FileStats stats)
             int differentEncodings = set.Count;
 
             message = $"Encoding detection finished successfully. Detected concatenated encoding with " +
-                      $"{differentEncodings} different encodings. Time taken: {_stopWatch.Elapsed}";
+                      $"{differentEncodings} different encodings. Time taken: {_stopWatch.Elapsed}.";
             
             await logger.Log(message, LogLevel.Success, LogContext.Encoding);
         }
         else
         {
-            message = $"Encoding detection failed. Detector did not detect any encoding. Time taken: {_stopWatch.Elapsed}";
+            message = $"Encoding detection failed. Detector did not detect any encoding. Time taken: {_stopWatch.Elapsed}.";
             
             await logger.Log(message, LogLevel.Warning, LogContext.Encoding);
         }
@@ -60,7 +59,7 @@ public class EncodingDetector(IFileLogger logger, FileStats stats)
     
     private async Task<List<EncodingSegment>> DetectConsistentEncoding()
     {
-        await logger.Log("Detection of consistent encoding");
+        await logger.Log("Detection of consistent encoding.");
         
         string message;
         var segments = new List<EncodingSegment>();
@@ -85,7 +84,7 @@ public class EncodingDetector(IFileLogger logger, FileStats stats)
 
         if (result?.Detected == null)
         {
-            message = "Consistent encoding detection failed: returned null.";
+            message = "Consistent encoding detection failed: returned [NULL].";
         }
         else
         {
@@ -102,7 +101,7 @@ public class EncodingDetector(IFileLogger logger, FileStats stats)
     // sampleSize predefined to 4KB
     private async Task<List<EncodingSegment>> DetectConcatenatedEncoding(int sampleSize = 4 * 1024)
     {
-        await logger.Log("Detection of concatenated encoding");
+        await logger.Log("Detection of concatenated encoding.");
         int bytesRead;
         long offset = 0;
         var buffer = new byte[sampleSize];
