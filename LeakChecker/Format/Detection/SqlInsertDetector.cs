@@ -149,8 +149,8 @@ public static class SqlInsertDetector
                                     DelimitersInside = value.Count(ch => ch == Delimiter)
                                 });
                             }
-
-                            int lineDelimitersCount = line.Count(ch => ch == Delimiter) - 1;    // -1 for "," separating each insert "( )", not direct values
+                            
+                            int lineDelimitersCount = line.Count(ch => ch == Delimiter) - 1;    // -1 because value is exact number of columns, not delimiters
                             analyzer.AddLinePatterns(linePatterns, lineDelimitersCount);
                             stringBuilder.Clear();
 
