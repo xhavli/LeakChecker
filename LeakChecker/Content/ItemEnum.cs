@@ -4,6 +4,7 @@ public enum ItemEnum
 {
     // Control
     Previous,
+    Empty,
     Null,
     
     // Content
@@ -21,7 +22,16 @@ public enum ItemEnum
     Location,
     Organization,
     Name,
+    FirstName,
+    LastName,
     Gender,
+    DateOfBirth,
+    Age,
+    Nationality,
+    EyeColor,
+    HairColor,
+    Height,
+    Weight,
     MaritalStatus,
     Iban,
     Username,
