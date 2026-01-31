@@ -340,7 +340,7 @@ public class FileLogger : IFileLogger
             await LogLineAsync($"   {format}");
         
         await LogLineAsync("Subjects:");
-        foreach (var subject in stats.Subjects)
+        foreach (var subject in stats.Context)
             await LogLineAsync($"   {subject}");
 
         await LogLineAsync($"Correct records parsed: {stats.RecordsRead:N0}");
