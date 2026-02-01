@@ -8,8 +8,9 @@ namespace LeakChecker.Logging.ExecutionLogging;
 public class ExecutionLogger : IDisposable
 {
     public readonly DateTime ExecutionStart;
-    private bool Verbose { get; }
+    private bool Verbose { get; } = true;
     private readonly StreamWriter _writer;
+    private readonly SemaphoreSlim _lock = new(1, 1);
     private const ConsoleColor InfoColor = ConsoleColor.DarkBlue;
     private const ConsoleColor WarningColor = ConsoleColor.DarkYellow;
     private const ConsoleColor SuccessColor = ConsoleColor.Green;
@@ -26,16 +27,24 @@ public class ExecutionLogger : IDisposable
         _writer = new StreamWriter(reportFilePath, append: true, encoding: Encoding.UTF8);
         _writer.AutoFlush = true;
         
-        Verbose = config.Verbose;
-        
         CreateReportHeader(config);
     }
     
     private async Task LogLineAsync(string message = "")
     {
         if (Verbose) Console.WriteLine(message);
-        await _writer.WriteLineAsync(message);
+
+        await _lock.WaitAsync();
+        try
+        {
+            await _writer.WriteLineAsync(message);
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
+
     
     public async Task Log(string message, LogLevel level = LogLevel.Info, LogContext? context = null )
     {
@@ -85,7 +94,7 @@ public class ExecutionLogger : IDisposable
         _writer.WriteLine();
         _writer.WriteLine($"Schema accuracy: {config.SchemaThreshold}");
         _writer.WriteLine();
-        _writer.WriteLine(string.Equals(config.Environment?.Trim(), "Development", StringComparison.OrdinalIgnoreCase)
+        _writer.WriteLine(string.Equals(config.Environment.Trim(), "Development", StringComparison.OrdinalIgnoreCase)
                           ? $"Environment: {config.Environment} - AutoFlush = ON"
                           : $"Environment: {config.Environment} - AutoFlush = OFF");
         _writer.WriteLine($"Verbose: {config.Verbose}");
