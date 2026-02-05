@@ -61,6 +61,8 @@ Author: Adam Havlík
   Assigning username to only first position if is detected as other and password on second undetected position which can be higher than 0.
 - `20.12.2025` - SchemaHeuristic length normalization  
   Set final schema length to most frequent length based on delimiters count per each line. Cut in case it computed longer, fill with ItemEnum.Other if computed shorter than normalized length.
+- `30.1.2026` - ExcelDetector  
+  Initial of schema detection across Excel sheets in one forward sequential file scan using [ExcelDataParser](https://github.com/ExcelDataReader/ExcelDataReader) returning all schemas for all sheets.
 
 ## Content
 
@@ -172,6 +174,8 @@ Author: Adam Havlík
   Processors count sequence of lines with fields count different from expected. When reached the limit, then return back to recompute the schema.
 - `21.12.2025` Channel threading initial  
   To avoid context switching when parsing large amount of files.
+- `31.1.2026` - ExcelParser  
+  Initial of ExcelParser using [ExcelDataParser](https://github.com/ExcelDataReader/ExcelDataReader) which can read direct values of each cell in Excel row by row and column by column.
 
 ## Utilities
 
@@ -183,6 +187,8 @@ Author: Adam Havlík
   Custom and performance trimming of quoted text `content`` / 'content' / "content" or SQL line (content),.
 - `28.9.2025` - StreamReaderExtensions  
   Custom ReadLineWithEndingAsync return line with newline to measure of read bytes.
+- `29.1.2026` - FileHandler  
+  Handling file accessibility, supported file type according its mime type detected by [Mime-Detective](https://github.com/MediatedCommunications/Mime-Detective), if its excel trying to open [ExcelDataParser](https://github.com/ExcelDataReader/ExcelDataReader), readability of converted encodings scanning for lines containing a '�' as unrecognized character.
 
 ## Tests
 
@@ -212,8 +218,6 @@ Author: Adam Havlík
 - When hash detected at [i], try [i+1] for salted hash 
 - Communication timeout for connection and request reply
 - When row mismatch, parse it separately.
-- ExcelDataParser - VelvetSweetShop obfuscation
-- Unify loggers behavior, abstract class...
 - Refactor Python NER Service
 - Detect Username and plaintext Password. CredentialCandidate
 - Decide how to enum localhost IpV4/IpV6
