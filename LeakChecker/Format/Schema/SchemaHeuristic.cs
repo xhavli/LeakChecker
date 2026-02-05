@@ -95,14 +95,32 @@ public class SchemaHeuristic
             int maxIndex = Array.IndexOf(array, maxCount);
             double percent = Math.Round((double)maxCount / total * 100.0, 2);
 
-            if (percent >= threshold)
+            (ItemEnum attr, double percent) dominant = 
+                percent >= threshold ? ((ItemEnum)maxIndex, percent) : (ItemEnum.Other, 0);
+
+            // if Empty is dominant but not 100% it will be something else
+            if (dominant is { attr: ItemEnum.Empty, percent: < 100 })
             {
-                result[kvp.Key] = ((ItemEnum)maxIndex, percent);
+                // Remove Empty entries and recompute
+                int emptyIndex = (int)ItemEnum.Empty;
+                array[emptyIndex] = 0;
+
+                total = array.Sum();
+                if (total > 0)
+                {
+                    maxCount = array.Max();
+                    maxIndex = Array.IndexOf(array, maxCount);
+                    percent = Math.Round((double)maxCount / total * 100.0, 2);
+
+                    dominant = percent >= threshold ? ((ItemEnum)maxIndex, percent) : (ItemEnum.Other, 0);
+                }
+                else
+                {
+                    dominant = (ItemEnum.Other, 0);
+                }
             }
-            else
-            {
-                result[kvp.Key] = (ItemEnum.Other, 0);
-            }
+
+            result[kvp.Key] = dominant;
         }
 
         return result;
