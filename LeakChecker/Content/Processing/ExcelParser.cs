@@ -61,10 +61,10 @@ public static class ExcelParser
                         malformedRecordsRead++;
                     }
 
-                    Console.WriteLine($"Row [{row}] Column [{column}], {type}: {value}");
+                    // Console.WriteLine($"Row [{row}] Column [{column}], {type}: {value}");
                 }
                 
-                Console.WriteLine();
+                // Console.WriteLine();
                 if (rowsRead == ParseLimit) break;
             }
             
