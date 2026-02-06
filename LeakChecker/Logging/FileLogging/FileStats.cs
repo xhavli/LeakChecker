@@ -27,5 +27,18 @@ public class FileStats
     public double LineSpeed => Duration.TotalSeconds > 0 ? LinesRead / Duration.TotalSeconds : 0;
     public double Accuracy =>
         RecordsRead <= 0 ? 0 : Math.Max(0, (double)(RecordsRead - MalformedRecordsRead) / RecordsRead * 100);
+    
+    public static FileStats Create(Guid executionId, IFileLogger parseLogger, string filePath) 
+    { 
+        return new FileStats 
+        { 
+            ParseId = parseLogger.ParseId, 
+            ExecutionId = executionId, 
+            ParseStart = parseLogger.ParseStart, 
+            FileName = Path.GetFileName(filePath), 
+            FilePath = filePath, 
+            FileSize = new FileInfo(filePath).Length 
+        }; 
+    }
 }
 

@@ -18,9 +18,6 @@ namespace LeakChecker;
 
 public static class Program
 {
-    private static ExecutionLogger? ExecutionLogger { get; set; }
-    public static string? ApplicationName { get; private set; }
-
     public static async Task<int> Main()
     {
         // string hash = "$oldoffice$0*55045061647456688860411218030058*e7e24d163fbd743992d4b8892bf3f2f7*493410dbc832557d3fe1870ace8397e2:91b2e062b9";
@@ -32,7 +29,6 @@ public static class Program
         try
         {
             config = AppConfigParser.LoadFromFile(configJson);
-            ApplicationName = AppDomain.CurrentDomain.FriendlyName;
         }
         catch (Exception e)
         {
@@ -51,13 +47,13 @@ public static class Program
         services.AddSingleton<ExecutionLogger>();
         
         var provider = services.BuildServiceProvider();
-        ExecutionLogger = provider.GetRequiredService<ExecutionLogger>();
+        var executionLogger = provider.GetRequiredService<ExecutionLogger>();
         var loggerFactory = provider.GetRequiredService<IFileLoggerFactory>();
         Guid executionId = Guid.NewGuid();
-        var stats = new ExecutionStats(executionId, ExecutionLogger.ExecutionStart);
-        var fileHandler = new FileHandler(ExecutionLogger);
+        var stats = new ExecutionStats(executionId, executionLogger.ExecutionStart);
+        var fileHandler = new FileHandler(executionLogger);
         
-        PythonNerService pythonNerService = new PythonNerService(ExecutionLogger);
+        PythonNerService pythonNerService = new PythonNerService(executionLogger);
         try
         {
             // await pythonNerService.Start(config.PythonNerService, config.PythonNerServArgs);
@@ -65,7 +61,7 @@ public static class Program
         }
         catch (Exception e)
         {
-            await ExecutionLogger.Log(e.Message, LogLevel.Failure, LogContext.PythonNerService);
+            await executionLogger.Log(e.Message, LogLevel.Failure, LogContext.PythonNerService);
             return 1;
         }
         
@@ -107,34 +103,14 @@ public static class Program
         });
 
         // Consumers: process files with bounded concurrency (threads)
-        var consumers = Enumerable.Range(0, 1).Select(_ => Task.Run(async () =>
+        var consumers = Enumerable.Range(0, threads).Select(_ => Task.Run(async () =>
         {
             await foreach (var filePath in channel.Reader.ReadAllAsync())
             {
-                // TODO reorder
-                // IsAccesible
-                // IsExcel
-                // IsSupported
-                // Encoding detection and conversion
-                // IsReadable
-                // Parse content
-                
-                if (!await fileHandler.IsAccessible(filePath) || !await fileHandler.IsSupported(filePath)) 
-                    continue;
-                
-                Guid parseId = Guid.NewGuid();
-                DateTime parseStart = DateTime.Now;
-                using var parseLogger = await loggerFactory.CreateAsync(parseId, executionId, parseStart, filePath);
+                if (!await fileHandler.IsAccessible(filePath) || !await fileHandler.IsSupported(filePath)) continue;
 
-                FileStats parseStats = new()
-                {
-                    ParseId = parseId,
-                    ExecutionId = executionId,
-                    ParseStart = parseStart,
-                    FileName = Path.GetFileName(filePath),
-                    FilePath = filePath,
-                    FileSize = new FileInfo(filePath).Length,
-                };
+                using var parseLogger = await loggerFactory.CreateAsync(executionId, filePath);
+                FileStats parseStats = FileStats.Create(executionId, parseLogger, filePath);
 
                 try
                 {
@@ -145,20 +121,17 @@ public static class Program
                     }
                     else
                     {
-                        continue;
                         // EncodingDetector encodingDetector = new(parseLogger, parseStats);
                         // List<EncodingSegment> encodingSegments = await encodingDetector.DetectFileEncodings();
                         //
                         // await EncodingConverter.ConvertFileToUtf8(parseLogger, encodingSegments);
 
-                        //TODO try this and then try to detect encoding again for files encoded multiple times
                         await fileHandler.IsReadable(filePath);
                         
                         using ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(parseLogger, parseStats, utf8, config.SchemaThreshold);
                         await contentProcessor.ProcessFile();
                     }
 
-                    parseStats.ParseEnd = DateTime.Now;
                     await parseLogger.LogFileStats(parseStats);
                     
                     lock (stats)
@@ -172,7 +145,7 @@ public static class Program
                 }
                 catch (Exception e)
                 {
-                    await ExecutionLogger.Log($"{parseId} : {parseLogger.SubjectFileName}: {e}", LogLevel.Failure, LogContext.Main);
+                    await executionLogger.Log($"{parseLogger.ParseId} : {parseLogger.SubjectFileName}: {e}", LogLevel.Failure, LogContext.Main);
                 }
                 finally
                 {
@@ -185,6 +158,8 @@ public static class Program
                     //     await ExecutionLogger.Log($"{parseId} : {parseLogger.SubjectFileName}: {e}", LogLevel.Warning, LogContext.Main);
                     // }
                 }
+
+                await executionLogger.Log($"Finished: {parseLogger.SubjectFileName}", LogLevel.Success, LogContext.Parsing);
             }
         })).ToArray();
 
@@ -192,11 +167,11 @@ public static class Program
         await pythonNerService.Stop();
         
         stats.ExecutionEnd = DateTime.Now;
-        await ExecutionLogger.LogExecutionStats(stats);
+        await executionLogger.LogExecutionStats(stats);
         
-        await ExecutionLogger.Log($"Execution finished successfully. Parsed {data.Length} files. Current DateTime is " +
+        await executionLogger.Log($"Execution finished successfully. Parsed {data.Length} files. Current DateTime is " +
                          $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Main);
-        await ExecutionLogger.Log("Program will exit with exit code 0");
+        await executionLogger.Log("Program will exit with exit code 0");
         return 0;
     }
 }

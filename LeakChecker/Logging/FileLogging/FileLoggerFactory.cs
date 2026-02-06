@@ -4,8 +4,8 @@ namespace LeakChecker.Logging.FileLogging;
 
 public class FileLoggerFactory(AppConfig config) : IFileLoggerFactory
 {
-    public Task<IFileLogger> CreateAsync(Guid parsingId, Guid executionId, DateTime parseStart, string filePath)
+    public Task<IFileLogger> CreateAsync(Guid executionId, string filePath)
     {
-        return FileLogger.CreateAsync(config, parsingId, executionId, parseStart, filePath);
+        return FileLogger.CreateAsync(config, executionId, filePath);
     }
 }

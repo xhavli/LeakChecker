@@ -45,13 +45,13 @@ public class FileLogger : IFileLogger
 
     public static async Task<IFileLogger> CreateAsync(
         AppConfig config,
-        Guid parseId,
         Guid executionId,
-        DateTime parseStart,
         string subjectFilePath)
     {
+        Guid parseId = Guid.NewGuid();
+        DateTime parseStart = DateTime.Now;
+        
         string subjectFileName = Path.GetFileName(subjectFilePath);
-
         string fileTimeStamp = $"{parseStart:yyyy-M-dTHH-mm-ss}";
         string logFileName = $"{fileTimeStamp}_{subjectFileName}_{parseId}.txt";
         string logFilePath = Path.Combine(config.LogDirectory, logFileName);
@@ -318,6 +318,8 @@ public class FileLogger : IFileLogger
     
     public async Task LogFileStats(FileStats stats)
     {
+        stats.ParseEnd = DateTime.Now;
+        
         await LogLineAsync();
         await LogLineAsync("------------------------------------------------");
         await LogLineAsync("             [X] FILE PARSE STATS [X]");
@@ -333,7 +335,10 @@ public class FileLogger : IFileLogger
 
         await LogLineAsync("Delimiters:");
         foreach (var delimiter in stats.Delimiters)
-            await LogLineAsync($"   '{delimiter}'");
+        {
+            var display = delimiter == '\t' ? "\\t" : delimiter.ToString();
+            await LogLineAsync($"   '{display}'");
+        }
 
         await LogLineAsync("Formats:");
         foreach (var format in stats.Formats)

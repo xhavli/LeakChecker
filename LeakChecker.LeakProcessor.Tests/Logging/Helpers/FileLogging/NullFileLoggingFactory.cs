@@ -8,6 +8,6 @@ namespace LeakProcessor.Tests.Logging.Helpers.FileLogging;
 /// </summary>
 public sealed class NullFileLoggerFactory : IFileLoggerFactory
 {
-    public Task<IFileLogger> CreateAsync(Guid parsingId, Guid executionId, DateTime parseStart, string filePath)
+    public Task<IFileLogger> CreateAsync(Guid executionId, string filePath)
         => Task.FromResult<IFileLogger>(new NullFileLogger(filePath));
 }
