@@ -20,10 +20,6 @@ public static class Program
 {
     public static async Task<int> Main()
     {
-        // string hash = "$oldoffice$0*55045061647456688860411218030058*e7e24d163fbd743992d4b8892bf3f2f7*493410dbc832557d3fe1870ace8397e2:91b2e062b9";
-        // _ = await HashParser.TryParse(hash);
-        // return 0;
-        
         const string configJson = "appsettings.json";
         AppConfig config;
         try
