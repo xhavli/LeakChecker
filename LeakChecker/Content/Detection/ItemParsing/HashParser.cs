@@ -136,6 +136,10 @@ public static class HashParser
         ["MSSQL (2005)"] = ItemEnum.MSSQL2005,
         ["MSSQL (2012, 2014)"] = ItemEnum.MSSQL2012_2014,
         
+        // DJANGO
+        ["Django (SHA-1)"] = ItemEnum.DJANGO_SHA1,
+        ["Django (PBKDF2-SHA256)"] = ItemEnum.DJANGO_PBKDF2_SHA256,
+        
         // PHPASS
         ["phpass(md5($plaintext))/phpbb3md5"] = ItemEnum.PHPBB3_MD5,   // Hashcat Hash-Name "phpass, phpBB3 (MD5)"
         ["phpass, phpBB3 (MD5), Joomla >= 2.5.18 (MD5), WordPress (MD5)"] = ItemEnum.PHPASS_WORDPRESS_MD5, // Hashcat Hash-Name "phpass, WordPress (MD5), Joomla (MD5)"
@@ -160,9 +164,17 @@ public static class HashParser
         ["Ethereum Wallet, PBKDF2-HMAC-SHA256"] = ItemEnum.ETHEREUM_WALLET_PBKDF2_HMAC_SHA256,
         ["Ethereum Pre-Sale Wallet, PBKDF2-HMAC-SHA256"] = ItemEnum.ETHEREUM_PRE_SALE_WALLET_PBKDF2_HMAC_SHA256,
         
-        // DJANGO
-        ["Django (SHA-1)"] = ItemEnum.DJANGO_SHA1,
-        ["Django (PBKDF2-SHA256)"] = ItemEnum.DJANGO_PBKDF2_SHA256,
+        // BITCOIN
+        // Other bitcoin hash types always fallback to Bitcoin Public Address 
+        ["Bitcoin Public Address"] = ItemEnum.BITCOIN_PUBLIC_ADDRESS,   // Does not exit in Hashcat Hash-Name
+        ["Litecoin Public Address"] = ItemEnum.LITECOIN_PUBLIC_ADDRESS,
+        ["Bitcoin Cash Public Address"] = ItemEnum.BITCOIN_CASH_PUBLIC_ADDRESS, // Does not exit in Hashcat Hash-Name
+        ["Bitcoin/Litecoin wallet.dat"] = ItemEnum.BITCOIN_LITTLECOIN_WALLET_DAT,
+        
+        // BLOCKCHAIN
+        ["Blockchain, My Wallet"] = ItemEnum.BLOCKCHAIN_MY_WALLET,
+        ["Blockchain, My wallet, v2"] = ItemEnum.BLOCKCHAIN_MY_WALLET_V2,
+        ["Blockchain, My Wallet, Second (SHA256)"] = ItemEnum.BLOCKCHAIN_MY_WALLET_SECOND_SHA256,
         
         // APPLE
         ["macOS v10.7"] = ItemEnum.MACOS_V107,
@@ -172,6 +184,15 @@ public static class HashParser
         ["iTunes backup < 10.0"] = ItemEnum.APPLE_ITUNES_BACKUP_BEFORE_10_0,
         ["iTunes backup >= 10.0"] = ItemEnum.APPLE_ITUNES_BACKUP_AFTER_10_0,
         ["Apple File System (APFS)"] = ItemEnum.APPLE_FILE_SYSTEM,
+        
+        // PDF
+        ["PDF 1.1 - 1.3 (Acrobat 2 - 4)"] = ItemEnum.PDF_11_13_ACROBAT_2_4,
+        ["PDF 1.1 - 1.3 (Acrobat 2 - 4), collider #1"] = ItemEnum.PDF_11_13_ACROBAT_2_4_COLLIDER_1,
+        ["PDF 1.1 - 1.3 (Acrobat 2 - 4), collider #2"] = ItemEnum.PDF_11_13_ACROBAT_2_4_COLLIDER_2,
+        ["PDF 1.4 - 1.6 (Acrobat 5 - 8)"] = ItemEnum.PDF_14_16_ACROBAT_5_8,
+        ["PDF 1.7 Level 3 (Acrobat 9)"] = ItemEnum.PDF_17_LEVEL_3_ACROBAT_9,
+        ["PDF 1.7 Level 8 (Acrobat 10 - 11)"] = ItemEnum.PDF_17_LEVEL_8_ACROBAT_10_11,
+        ["PDF Unknown Type"] = ItemEnum.PDF_UNKNOWN_TYPE,
         
         // MS OFFICE
         ["MS Office 2007"] = ItemEnum.MS_OFFICE_2007,
@@ -184,31 +205,6 @@ public static class HashParser
         ["MS Office <= 2003 $3/$4, SHA1 + RC4"] = ItemEnum.MS_OFFICE_2003_SHA1_RC4, // Hashcat Hash-Name "MS Office ⇐ 2003 SHA1 + RC4, oldoffice$3, oldoffice$4"
         ["MS Office <= 2003 $3, SHA1 + RC4, collider #1"] = ItemEnum.MS_OFFICE_2003_SHA1_RC4_COLLIDER_1,
         ["MS Office <= 2003 $3, SHA1 + RC4, collider #2"] = ItemEnum.MS_OFFICE_2003_SHA1_RC4_COLLIDER_2,
-        
-        // AXCRYPT
-        ["AxCrypt"] = ItemEnum.AXCRYPT, // TODO this AxCrypt not detected properly
-        ["AxCrypt in-memory SHA1"] = ItemEnum.AXCRYPT_INMEMORY_SHA1,
-        
-        // BITCOIN
-        // Other bitcoin hash types always fallback to Bitcoin Public Address 
-        ["Bitcoin/Litecoin wallet.dat"] = ItemEnum.BITCOIN_LITTLECOIN_WALLET_DAT,
-        ["Bitcoin Public Address"] = ItemEnum.BITCOIN_PUBLIC_ADDRESS,   // Does not exit in Hashcat Hash-Name
-        ["Bitcoin Cash Public Address"] = ItemEnum.BITCOIN_CASH_PUBLIC_ADDRESS, // Does not exit in Hashcat Hash-Name
-        ["Litecoin Public Address"] = ItemEnum.LITECOIN_PUBLIC_ADDRESS,
-        
-        // BLOCKCHAIN
-        ["Blockchain, My Wallet"] = ItemEnum.BLOCKCHAIN_MY_WALLET,
-        ["Blockchain, My wallet, v2"] = ItemEnum.BLOCKCHAIN_MY_WALLET_V2,
-        ["Blockchain, My Wallet, Second (SHA256)"] = ItemEnum.BLOCKCHAIN_MY_WALLET_SECOND_SHA256,
-        
-        // PDF
-        ["PDF 1.1 - 1.3 (Acrobat 2 - 4)"] = ItemEnum.PDF_11_13_ACROBAT_2_4,
-        ["PDF 1.1 - 1.3 (Acrobat 2 - 4), collider #1"] = ItemEnum.PDF_11_13_ACROBAT_2_4_COLLIDER_1,
-        ["PDF 1.1 - 1.3 (Acrobat 2 - 4), collider #2"] = ItemEnum.PDF_11_13_ACROBAT_2_4_COLLIDER_2,
-        ["PDF 1.4 - 1.6 (Acrobat 5 - 8)"] = ItemEnum.PDF_14_16_ACROBAT_5_8,
-        ["PDF 1.7 Level 3 (Acrobat 9)"] = ItemEnum.PDF_17_LEVEL_3_ACROBAT_9,
-        ["PDF 1.7 Level 8 (Acrobat 10 - 11)"] = ItemEnum.PDF_17_LEVEL_8_ACROBAT_10_11,
-        ["PDF Unknown Type"] = ItemEnum.PDF_UNKNOWN_TYPE,
         
         // KERBEROS
         ["Kerberos 5, etype 17, DB"] = ItemEnum.KERBEROS_5_ETYPE_17_DB,
@@ -234,9 +230,13 @@ public static class HashParser
         ["RSA/DSA/EC/OpenSSH Private Keys ($5$)"] = ItemEnum.RSA_DSA_EC_OPENSSH_PRIVATE_KEYS_5,
         ["RSA/DSA/EC/OpenSSH Private Keys ($6$)"] = ItemEnum.RSA_DSA_EC_OPENSSH_PRIVATE_KEYS_6,
         
+        // AXCRYPT
+        ["AxCrypt"] = ItemEnum.AXCRYPT, // TODO this AxCrypt not detected properly
+        ["AxCrypt in-memory SHA1"] = ItemEnum.AXCRYPT_INMEMORY_SHA1,
+        
         // OTHERS
-        ["PHPS"] = ItemEnum.PHPS,
         ["JWT (Json Web Token)"] = ItemEnum.JWT,
+        ["PHPS"] = ItemEnum.PHPS,
         ["RAR5"] = ItemEnum.RAR5,
         ["RAR3-hp (*0* only)"] = ItemEnum.RAR3_HP,
         ["RAR3-p (Compressed)"] = ItemEnum.RAR3_P_COMPRESSED,
@@ -247,13 +247,13 @@ public static class HashParser
         ["Drupal7"] = ItemEnum.DRUPAL7,
         ["Radmin2"] = ItemEnum.RADMIN2,
         ["Radmin3"] = ItemEnum.RADMIN3,
-        ["BitLocker"] = ItemEnum.BITLOCKER,
         ["OpenCart"] = ItemEnum.OPENCART,
         ["Whirlpool"] = ItemEnum.WHIRLPOOL,
+        ["BitLocker"] = ItemEnum.BITLOCKER,
         ["NetNTLMv2"] = ItemEnum.NET_NTLM_V2,
         ["AIX {ssha1}"] = ItemEnum.AIX_SSHA1,
-        ["Yescrypt $y$"] = ItemEnum.YESCRYPT,    // Hashcat Hash-Name IS NOT "scrypt [Bridged: Scrypt-Yescrypt]"
         ["FileVault 2"] = ItemEnum.FILEVAULT_2,
+        ["Yescrypt $y$"] = ItemEnum.YESCRYPT,    // Hashcat Hash-Name IS NOT "scrypt [Bridged: Scrypt-Yescrypt]"
         ["AuthMe sha256"] = ItemEnum.AUTHME_SHA256,
         ["Ansible Vault"] = ItemEnum.ANSIBLE_VAULT,
         ["Mozilla key3.db"] = ItemEnum.MOZILLA_KEY3_DB,
@@ -263,15 +263,15 @@ public static class HashParser
         ["MultiBit Classic .key (MD5)"] = ItemEnum.MULTIBIT_CLASSIC_KEY_MD5,
         ["MultiBit Classic .wallet (scrypt)"] = ItemEnum.MULTIBIT_CLASSIC_WALLET_SCRYPT,
         ["Base64 Encoded String"] = ItemEnum.BASE64,
-        ["Password Safe v3 pwsafe3"] = ItemEnum.PASSWORDSAFE_V3, // Hashcat Hash-Name "Password Safe v3"
+        ["Password Safe v3 pwsafe3"] = ItemEnum.PASSWORD_SAFE_V3, // Hashcat Hash-Name "Password Safe v3"
         ["Android Backup"] = ItemEnum.ANDROID_BACKUP,
         ["Android FDE (Samsung DEK)"] = ItemEnum.ANDROID_FDE_SAMSUNG_DEK,
         ["WPA-PMKID-PBKDF2"] = ItemEnum.WPA_PMKID_PBKDF2,
         ["WPA-PBKDF2-PMKID+EAPOL"] = ItemEnum.WPA_PBKDF2_PMKID_EAPOL,
         ["IPMI2 RAKP HMAC-SHA1"] = ItemEnum.IPMI2_RAKP_HMAC_SHA1,
         ["osCommerce, xt:Commerce"] = ItemEnum.OSCOMMERCE_XTCOMMERCE,
-        ["Cisco-IOS $9$ (scrypt)"] = ItemEnum.CISCO_IOS_SCRYPT,
-        ["Cisco-IOS $8$ (PBKDF2-SHA256)"] = ItemEnum.CISCO_IOS_PBKDF2_SHA256,
+        ["Cisco-IOS $9$ (scrypt)"] = ItemEnum.CISCO_IOS_9_SCRYPT,
+        ["Cisco-IOS $8$ (PBKDF2-SHA256)"] = ItemEnum.CISCO_IOS_8_PBKDF2_SHA256,
         ["Atlassian (PBKDF2-HMAC-SHA1)"] = ItemEnum.ATLASSIAN_PBKDF2_HMAC_SHA1,
         ["Exodus Desktop Wallet (scrypt)"] = ItemEnum.EXODUS_DESKTOP_WALLET_SCRYPT,
         ["BestCrypt v3 Volume Encryption"] = ItemEnum.BESTCRYPT_V3_VOLUME_ENCRYPTION,
