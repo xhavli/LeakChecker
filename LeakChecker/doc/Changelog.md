@@ -199,6 +199,7 @@ Author: Adam Havlík
 - `3.11.2025` - SqlHeaderGuesser 245 tests initial
 - `1.12.2025` - HashParserTests added 63 tests
 - `2.12.2025` - HashParserTests added 13 tests
+- `7.2.2026` - HashParserTests have now 116 tests at summary
 - `XX.2.2026` - Encodings.Detection tests
 - `XX.2.2026` - Encodings.Conversion tests
 - `XX.2.2026` - Format.Delimiter tests
@@ -214,10 +215,10 @@ Author: Adam Havlík
 
 ## TODOs
 
-- Add ~400 Hashcat hash types to ItemEnum and match it to <www.hashes.com>
+- When row mismatch, parse it separately.
 - When hash detected at [i], try [i+1] for salted hash 
 - Communication timeout for connection and request reply
-- When row mismatch, parse it separately.
+- Custom hash identification for truecrypt, veracrypt and other hashes in text form or common prefix 
 - Refactor Python NER Service
 - Detect Username and plaintext Password. CredentialCandidate
 - Decide how to enum localhost IpV4/IpV6
