@@ -135,8 +135,6 @@ public static class DelimiterHeuristic
                 LinesSeen = s.Lines,
                 LinesWithAny = s.LinesWithAny,
                 WithinOneOfMeanFraction = within1Frac,
-                ApproxModeCount = s.ModeCount,
-                ApproxModeFrequency = s.ModeFreq
             });
         }
 
@@ -206,15 +204,6 @@ public static class DelimiterHeuristic
                 else if (m.AFreq <= m.BFreq) (m.ACount, m.AFreq) = (count, 1);
                 else (m.BCount, m.BFreq) = (count, 1);
 
-                if (m.AFreq >= m.BFreq)
-                {
-                    s.ModeCount = m.ACount; s.ModeFreq = m.AFreq;
-                }
-                else
-                {
-                    s.ModeCount = m.BCount; s.ModeFreq = m.BFreq;
-                }
-
                 mode[i] = m;
             }
 
@@ -233,8 +222,6 @@ public static class DelimiterHeuristic
         public double Mean;
         public double M2;
         public int Within1;
-        public int ModeCount;
-        public int ModeFreq;
     }
 
     private struct SmallMode
