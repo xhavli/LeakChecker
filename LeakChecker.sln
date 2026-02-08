@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeakChecker", "LeakChecker\LeakChecker.csproj", "{E8D1FF5C-3D51-4EC7-8E09-B5F292A3BE50}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeakChecker.DataParser", "LeakChecker.DataParser\LeakChecker.DataParser.csproj", "{E8D1FF5C-3D51-4EC7-8E09-B5F292A3BE50}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeakChecker.LeakProcessor.Tests", "LeakChecker.LeakProcessor.Tests\LeakChecker.LeakProcessor.Tests.csproj", "{41F754ED-08EB-464E-A10B-AB7603540657}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeakChecker.DataParser.Tests", "LeakChecker.DataParser.Tests\LeakChecker.DataParser.Tests.csproj", "{41F754ED-08EB-464E-A10B-AB7603540657}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

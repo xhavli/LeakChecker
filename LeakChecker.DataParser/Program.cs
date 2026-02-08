@@ -2,7 +2,7 @@
 using System.Text;
 using System.Threading.Channels;
 using LeakChecker.Content.Detection.RecognitionService;
-using LeakChecker.Content.Processing;
+using LeakChecker.Content.Parsing;
 using LeakChecker.Data;
 using LeakChecker.Encodings;
 using LeakChecker.Encodings.Conversion;
@@ -124,8 +124,8 @@ public static class Program
 
                         await fileHandler.IsReadable(filePath);
                         
-                        using ContentProcessor contentProcessor = await ContentProcessor.CreateAsync(parseLogger, parseStats, utf8, config.SchemaThreshold);
-                        await contentProcessor.ProcessFile();
+                        using ContentParser contentParser = await ContentParser.CreateAsync(parseLogger, parseStats, utf8, config.SchemaThreshold);
+                        await contentParser.ProcessFile();
                     }
 
                     await parseLogger.LogFileStats(parseStats);

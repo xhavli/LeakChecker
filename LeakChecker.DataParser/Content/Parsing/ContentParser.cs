@@ -7,9 +7,9 @@ using LeakChecker.Logging;
 using LeakChecker.Logging.FileLogging;
 using LeakChecker.Utilities.Extensions;
 
-namespace LeakChecker.Content.Processing;
+namespace LeakChecker.Content.Parsing;
 
-public class ContentProcessor : IDisposable
+public class ContentParser : IDisposable
 {
     // Parsing state
     private long _malformedRecordsRead;
@@ -26,11 +26,11 @@ public class ContentProcessor : IDisposable
     // Default constants
     private const int SqlSamplesLimit = 31;
     private const int CsvSamplesLimit = 103;
-    private const int ThresholdPercent = 50;
+    // private const long ParseLimit = 150;
     private const long ParseLimit = long.MaxValue;
     private readonly int _thresholdPercent;
 
-    private ContentProcessor(int thresholdPercent, Encoding encoding, StreamReader reader, IFileLogger logger, FileStats stats)
+    private ContentParser(int thresholdPercent, Encoding encoding, StreamReader reader, IFileLogger logger, FileStats stats)
     {
         _thresholdPercent = thresholdPercent;
         _encoding = encoding;
@@ -39,7 +39,7 @@ public class ContentProcessor : IDisposable
         _stats = stats;
     }
 
-    public static async Task<ContentProcessor> CreateAsync(IFileLogger logger, FileStats stats, Encoding? encoding, int thresholdPercent)
+    public static async Task<ContentParser> CreateAsync(IFileLogger logger, FileStats stats, Encoding? encoding, int thresholdPercent)
     {
         await logger.LogContentHeader();
         if (encoding == null)
@@ -54,7 +54,7 @@ public class ContentProcessor : IDisposable
         var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: false);
         
-        return new ContentProcessor(thresholdPercent, encoding, reader, logger, stats);
+        return new ContentParser(thresholdPercent, encoding, reader, logger, stats);
     }
     
     public async Task ProcessFile()
@@ -119,8 +119,8 @@ public class ContentProcessor : IDisposable
 
         // Parse SQL INSERT block with header
         _reader.AdjustPosition(sqlInsertStart);
-        SqlInsertProcessor processor = new(schema, _reader, _logger);
-        ParsingState result = await processor.ProcessSqlInsert(_linesRead, SqlSamplesLimit, ParseLimit);
+        SqlInsertParser parser = new(schema, _reader, _logger);
+        ParsingState result = await parser.ProcessSqlInsert(_linesRead, SqlSamplesLimit, ParseLimit);
         UpdateParsingState(result);
         
         _stats.Formats.Add(FormatEnum.SqlInsert);
@@ -155,18 +155,18 @@ public class ContentProcessor : IDisposable
         
         // Parse CSV file
         _reader.AdjustPosition(csvFormatStart);
-        CsvFileProcessor csvFileProcessor = new(schema, _reader, _logger);
+        CsvParser csvParser = new(schema, _reader, _logger);
         ParsingState result;
         if (schema.Values.All(v => v == ItemEnum.Other) || schema.Count == 0)    // if nothing reliable detected
         {
-            result = await csvFileProcessor.ProcessCsvFile(_linesRead, delimiter, CsvSamplesLimit, CsvSamplesLimit);
+            result = await csvParser.ProcessCsvFile(_linesRead, delimiter, CsvSamplesLimit, CsvSamplesLimit);
             result.LinesRead = 0;
             result.MalformedRecordsRead = CsvSamplesLimit;
             UpdateParsingState(result);
             
             return;
         }
-        result = await csvFileProcessor.ProcessCsvFile(_linesRead, delimiter, CsvSamplesLimit, ParseLimit);
+        result = await csvParser.ProcessCsvFile(_linesRead, delimiter, CsvSamplesLimit, ParseLimit);
         UpdateParsingState(result);
         
         _stats.Formats.Add(FormatEnum.Csv);

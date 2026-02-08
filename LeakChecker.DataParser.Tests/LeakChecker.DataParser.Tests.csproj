@@ -23,12 +23,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\LeakChecker\LeakChecker.csproj" />
+      <ProjectReference Include="..\LeakChecker.DataParser\LeakChecker.DataParser.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Configuration\" />
-      <Folder Include="Content\Processing\" />
+      <Folder Include="Content\Parsing\" />
       <Folder Include="Encodings\Conversion\" />
     </ItemGroup>
 

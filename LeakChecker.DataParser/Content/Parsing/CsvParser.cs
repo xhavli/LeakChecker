@@ -3,9 +3,9 @@ using LeakChecker.Logging;
 using LeakChecker.Logging.FileLogging;
 using LeakChecker.Utilities.Extensions;
 
-namespace LeakChecker.Content.Processing;
+namespace LeakChecker.Content.Parsing;
 
-public class CsvFileProcessor(Dictionary<int, ItemEnum> schema, StreamReader reader, IFileLogger logger)
+public class CsvParser(Dictionary<int, ItemEnum> schema, StreamReader reader, IFileLogger logger)
 {
     public async Task<ParsingState> ProcessCsvFile(long startLine, char delimiter, int malformedLimit, long parseLimit)
     {

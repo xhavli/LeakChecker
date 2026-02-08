@@ -3,9 +3,9 @@ using LeakChecker.Logging;
 using LeakChecker.Logging.FileLogging;
 using LeakChecker.Utilities.Extensions;
 
-namespace LeakChecker.Content.Processing;
+namespace LeakChecker.Content.Parsing;
 
-public class SqlInsertProcessor(Dictionary<int, ItemEnum> schema, StreamReader reader, IFileLogger logger)
+public class SqlInsertParser(Dictionary<int, ItemEnum> schema, StreamReader reader, IFileLogger logger)
 {
     public async Task<ParsingState> ProcessSqlInsert(long startLine, int malformedLimit, long parseLimit)
     {

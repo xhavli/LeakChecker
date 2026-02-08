@@ -4,7 +4,7 @@ using LeakChecker.Format.Detection;
 using LeakChecker.Logging;
 using LeakChecker.Logging.FileLogging;
 
-namespace LeakChecker.Content.Processing;
+namespace LeakChecker.Content.Parsing;
 
 public static class ExcelParser
 {
