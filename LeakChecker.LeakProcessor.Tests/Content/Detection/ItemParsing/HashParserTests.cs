@@ -228,7 +228,7 @@ public class HashParserTests
     // [InlineData(ItemEnum.MULTIBIT_HD_SCRYPT , "$multibit$2*2e311aa2cc5ec99f7073cacc8a2d1938*e3ad782e7f92d66a3cdfaec43a46be29*5d1cabd4f4a50ba125f88c47027fff9b")] // hashes.com mismatch Possible algorithms: MultiBit Classic .key (MD5)...
     [InlineData(ItemEnum.MULTIBIT_CLASSIC_KEY_MD5 , "$multibit$1*e5912fe5c84af3d5*5f0391c219e8ef62c06505b1f6232858f5bcaa739c2b471d45dd0bd8345334de")]
     // [InlineData(ItemEnum.MULTIBIT_CLASSIC_WALLET_SCRYPT , "$multibit$3*16384*8*1*7523cb5482e81b81*91780fd49b81a782ab840157a69ba7996d81270eaf456c850f314fc1787d9b0b")]    // hashes.com mismatch Possible algorithms: MultiBit Classic .key (MD5)...
-    [InlineData(ItemEnum.BASE64 , "cGFzc3dvcmQ=\n")]
+    [InlineData(ItemEnum.BASE64 , "cGFzc3dvcmQ=")]
     // [InlineData(ItemEnum.PASSWORD_SAFE_V3, "")]   // Too complicated hash example
     [InlineData(ItemEnum.ANDROID_BACKUP , "$ab$5*0*10000*b8900e4885ff9cad8f01ee1957a43bd633fea12491440514ae27aa83f2f5c006ec7e7fa0bce040add619919b4eb60608304b7d571a2ed87fd58c9ad6bc5fcf4c*7d254d93e16be9312fb1ccbfc6265c40cb0c5eab7b605a95a116e2383fb1cf12b688223f96221dcd2bf5410d4ca6f90e0789ee00157fa91658b42665d6b6844c*fc9f6be604d1c59ac32664ec2c5b9b30*00c4972149af3adcc235899e9d20611ea6e8de2212afcb9fcfefde7e35b691c2d0994eb47e4f9a260526ba47f4caea71af9c7fadcd5685d50126276f6acdd59966528b13ccc26036a0eaba2f2451aa64b05766d0edd03c988dcf87e2a9eec52d")]
     [InlineData(ItemEnum.ANDROID_FDE_SAMSUNG_DEK, "38421854118412625768408160477112384218541184126257684081604771129b6258eb22fc8b9d08e04e6450f72b98725d7d4fcad6fb6aec4ac2a79d0c6ff738421854118412625768408160477112")]
@@ -259,7 +259,7 @@ public class HashParserTests
     // INVALID HASHES
     [Theory]
     [InlineData("")]
-    [InlineData("5)")]  //hashes.com marked as Base64
+    [InlineData("5)")]  //hashes.com recognized as Base64
     [InlineData("not_a_hash")]
     [InlineData("12345")]
     [InlineData("hello world")]
