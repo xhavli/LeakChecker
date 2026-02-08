@@ -287,21 +287,6 @@ public class SqlHeaderGuesserTests
     public void ShouldGuess_Password(string header, ItemEnum expected)
         => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
 
-    // ---------------- Hash ----------------
-    [Theory]
-    [InlineData("hash", ItemEnum.Hash)]
-    [InlineData("md5", ItemEnum.Hash)]
-    [InlineData("sha1", ItemEnum.Hash)]
-    [InlineData("sha256", ItemEnum.Hash)]
-    [InlineData("sha512", ItemEnum.Hash)]
-    [InlineData("crc32", ItemEnum.Hash)]
-    [InlineData("ripemd160", ItemEnum.Hash)]
-    [InlineData("whirlpool", ItemEnum.Hash)]
-    [InlineData("bcrypt", ItemEnum.Hash)]
-    [InlineData("password_hash", ItemEnum.Hash)]
-    public void ShouldGuess_Hash(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
-
     // ---------------- Salt ----------------
     [Theory]
     [InlineData("salt", ItemEnum.Salt)]

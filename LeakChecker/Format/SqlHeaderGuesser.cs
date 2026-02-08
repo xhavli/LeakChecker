@@ -214,23 +214,6 @@ public static class SqlHeaderGuesser
             ]
         },
         {
-            ItemEnum.Hash, [
-                new("hash", MatchPolicy.Substring),
-                new("hashval", MatchPolicy.Substring),
-                new("hash-val", MatchPolicy.Substring),
-                new("hash_val", MatchPolicy.Substring),
-                new("hash", MatchPolicy.Token),
-                new("md5", MatchPolicy.Token),
-                new("sha1", MatchPolicy.Token),
-                new("sha256", MatchPolicy.Token),
-                new("sha512", MatchPolicy.Token),
-                new("crc32", MatchPolicy.Token),
-                new("ripemd160", MatchPolicy.Token),
-                new("whirlpool", MatchPolicy.Token),
-                new("bcrypt", MatchPolicy.Token),
-            ]
-        },
-        {
             ItemEnum.Salt, [
                 new("salting", MatchPolicy.Substring),
                 new("salt", MatchPolicy.Token),
@@ -278,7 +261,7 @@ public static class SqlHeaderGuesser
     };
 
     /// <summary>
-    /// Attempts to guess ItemEnum types from a list of SQL column headers.
+    /// Attempts to guess ItemEnum types from a list of headers.
     /// </summary>
     public static Dictionary<int, ItemEnum> GuessColumns(IEnumerable<string> headers)
     {
@@ -299,8 +282,8 @@ public static class SqlHeaderGuesser
     {
         if (string.IsNullOrEmpty(header))
         {
-            Console.WriteLine("Sql header column have empty label");
-            return ItemEnum.Null;   //todo validate in higher logic
+            Console.WriteLine("Header have empty label");
+            return ItemEnum.Null;
         }
         
         // FIRST PASS: true semantic exact matches (ignore policy)
@@ -308,9 +291,9 @@ public static class SqlHeaderGuesser
         {
             foreach (var keyword in keywords)
             {
-                if (Normalize(keyword.Keyword) == Normalize(header))
+                if (string.Equals(keyword.Keyword, header, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    Console.WriteLine($"{header} -> EXACT MATCH ({itemType})");
+                    // Console.WriteLine($"{header} -> EXACT MATCH ({itemType})");
                     return itemType;
                 }
             }
@@ -381,7 +364,7 @@ public static class SqlHeaderGuesser
                             }
                             else
                             {
-                                score += 2; // existing base only, no positional bonus //TODO origin 1
+                                score += 2; // existing base only, no positional bonus
                             }
                             matched = true;
                         }
@@ -404,11 +387,11 @@ public static class SqlHeaderGuesser
         var results = scores.OrderByDescending(kv => kv.Value).ToList();
         var (bestMatch, bestScore) = results.First();
         
-        Console.WriteLine($"{header}");
-        foreach (var res in results)
-        {
-            Console.WriteLine($"{res.Key}: {res.Value}");
-        }
+        // Console.WriteLine($"{header}");
+        // foreach (var res in results)
+        // {
+        //     Console.WriteLine($"{res.Key}: {res.Value}");
+        // }
         
         return bestScore > 1 ? bestMatch : ItemEnum.Other;
     }
@@ -443,7 +426,6 @@ public static class SqlHeaderGuesser
         if (current.Length > 0)
             parts.Add(current.ToLowerInvariant());
 
-        // --- PATCH: merge ip + 4/6 and ipv + 4/6 ---
         for (int i = 0; i < parts.Count - 1; i++)
         {
             string token = parts[i];
@@ -458,7 +440,4 @@ public static class SqlHeaderGuesser
 
         return parts;
     }
-    
-    private static string Normalize(string s)
-        => s.ToLowerInvariant();
 }
