@@ -93,7 +93,7 @@ Author: Adam Havlík
     [NOTE] It can do also optional localization. It cant process local number formats like 055 234 5678 from the United Arab Emirates.
 - `4.8.2025` - Hash identification
   - C# - [Base64.IsValid](https://learn.microsoft.com/en-us/dotnet/api/system.buffers.text.base64.isvalid?view=net-10.0) is good, but it can mismatch some string for example hl251986 as valid Base64.
-  - Hash Identification applications were manually tested with dataset from [onlinehashcrack](https://www.onlinehashcrack.com/hash-acceptance.php). Better will be [Hashcat Examples](https://hashcat.net/wiki/doku.php?id=example_hashes).
+  - Hash Identification applications were manually tested with dataset from [Hashcat Examples](https://hashcat.net/wiki/doku.php?id=example_hashes).
   - [www.hashes.com](https://hashes.com/en/tools/hash_identifier) - Hash Identifier do proper validation and return most successful results ordered by its popularity, have demo its web application with well documented [api](https://hashes.com/en/docs). Chosen solution.  
     [NOTE] It can misinterpret 2), 5)... as Base64 encoded text of plaintext ''. Additional validation:
     ```csharp
@@ -161,6 +161,8 @@ Author: Adam Havlík
   - [knowledgator/gliner-pii-large-v1.0](https://huggingface.co/knowledgator/gliner-pii-large-v1.0) tested with no relevant results.
   - [Microsoft Presidio](https://microsoft.github.io/presidio/) tested as orchestrator of previously used model and models from `2.10.2025` with no relevant results.  
   [NOTE] - Most models can recognize contextual data like "User login info: username: alice, password: p@ssW0rd123".  Pure credentials as content-free data are hard to recognize, detect and validate.
+- `7.10.2025` - Password opportunities  
+  [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) tried on some possible passwords with not satisfied results.
 - `27.10.2025` [IbanNet](https://github.com/skwasjer/IbanNet) - validation of some common formats
 - `30.11.2025` Hash type recognition done with <www.hashes.com> 
 
@@ -194,12 +196,13 @@ Author: Adam Havlík
 
 ### Unit tests
 
-- `14.10.2025` - Content.Detection.ItemParsing add 230 tests initial
-- `15.10.2025` - Content.Detection.ItemRecognition add 158 tests initial
-- `3.11.2025` - SqlHeaderGuesser 245 tests initial
-- `1.12.2025` - HashParserTests added 63 tests
-- `2.12.2025` - HashParserTests added 13 tests
+- `14.10.2025` - Content.Detection.ItemParsing add initial tests
+- `15.10.2025` - Content.Detection.ItemRecognition add initial tests
+- `3.11.2025` - Format.HeaderGuesser initial tests
+- `1.12.2025` - HashParserTests initial tests
+- `2.12.2025` - HashParserTests added tests
 - `7.2.2026` - HashParserTests have now 116 tests at summary
+- `10.2.2026` - Format.CredentialAssignerTests
 - `XX.2.2026` - Encodings.Detection tests
 - `XX.2.2026` - Encodings.Conversion tests
 - `XX.2.2026` - Format.Delimiter tests
@@ -218,13 +221,13 @@ Author: Adam Havlík
 - When row mismatch, parse it separately.
 - When hash detected at [i], try [i+1] for salted hash 
 - Communication timeout for connection and request reply
-- Custom hash identification for truecrypt, veracrypt and other hashes in text form or common prefix 
 - Refactor Python NER Service
+- Custom hash identification for truecrypt, veracrypt and other hashes in text form or common prefix 
+- Test Timestamps recognizer and parser for valid datetime range. What's the correct range?
 - Detect Username and plaintext Password. CredentialCandidate
 - Decide how to enum localhost IpV4/IpV6
 - Decide how to process a IpAddress ports
 - Decide if IpAddress parsing of cross mapped addresses are feature or limitation. Can be done by [Microsoft.Recognizers.Text.Sequence](https://github.com/microsoft/Recognizers-Text) automated recognition as Email, Guid and Urls are.
-- Test Timestamps recognizer and parser for valid datetime range. What's the correct range?
 - Location GPS coordinates [parser](https://github.com/Tronald/CoordinateSharp)
 - NationalID and VAT [parsers](https://github.com/anghelvalentin/CountryValidator)
 - Bank cards ???
