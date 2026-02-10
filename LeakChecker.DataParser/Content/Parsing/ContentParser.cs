@@ -30,6 +30,8 @@ public class ContentParser : IDisposable
     private const long ParseLimit = long.MaxValue;
     private readonly int _thresholdPercent;
 
+    private bool _possibleAsciiTable;
+
     private ContentParser(int thresholdPercent, Encoding encoding, StreamReader reader, IFileLogger logger, FileStats stats)
     {
         _thresholdPercent = thresholdPercent;
@@ -79,12 +81,14 @@ public class ContentParser : IDisposable
                 _linesRead++;
                 _readerPosition += _encoding.GetByteCount(originLine);
                 await SkipSqlCreateTable();
+                _possibleAsciiTable = false;
                 continue;
             }
             
             if (IsSqlInsertValues(line))
             {
                 await ProcessSqlInsert();
+                _possibleAsciiTable = false;
                 continue;
             }
             
@@ -161,6 +165,7 @@ public class ContentParser : IDisposable
         {
             result = await csvParser.ProcessCsvFile(_linesRead, delimiter, CsvSamplesLimit, CsvSamplesLimit);
             result.LinesRead = 0;
+            result.RecordsRead = 0;
             result.MalformedRecordsRead = CsvSamplesLimit;
             UpdateParsingState(result);
             
@@ -169,8 +174,16 @@ public class ContentParser : IDisposable
         result = await csvParser.ProcessCsvFile(_linesRead, delimiter, CsvSamplesLimit, ParseLimit);
         UpdateParsingState(result);
         
-        _stats.Formats.Add(FormatEnum.Csv);
+        if (_possibleAsciiTable && delimiter == '|')
+        {
+            _stats.Formats.Add(FormatEnum.AsciiTable);
+        }
+        else
+        { 
+            _stats.Formats.Add(FormatEnum.Csv);
+        }
         _stats.Delimiters.Add(delimiter);
+        _possibleAsciiTable = false;
     }
 
     // INSERT [modifiers] INTO <table_name> [ (columns...) ] VALUES
@@ -273,6 +286,13 @@ public class ContentParser : IDisposable
     {
         line = line.Trim();
         if (string.IsNullOrWhiteSpace(line)) return true;
+
+        if (line.First() == line.Last() &&
+            line.All(c => c == '+' || char.GetUnicodeCategory(c) == UnicodeCategory.DashPunctuation))
+        {
+            _possibleAsciiTable = true;
+            return true;
+        }
         
         if (line.LastIndexOf("--", StringComparison.Ordinal) == 0 && _stats.Formats.Last() == FormatEnum.SqlInsert) return true;    // Sql comment
         if (line == ";" && _stats.Formats.Last() == FormatEnum.SqlInsert) return true;

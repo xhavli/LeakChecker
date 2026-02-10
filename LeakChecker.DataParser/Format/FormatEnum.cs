@@ -7,4 +7,5 @@ public enum FormatEnum
     Html,
     Excel,
     SqlInsert,
+    AsciiTable,
 }
