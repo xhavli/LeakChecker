@@ -32,7 +32,7 @@ public sealed class DelimiterHeuristicResult
 
 public static class DelimiterHeuristic
 {
-    private static readonly HashSet<char> AllowedDelimiters = [',', ';', ':', '\t', '|', '~', '-', '_', ' '];
+    private static readonly HashSet<char> AllowedDelimiters = [' ', ',', ':', '\t', '|', ';', '~', '-', '_'];
 
     public static DelimiterHeuristicResult Analyze(StreamReader reader, int maxLines = 10_000, int bufferSize = 1_048_576)
     {
