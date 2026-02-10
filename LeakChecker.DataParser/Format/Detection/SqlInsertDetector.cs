@@ -173,7 +173,7 @@ public static class SqlInsertDetector
         await logger.LogDominantSchema(analyzer, threshold);
         
         var schema = analyzer.GetDominantSchema(threshold);
-        var guessed = SqlHeaderGuesser.GuessColumns(sqlHeaders);
+        var guessed = HeaderGuesser.GuessColumns(sqlHeaders);
 
         foreach (var (idx, guess) in guessed)
         {

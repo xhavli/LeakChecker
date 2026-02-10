@@ -2,7 +2,7 @@ using LeakChecker.Content;
 
 namespace LeakChecker.Format;
 
-public static class SqlHeaderGuesser
+public static class HeaderGuesser
 {
     private enum MatchPolicy
     {

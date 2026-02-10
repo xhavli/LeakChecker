@@ -2,7 +2,7 @@ using LeakChecker.Content;
 
 namespace LeakChecker.Format;
 
-public static class CsvCredentialAssigner
+public static class CredentialAssigner
 {
     public static Dictionary<int, ItemEnum> Assign(Dictionary<int, ItemEnum> schema)
     {

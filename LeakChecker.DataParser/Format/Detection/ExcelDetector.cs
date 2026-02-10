@@ -73,7 +73,7 @@ public static class ExcelDetector
             await logger.LogDominantSchema(analyzer, threshold);
         
             var sheetSchema = analyzer.GetDominantSchema(threshold);
-            var assigned = CsvCredentialAssigner.Assign(sheetSchema);
+            var assigned = CredentialAssigner.Assign(sheetSchema);
             await logger.LogFinalSchema(assigned);
         
             schema.Add(sheetNumber, assigned);

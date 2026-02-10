@@ -3,7 +3,7 @@ using LeakChecker.Content;
 
 namespace LeakProcessor.Tests.Format;
 
-public class SqlHeaderGuesserTests
+public class HeaderGuesserTests
 {
     // ---------------- IpV4 ----------------
     [Theory]
@@ -18,7 +18,7 @@ public class SqlHeaderGuesserTests
     [InlineData("userIpV4", ItemEnum.Ipv4)]
     [InlineData("device-ip4", ItemEnum.Ipv4)]
     public void ShouldGuess_IpV4(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- IpV6 ----------------
     [Theory]
@@ -33,7 +33,7 @@ public class SqlHeaderGuesserTests
     [InlineData("device-ip6", ItemEnum.Ipv6)]
     [InlineData("networkIpv6", ItemEnum.Ipv6)]
     public void ShouldGuess_IpV6(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- Mac ----------------
     [Theory]
@@ -48,7 +48,7 @@ public class SqlHeaderGuesserTests
     [InlineData("ethernetMac", ItemEnum.Mac)]
     [InlineData("user-mac-address", ItemEnum.Mac)]
     public void ShouldGuess_Mac(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- TimeStamp ----------------
     [Theory]
@@ -63,7 +63,7 @@ public class SqlHeaderGuesserTests
     [InlineData("accountCreatedAt", ItemEnum.Timestamp)]
     [InlineData("user_insert_date", ItemEnum.Timestamp)]
     public void ShouldGuess_TimeStamp(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- Location ----------------
     [Theory]
@@ -78,7 +78,7 @@ public class SqlHeaderGuesserTests
     [InlineData("region", ItemEnum.Location)]
     [InlineData("user_location", ItemEnum.Location)]
     public void ShouldGuess_Location(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- PhoneNumber ----------------
     [Theory]
@@ -93,7 +93,7 @@ public class SqlHeaderGuesserTests
     [InlineData("contact_phone", ItemEnum.PhoneNumber)]
     [InlineData("user-mobile-phone", ItemEnum.PhoneNumber)]
     public void ShouldGuess_PhoneNumber(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- Email ----------------
     [Theory]
@@ -108,7 +108,7 @@ public class SqlHeaderGuesserTests
     [InlineData("primaryEmail", ItemEnum.Email)]
     [InlineData("customer_mail_addr", ItemEnum.Email)]
     public void ShouldGuess_Email(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- Iban ----------------
     [Theory]
@@ -123,7 +123,7 @@ public class SqlHeaderGuesserTests
     [InlineData("iban_number", ItemEnum.Iban)]
     [InlineData("recipientBankAccount", ItemEnum.Iban)]
     public void ShouldGuess_Iban(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- Gender ----------------
     [Theory]
@@ -138,7 +138,7 @@ public class SqlHeaderGuesserTests
     [InlineData("UserGenderCode", ItemEnum.Gender)]
     [InlineData("profile_gender_value", ItemEnum.Gender)]
     public void ShouldGuess_Gender(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- Name ----------------
     [Theory]
@@ -187,7 +187,7 @@ public class SqlHeaderGuesserTests
     [InlineData("GivenName", ItemEnum.Name)]
     [InlineData("UserNameFull", ItemEnum.Name)]
     public void ShouldGuess_Name(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- Username ----------------
     [Theory]
@@ -236,7 +236,7 @@ public class SqlHeaderGuesserTests
     [InlineData("AccountNickname", ItemEnum.Username)]
     [InlineData("ProfileNick", ItemEnum.Username)]
     public void ShouldGuess_Username(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- Password ----------------
     [Theory]
@@ -285,7 +285,7 @@ public class SqlHeaderGuesserTests
     [InlineData("PwdValue", ItemEnum.Password)]
     [InlineData("UserPass", ItemEnum.Password)]
     public void ShouldGuess_Password(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- Salt ----------------
     [Theory]
@@ -300,7 +300,7 @@ public class SqlHeaderGuesserTests
     [InlineData("key_salt", ItemEnum.Salt)]
     [InlineData("securitySalt", ItemEnum.Salt)]
     public void ShouldGuess_Salt(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- Token ----------------
     [Theory]
@@ -315,7 +315,7 @@ public class SqlHeaderGuesserTests
     [InlineData("sessionKey", ItemEnum.Token)]
     [InlineData("client_api_key", ItemEnum.Token)]
     public void ShouldGuess_Token(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- Web ----------------
     [Theory]
@@ -330,7 +330,7 @@ public class SqlHeaderGuesserTests
     [InlineData("userWeb", ItemEnum.Web)]
     [InlineData("homepageLink", ItemEnum.Web)]
     public void ShouldGuess_Web(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- Id ----------------
     [Theory]
@@ -345,7 +345,7 @@ public class SqlHeaderGuesserTests
     [InlineData("sessionId", ItemEnum.Id)]
     [InlineData("FacebookUserID", ItemEnum.Id)]
     public void ShouldGuess_Id(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 
     // ---------------- Other ----------------
     [Theory]
@@ -477,5 +477,5 @@ public class SqlHeaderGuesserTests
     [InlineData("PasswordLevelNote", ItemEnum.Other)]
     [InlineData("CredentialInfoFlag", ItemEnum.Other)]
     public void ShouldGuess_Other(string header, ItemEnum expected)
-        => Assert.Equal(expected, SqlHeaderGuesser.GuessItem(header));
+        => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 }

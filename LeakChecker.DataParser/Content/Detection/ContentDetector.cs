@@ -15,7 +15,7 @@ public static class ContentDetector
     {
         List<SchemaHeuristicRecord> linePatterns = new();
         string originLine = line;
-        // line = line.Trim().TrimOuterParenthesesAndComma().TrimOuterQuotes();
+        // line = line.Trim().TrimEnclosingChars();
         
         if (WebRecognizer.TryRecognize(line, out List<string> stringUris, out List<Uri> uris))
         {
@@ -169,14 +169,11 @@ public static class ContentDetector
         {
             if (linePatterns.Any(lp => lp.Position == i)) continue;
 
-            string token = tokens[i].Trim().TrimOuterQuotes();
+            string token = tokens[i].Trim().TrimEnclosingChars();
             if (string.IsNullOrEmpty(token) || string.IsNullOrWhiteSpace(token)) continue;
 
             ItemEnum itemType = await DetectToken(token, logger);
-
-            if (itemType != ItemEnum.Other)
             {
-                // Console.WriteLine($"[{i}] {itemType} = {token}");
             }
             
             linePatterns.Add(new SchemaHeuristicRecord
@@ -185,6 +182,7 @@ public static class ContentDetector
                 Position = i,
                 DelimitersInside = token.Count(ch => ch == delimiter)
             });
+            // Console.WriteLine($"[{i}] {itemType} = {token}");
         }
         
         return linePatterns;

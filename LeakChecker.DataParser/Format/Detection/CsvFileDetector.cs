@@ -20,9 +20,9 @@ public static class CsvFileDetector
             if (samplesCount == detectSamples) break;
 
             line = line.Trim()
-                .TrimOuterQuotes()
+                .TrimEnclosingChars()
                 .TrimOuterParentheses()
-                .TrimOuterParenthesesAndComma();    // For undetected SQL INSERT
+                .TrimOuterParenthesesWithComma();    // For undetected SQL INSERT
             
             if (string.IsNullOrWhiteSpace(line)) { continue; }
             
@@ -37,7 +37,7 @@ public static class CsvFileDetector
         await logger.LogDominantSchema(analyzer, threshold);
         
         var schema = analyzer.GetDominantSchema(threshold);
-        var assigned = CsvCredentialAssigner.Assign(schema);
+        var assigned = CredentialAssigner.Assign(schema);
         await logger.LogFinalSchema(assigned);
         
         return assigned;
