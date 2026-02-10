@@ -11,8 +11,8 @@ public sealed class NullFileLogger(string path) : IFileLogger
 {
     public Guid ParseId { get; } = Guid.Empty;
     public Guid ExecutionId { get; } = Guid.Empty;
-    public DateTime ParseStart { get; } = DateTime.UtcNow;
-    public string SubjectFileName { get; } = Path.GetFileName(path);
+    public DateTime ParseStart { get; } = DateTime.MaxValue;
+    public string SubjectFileName { get; } = string.Empty;
     public string SubjectFilePath { get; } = path;
     public string SubjectTmpFilePath { get; } = string.Empty;
 
