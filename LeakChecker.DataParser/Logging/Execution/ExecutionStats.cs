@@ -1,6 +1,4 @@
-using System.Runtime.InteropServices.JavaScript;
-
-namespace LeakChecker.Logging.ExecutionLogging;
+namespace LeakChecker.Logging.Execution;
 
 public class ExecutionStats(Guid executionId, DateTime startTime)
 {

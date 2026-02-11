@@ -2,9 +2,9 @@ using System.Text;
 using LeakChecker.Encodings;
 using LeakChecker.Format;
 
-namespace LeakChecker.Logging.FileLogging;
+namespace LeakChecker.Logging.Parse;
 
-public class FileStats
+public class ParseStats
 {
     public Guid ParseId { get; init; }
     public Guid ExecutionId { get; init; }
@@ -28,9 +28,9 @@ public class FileStats
     public double Accuracy =>
         RecordsRead <= 0 ? 0 : Math.Max(0, (double)(RecordsRead - MalformedRecordsRead) / RecordsRead * 100);
     
-    public static FileStats Create(Guid executionId, IFileLogger parseLogger, string filePath) 
+    public static ParseStats Create(Guid executionId, IParseLogger parseLogger, string filePath) 
     { 
-        return new FileStats 
+        return new ParseStats 
         { 
             ParseId = parseLogger.ParseId, 
             ExecutionId = executionId, 

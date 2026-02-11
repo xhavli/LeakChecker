@@ -3,7 +3,7 @@ using System.Text;
 using LeakChecker.Utilities;
 using LeakChecker.Utilities.Configuration;
 
-namespace LeakChecker.Logging.ExecutionLogging;
+namespace LeakChecker.Logging.Execution;
 
 public class ExecutionLogger : IDisposable
 {

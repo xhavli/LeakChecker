@@ -3,9 +3,9 @@ using LeakChecker.Encodings;
 using LeakChecker.Format.Detection;
 using LeakChecker.Format.Schema;
 
-namespace LeakChecker.Logging.FileLogging;
+namespace LeakChecker.Logging.Parse;
 
-public interface IFileLogger : IDisposable
+public interface IParseLogger : IDisposable
 {
     Guid ParseId { get; }
     Guid ExecutionId { get; }
@@ -27,5 +27,5 @@ public interface IFileLogger : IDisposable
     Task LogHeuristicData(SchemaHeuristic analyzer);
     Task LogDominantSchema(SchemaHeuristic analyzer, double threshold);
     Task LogFinalSchema(Dictionary<int, ItemEnum> schema);
-    Task LogFileStats(FileStats stats);
+    Task LogFileStats(ParseStats stats);
 }

@@ -1,6 +1,6 @@
 using ExcelDataReader;
 using LeakChecker.Logging;
-using LeakChecker.Logging.ExecutionLogging;
+using LeakChecker.Logging.Execution;
 using MimeDetective;
 using MimeDetective.Definitions;
 using MimeDetective.Definitions.Licensing;

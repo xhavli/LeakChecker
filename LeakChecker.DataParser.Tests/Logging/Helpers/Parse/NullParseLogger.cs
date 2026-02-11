@@ -3,11 +3,11 @@ using LeakChecker.Encodings;
 using LeakChecker.Format.Detection;
 using LeakChecker.Format.Schema;
 using LeakChecker.Logging;
-using LeakChecker.Logging.FileLogging;
+using LeakChecker.Logging.Parse;
 
-namespace LeakProcessor.Tests.Logging.Helpers.FileLogging;
+namespace LeakProcessor.Tests.Logging.Helpers.Parse;
 
-public sealed class NullFileLogger(string path) : IFileLogger
+public sealed class NullParseLogger(string path) : IParseLogger
 {
     public Guid ParseId { get; } = Guid.Empty;
     public Guid ExecutionId { get; } = Guid.Empty;
@@ -29,6 +29,6 @@ public sealed class NullFileLogger(string path) : IFileLogger
     public Task LogHeuristicData(SchemaHeuristic analyzer) => Task.CompletedTask;
     public Task LogDominantSchema(SchemaHeuristic analyzer, double threshold) => Task.CompletedTask;
     public Task LogFinalSchema(Dictionary<int, ItemEnum> schema) => Task.CompletedTask; 
-    public Task LogFileStats(FileStats stats) => Task.CompletedTask;
+    public Task LogFileStats(ParseStats stats) => Task.CompletedTask;
     public void Dispose() { }
 }

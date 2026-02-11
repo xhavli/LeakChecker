@@ -4,7 +4,7 @@ using System.Text;
 using LeakChecker.Format;
 using LeakChecker.Format.Detection;
 using LeakChecker.Logging;
-using LeakChecker.Logging.FileLogging;
+using LeakChecker.Logging.Parse;
 using LeakChecker.Utilities.Extensions;
 
 namespace LeakChecker.Content.Parsing;
@@ -21,8 +21,8 @@ public class ContentParser : IDisposable
     private readonly StreamReader _reader;
     // Logging and Statistics
     private readonly Stopwatch _sw = new();
-    private readonly IFileLogger _logger;
-    private readonly FileStats _stats;
+    private readonly IParseLogger _logger;
+    private readonly ParseStats _stats;
     // Default constants
     private const int SqlSamplesLimit = 31;
     private const int CsvSamplesLimit = 103;
@@ -32,7 +32,7 @@ public class ContentParser : IDisposable
 
     private bool _possibleAsciiTable;
 
-    private ContentParser(int thresholdPercent, Encoding encoding, StreamReader reader, IFileLogger logger, FileStats stats)
+    private ContentParser(int thresholdPercent, Encoding encoding, StreamReader reader, IParseLogger logger, ParseStats stats)
     {
         _thresholdPercent = thresholdPercent;
         _encoding = encoding;
@@ -41,7 +41,8 @@ public class ContentParser : IDisposable
         _stats = stats;
     }
 
-    public static async Task<ContentParser> CreateAsync(IFileLogger logger, FileStats stats, Encoding? encoding, int thresholdPercent)
+    public static async Task<ContentParser> CreateAsync(
+        string filePath, IParseLogger logger, ParseStats stats, Encoding? encoding, int thresholdPercent)
     {
         await logger.LogContentHeader();
         if (encoding == null)
@@ -51,8 +52,6 @@ public class ContentParser : IDisposable
             encoding ??= new UTF8Encoding(false);
         }
         
-        string filePath = logger.SubjectFilePath;   //TODO remove this only for test purposes
-        // string filePath = logger.SubjectTmpFilePath;    //TODO use this in deployment
         var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: false);
         

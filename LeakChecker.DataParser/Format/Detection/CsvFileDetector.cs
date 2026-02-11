@@ -1,7 +1,7 @@
 using LeakChecker.Content;
 using LeakChecker.Content.Detection;
 using LeakChecker.Format.Schema;
-using LeakChecker.Logging.FileLogging;
+using LeakChecker.Logging.Parse;
 using LeakChecker.Utilities.Extensions;
 
 namespace LeakChecker.Format.Detection;
@@ -9,7 +9,7 @@ namespace LeakChecker.Format.Detection;
 public static class CsvFileDetector
 {
     public static async Task<Dictionary<int, ItemEnum >> DetectFormat(
-        long startLine, char delimiter, StreamReader reader, IFileLogger logger, int detectSamples, int threshold)
+        long startLine, char delimiter, StreamReader reader, IParseLogger logger, int detectSamples, int threshold)
     {
         int samplesCount = 0;
         SchemaHeuristic analyzer = new();

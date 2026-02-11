@@ -3,14 +3,14 @@ using LeakChecker.Content;
 using LeakChecker.Content.Detection;
 using LeakChecker.Content.Parsing;
 using LeakChecker.Format.Schema;
-using LeakChecker.Logging.FileLogging;
+using LeakChecker.Logging.Parse;
 
 namespace LeakChecker.Format.Detection;
 
 public static class ExcelDetector
 {
     public static async Task<Dictionary<int, Dictionary<int, ItemEnum>>> DetectFormat(
-        long startSheet, string filePath, IFileLogger logger, int sampleLimit, int threshold)
+        long startSheet, string filePath, IParseLogger logger, int sampleLimit, int threshold)
     {
         await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
         using var reader = ExcelReaderFactory.CreateReader(stream);

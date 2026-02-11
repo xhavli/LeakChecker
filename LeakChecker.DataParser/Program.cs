@@ -8,11 +8,11 @@ using LeakChecker.Encodings;
 using LeakChecker.Encodings.Conversion;
 using LeakChecker.Encodings.Detection;
 using LeakChecker.Logging;
-using LeakChecker.Logging.ExecutionLogging;
-using LeakChecker.Logging.FileLogging;
 using LeakChecker.Utilities;
 using LeakChecker.Utilities.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using LeakChecker.Logging.Execution;
+using LeakChecker.Logging.Parse;
 
 namespace LeakChecker;
 
@@ -39,12 +39,12 @@ public static class Program
         var services = new ServiceCollection();
         services.AddSingleton(config);
         
-        services.AddSingleton<IFileLoggerFactory, FileLoggerFactory>();
+        services.AddSingleton<IParseLoggerFactory, ParseLoggerFactory>();
         services.AddSingleton<ExecutionLogger>();
         
         var provider = services.BuildServiceProvider();
         var executionLogger = provider.GetRequiredService<ExecutionLogger>();
-        var loggerFactory = provider.GetRequiredService<IFileLoggerFactory>();
+        var loggerFactory = provider.GetRequiredService<IParseLoggerFactory>();
         Guid executionId = Guid.NewGuid();
         var stats = new ExecutionStats(executionId, executionLogger.ExecutionStart);
         var fileHandler = new FileHandler(executionLogger);
@@ -106,7 +106,7 @@ public static class Program
                 if (!await fileHandler.IsAccessible(filePath) || !await fileHandler.IsSupported(filePath)) continue;
 
                 using var parseLogger = await loggerFactory.CreateAsync(executionId, filePath);
-                FileStats parseStats = FileStats.Create(executionId, parseLogger, filePath);
+                ParseStats parseStats = ParseStats.Create(executionId, parseLogger, filePath);
 
                 try
                 {
@@ -124,7 +124,9 @@ public static class Program
 
                         await fileHandler.IsReadable(filePath);
                         
-                        using ContentParser contentParser = await ContentParser.CreateAsync(parseLogger, parseStats, utf8, config.SchemaThreshold);
+                        string parseFile = parseLogger.SubjectFilePath;   //TODO remove this only for test purposes
+                        // string parseFile = parseLogger.SubjectTmpFilePath;    //TODO use this in deployment
+                        using ContentParser contentParser = await ContentParser.CreateAsync(parseFile, parseLogger, parseStats, utf8, config.SchemaThreshold);
                         await contentParser.ProcessFile();
                     }
 

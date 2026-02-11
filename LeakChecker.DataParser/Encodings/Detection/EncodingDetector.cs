@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using System.Text;
 using LeakChecker.Logging;
-using LeakChecker.Logging.FileLogging;
+using LeakChecker.Logging.Parse;
 using UtfUnknown;
 
 namespace LeakChecker.Encodings.Detection;
 
-public class EncodingDetector(IFileLogger logger, FileStats stats)
+public class EncodingDetector(IParseLogger logger, ParseStats stats)
 {
     private readonly Stopwatch _stopWatch = new();
 

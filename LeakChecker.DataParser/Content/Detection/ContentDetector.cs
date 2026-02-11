@@ -4,18 +4,18 @@ using LeakChecker.Content.Detection.ItemRecognition;
 using LeakChecker.Content.Detection.RecognitionService;
 using LeakChecker.Format.Schema;
 using LeakChecker.Logging;
-using LeakChecker.Logging.FileLogging;
+using LeakChecker.Logging.Parse;
 using LeakChecker.Utilities.Extensions;
 
 namespace LeakChecker.Content.Detection;
 
 public static class ContentDetector
 {
-    public static async Task<List<SchemaHeuristicRecord>> DetectLine(string line, char delimiter, IFileLogger logger)
+    public static async Task<List<SchemaHeuristicRecord>> DetectLine(string line, char delimiter, IParseLogger logger)
     {
         List<SchemaHeuristicRecord> linePatterns = new();
+        line = line.Trim().TrimEnclosingChars();
         string originLine = line;
-        // line = line.Trim().TrimEnclosingChars();
         
         if (WebRecognizer.TryRecognize(line, out List<string> stringUris, out List<Uri> uris))
         {
@@ -188,7 +188,7 @@ public static class ContentDetector
         return linePatterns;
     }
     
-    public static async Task<ItemEnum> DetectToken(string token, IFileLogger logger)
+    public static async Task<ItemEnum> DetectToken(string token, IParseLogger logger)
     {
         if (WebRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Web;
         if (EmailRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Email;

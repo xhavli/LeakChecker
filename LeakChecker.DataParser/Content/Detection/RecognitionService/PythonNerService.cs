@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using LeakChecker.Logging;
-using LeakChecker.Logging.ExecutionLogging;
+using LeakChecker.Logging.Execution;
 
 namespace LeakChecker.Content.Detection.RecognitionService;
 

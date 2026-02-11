@@ -7,9 +7,9 @@ using LeakChecker.Format.Schema;
 using LeakChecker.Utilities;
 using LeakChecker.Utilities.Configuration;
 
-namespace LeakChecker.Logging.FileLogging;
+namespace LeakChecker.Logging.Parse;
 
-public class FileLogger : IFileLogger
+public class ParseLogger : IParseLogger
 {
     public Guid ParseId {get; }
     public Guid ExecutionId {get; }
@@ -24,7 +24,7 @@ public class FileLogger : IFileLogger
     private const ConsoleColor SuccessColor = ConsoleColor.Green;
     private const ConsoleColor ExceptionColor = ConsoleColor.Red;
 
-    private FileLogger(
+    private ParseLogger(
         Guid parseId,
         Guid executionId,
         DateTime parseStart,
@@ -43,7 +43,7 @@ public class FileLogger : IFileLogger
         Verbose = verbose;
     }
 
-    public static async Task<IFileLogger> CreateAsync(
+    public static async Task<IParseLogger> CreateAsync(
         AppConfig config,
         Guid executionId,
         string subjectFilePath)
@@ -61,7 +61,7 @@ public class FileLogger : IFileLogger
         var writer = new StreamWriter(logFilePath, append: true, encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
         writer.AutoFlush = isDevelopment;
         
-        var logger = new FileLogger(parseId, executionId, parseStart, subjectFilePath, tmpFilePath, writer, config.Verbose);
+        var logger = new ParseLogger(parseId, executionId, parseStart, subjectFilePath, tmpFilePath, writer, config.Verbose);
         
         await logger.CreateLogHeaderAsync();
 
@@ -316,7 +316,7 @@ public class FileLogger : IFileLogger
         await LogLineAsync();
     }
     
-    public async Task LogFileStats(FileStats stats)
+    public async Task LogFileStats(ParseStats stats)
     {
         stats.ParseEnd = DateTime.Now;
         

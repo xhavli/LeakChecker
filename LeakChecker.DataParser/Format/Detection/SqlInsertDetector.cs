@@ -3,7 +3,7 @@ using LeakChecker.Content;
 using LeakChecker.Content.Detection;
 using LeakChecker.Format.Schema;
 using LeakChecker.Logging;
-using LeakChecker.Logging.FileLogging;
+using LeakChecker.Logging.Parse;
 
 namespace LeakChecker.Format.Detection;
 
@@ -12,7 +12,7 @@ public static class SqlInsertDetector
     private const char Delimiter = ',';
 
     public static async Task<Dictionary<int, ItemEnum>> DetectFormat(
-        long startLine, StreamReader reader, IFileLogger logger, int detectSamples, int threshold)
+        long startLine, StreamReader reader, IParseLogger logger, int detectSamples, int threshold)
     {
         bool inInsert = false;
         int parenDepth = 0, expectedColumns = 0;

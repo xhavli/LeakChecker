@@ -1,11 +1,11 @@
 using System.Text;
 using LeakChecker.Logging;
-using LeakChecker.Logging.FileLogging;
+using LeakChecker.Logging.Parse;
 using LeakChecker.Utilities.Extensions;
 
 namespace LeakChecker.Content.Parsing;
 
-public class CsvParser(Dictionary<int, ItemEnum> schema, StreamReader reader, IFileLogger logger)
+public class CsvParser(Dictionary<int, ItemEnum> schema, StreamReader reader, IParseLogger logger)
 {
     public async Task<ParsingState> ProcessCsvFile(long startLine, char delimiter, int malformedLimit, long parseLimit)
     {
