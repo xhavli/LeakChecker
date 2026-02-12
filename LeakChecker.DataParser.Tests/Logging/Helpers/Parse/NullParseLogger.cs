@@ -1,4 +1,5 @@
 using LeakChecker.Content;
+using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.Encodings;
 using LeakChecker.Format.Detection;
 using LeakChecker.Format.Schema;
