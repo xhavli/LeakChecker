@@ -1,0 +1,22 @@
+DROP TABLE IF EXISTS [UserTable];
+
+CREATE TABLE IF NOT EXISTS [UserTable] (
+    [ID] INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    [Name] VARCHAR(100) NOT NULL,
+    [IPv4] VARCHAR(45) DEFAULT NULL,
+    [Password] VARCHAR(255) NOT NULL,
+    PRIMARY KEY ([ID])
+)
+;
+
+-----------------------------
+-- Sql comment date 12.2.2026
+-----------------------------
+
+INSERT IGNORE INTO [UserTable] ([Id], [Name], [IPv4], [Password]) VALUES
+    ('1', 'Jake', '127.0.0.1', '1234'),
+    ('2', 'Kate', '', 'qwerty'),
+    ('3', 'Josh', '124.237.89.21', 'RealMadrid')
+    ,('4', 'Vadim', NULL, 'asdf'),
+    ('5', 'Layla', '224.37.82.18.1', 'A1/s2*D3-f4+')
+    ;
