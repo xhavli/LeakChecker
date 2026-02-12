@@ -5,7 +5,7 @@ using LeakChecker.Format.Schema;
 using LeakChecker.Logging;
 using LeakChecker.Logging.Parse;
 
-namespace LeakProcessor.Tests.Logging.Helpers.Parse;
+namespace LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
 
 public sealed class NullParseLogger(string path) : IParseLogger
 {

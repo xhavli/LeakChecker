@@ -1,7 +1,7 @@
-using LeakChecker.Format;
 using LeakChecker.Content;
+using LeakChecker.Format;
 
-namespace LeakProcessor.Tests.Format;
+namespace LeakChecker.DataParser.Tests.Format;
 
 public class HeaderGuesserTests
 {

@@ -1,6 +1,6 @@
 using LeakChecker.Logging.Parse;
 
-namespace LeakProcessor.Tests.Logging.Helpers.Parse;
+namespace LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
 
 /// <summary>
 /// Factory used in test dependency injection to create NullFileLogger instances.

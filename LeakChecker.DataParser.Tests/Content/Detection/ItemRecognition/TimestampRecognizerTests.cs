@@ -1,6 +1,6 @@
 using LeakChecker.Content.Detection.ItemRecognition;
 
-namespace LeakProcessor.Tests.Content.Detection.ItemRecognition;
+namespace LeakChecker.DataParser.Tests.Content.Detection.ItemRecognition;
 
 public class TimestampRecognizerTests
 {

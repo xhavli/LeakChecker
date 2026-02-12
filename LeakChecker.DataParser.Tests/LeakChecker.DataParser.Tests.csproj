@@ -7,7 +7,7 @@
 
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
-        <RootNamespace>LeakProcessor.Tests</RootNamespace>
+        <RootNamespace>LeakChecker.DataParser.Tests</RootNamespace>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
@@ -27,8 +27,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Configuration\" />
-      <Folder Include="Content\Parsing\" />
+      <Folder Include="Content\Parsing\ContentParserTests\" />
       <Folder Include="Encodings\Conversion\" />
     </ItemGroup>
 

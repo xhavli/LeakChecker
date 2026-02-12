@@ -1,7 +1,7 @@
 using LeakChecker.Content;
 using LeakChecker.Content.Detection.ItemParsing;
 
-namespace LeakProcessor.Tests.Content.Detection.ItemParsing;
+namespace LeakChecker.DataParser.Tests.Content.Detection.ItemParsing;
 
 public class TimestampParserTests
 {
