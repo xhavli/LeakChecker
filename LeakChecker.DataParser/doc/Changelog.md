@@ -55,10 +55,10 @@ Author: Adam Havlík
   Read and detect predefined number (31) of Sql Insert records, and return back heuristic schema.
 - `9.10.2025` - CsvFileDetector  
   Read and detect predefined number (103) of lines, and return back heuristic schema.
-- `3.11.2025` - SqlHeaderGuesser  
+- `3.11.2025` - HeaderGuesser  
   Guessing predefined and hardcoded values and try to match it on ItemEnum
-- `18.11.2025` - CsvCredentialAssigner  
-  Assigning username to only first position if is detected as other and password on second undetected position which can be higher than 0.
+- `18.11.2025` - CredentialAssigner  
+  Assigning username to only first position if is detected as other and password on second undetected position which can be higher than 0. Similar as [/etc/shadow](https://www.cyberciti.biz/faq/understanding-etcshadow-file/) 
 - `20.12.2025` - SchemaHeuristic length normalization  
   Set final schema length to most frequent length based on delimiters count per each line. Cut in case it computed longer, fill with ItemEnum.Other if computed shorter than normalized length.
 - `30.1.2026` - ExcelDetector  
@@ -203,6 +203,7 @@ Author: Adam Havlík
 - `2.12.2025` - HashParserTests added tests
 - `7.2.2026` - HashParserTests have now 116 tests at summary
 - `10.2.2026` - Format.CredentialAssignerTests
+- `12.2.2026` - ContentParser format detection initial tests
 - `XX.2.2026` - Encodings.Detection tests
 - `XX.2.2026` - Encodings.Conversion tests
 - `XX.2.2026` - Format.Delimiter tests
@@ -219,9 +220,11 @@ Author: Adam Havlík
 ## TODOs
 
 - When row mismatch, parse it separately.
-- When hash detected at [i], try [i+1] for salted hash 
-- Communication timeout for connection and request reply
 - Refactor Python NER Service
+- When hash detected at [i] and [i+1] is other try to concatenate with delimiter for salted hash detection 
+- Proper format detection of AsciiTable if have +-+ header -> is AsciiTableCandidate and on first 2 positions of delimiter results is somewhere delimiter "|" with simmillar probability. Or properly identify first 3 lines of the file but this need more attention.
+- Communication timeout for connection and request reply
+- Parse also JSON, HTML maybe XML
 - Custom hash identification for truecrypt, veracrypt and other hashes in text form or common prefix 
 - Test Timestamps recognizer and parser for valid datetime range. What's the correct range?
 - Detect Username and plaintext Password. CredentialCandidate
@@ -254,3 +257,9 @@ Author: Adam Havlík
 - Implement DI
 
 ## Notes
+
+- Relevant information about data breaches  
+  - [leak-lookup.com](https://leak-lookup.com/breaches)
+  - [haveibeenpwned.com](https://haveibeenpwned.com/PwnedWebsites)
+- Data sample creation
+  - [tableconvert.com](https://tableconvert.com/)
