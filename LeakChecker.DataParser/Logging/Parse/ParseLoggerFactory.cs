@@ -1,6 +1,6 @@
-using LeakChecker.Utilities.Configuration;
+using LeakChecker.DataParser.Utilities.Configuration;
 
-namespace LeakChecker.Logging.Parse;
+namespace LeakChecker.DataParser.Logging.Parse;
 
 public class ParseLoggerFactory(AppConfig config) : IParseLoggerFactory
 {

@@ -1,4 +1,4 @@
-namespace LeakChecker.Logging.Parse;
+namespace LeakChecker.DataParser.Logging.Parse;
 
 public interface IParseLoggerFactory
 {

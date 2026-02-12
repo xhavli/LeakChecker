@@ -1,10 +1,9 @@
-using LeakChecker.Content;
+using LeakChecker.DataParser.Content;
+using LeakChecker.DataParser.Encodings;
+using LeakChecker.DataParser.Format.Detection;
+using LeakChecker.DataParser.Format.Schema;
+using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
-using LeakChecker.Encodings;
-using LeakChecker.Format.Detection;
-using LeakChecker.Format.Schema;
-using LeakChecker.Logging;
-using LeakChecker.Logging.Parse;
 
 namespace LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
 

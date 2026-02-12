@@ -1,10 +1,10 @@
 using ExcelDataReader;
-using LeakChecker.Format;
-using LeakChecker.Format.Detection;
-using LeakChecker.Logging;
-using LeakChecker.Logging.Parse;
+using LeakChecker.DataParser.Format;
+using LeakChecker.DataParser.Format.Detection;
+using LeakChecker.DataParser.Logging;
+using LeakChecker.DataParser.Logging.Parse;
 
-namespace LeakChecker.Content.Parsing;
+namespace LeakChecker.DataParser.Content.Parsing;
 
 public static class ExcelParser
 {

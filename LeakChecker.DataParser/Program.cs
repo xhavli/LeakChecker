@@ -1,20 +1,17 @@
 ﻿using System.Globalization;
 using System.Text;
 using System.Threading.Channels;
-using LeakChecker.Content.Detection.RecognitionService;
-using LeakChecker.Content.Parsing;
-using LeakChecker.Data;
-using LeakChecker.Encodings;
-using LeakChecker.Encodings.Conversion;
-using LeakChecker.Encodings.Detection;
-using LeakChecker.Logging;
-using LeakChecker.Utilities;
-using LeakChecker.Utilities.Configuration;
+using LeakChecker.DataParser.Content.Detection.RecognitionService;
+using LeakChecker.DataParser.Content.Parsing;
+using LeakChecker.DataParser.Data;
+using LeakChecker.DataParser.Logging;
+using LeakChecker.DataParser.Logging.Execution;
+using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Utilities;
+using LeakChecker.DataParser.Utilities.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using LeakChecker.Logging.Execution;
-using LeakChecker.Logging.Parse;
 
-namespace LeakChecker;
+namespace LeakChecker.DataParser;
 
 public static class Program
 {

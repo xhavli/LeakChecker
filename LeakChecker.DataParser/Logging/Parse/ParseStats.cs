@@ -1,8 +1,8 @@
 using System.Text;
-using LeakChecker.Encodings;
-using LeakChecker.Format;
+using LeakChecker.DataParser.Encodings;
+using LeakChecker.DataParser.Format;
 
-namespace LeakChecker.Logging.Parse;
+namespace LeakChecker.DataParser.Logging.Parse;
 
 public class ParseStats
 {
@@ -22,6 +22,7 @@ public class ParseStats
     public List<string> Context { get; set; } = new();
     public DateTime ParseStart { get; init; } = DateTime.Now;
     public DateTime ParseEnd { get; set; }
+    
     public TimeSpan Duration => ParseEnd - ParseStart;
     public double ByteSpeed => Duration.TotalSeconds > 0 ? BytesRead / Duration.TotalSeconds : 0;
     public double LineSpeed => Duration.TotalSeconds > 0 ? LinesRead / Duration.TotalSeconds : 0;

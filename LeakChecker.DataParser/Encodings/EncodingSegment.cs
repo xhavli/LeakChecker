@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace LeakChecker.Encodings;
+namespace LeakChecker.DataParser.Encodings;
 
 public class EncodingSegment
 {

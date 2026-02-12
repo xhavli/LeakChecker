@@ -1,10 +1,10 @@
-using LeakChecker.Content;
-using LeakChecker.Content.Detection;
-using LeakChecker.Format.Schema;
-using LeakChecker.Logging.Parse;
-using LeakChecker.Utilities.Extensions;
+using LeakChecker.DataParser.Content;
+using LeakChecker.DataParser.Content.Detection;
+using LeakChecker.DataParser.Format.Schema;
+using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Utilities.Extensions;
 
-namespace LeakChecker.Format.Detection;
+namespace LeakChecker.DataParser.Format.Detection;
 
 public static class CsvFileDetector
 {

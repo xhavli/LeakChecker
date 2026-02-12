@@ -1,6 +1,6 @@
-using LeakChecker.Content;
+using LeakChecker.DataParser.Content;
 
-namespace LeakChecker.Format.Schema;
+namespace LeakChecker.DataParser.Format.Schema;
 
 public class SchemaHeuristicRecord
 {

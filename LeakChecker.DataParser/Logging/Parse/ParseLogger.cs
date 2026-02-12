@@ -1,13 +1,13 @@
 using System.Globalization;
 using System.Text;
-using LeakChecker.Content;
-using LeakChecker.Encodings;
-using LeakChecker.Format.Detection;
-using LeakChecker.Format.Schema;
-using LeakChecker.Utilities;
-using LeakChecker.Utilities.Configuration;
+using LeakChecker.DataParser.Content;
+using LeakChecker.DataParser.Encodings;
+using LeakChecker.DataParser.Format.Detection;
+using LeakChecker.DataParser.Format.Schema;
+using LeakChecker.DataParser.Utilities;
+using LeakChecker.DataParser.Utilities.Configuration;
 
-namespace LeakChecker.Logging.Parse;
+namespace LeakChecker.DataParser.Logging.Parse;
 
 public class ParseLogger : IParseLogger
 {

@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using System.Text;
-using LeakChecker.Logging;
-using LeakChecker.Logging.Parse;
+using LeakChecker.DataParser.Logging;
+using LeakChecker.DataParser.Logging.Parse;
 using UtfUnknown;
 
-namespace LeakChecker.Encodings.Detection;
+namespace LeakChecker.DataParser.Encodings.Detection;
 
 public class EncodingDetector(IParseLogger logger, ParseStats stats)
 {

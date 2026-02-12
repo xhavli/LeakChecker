@@ -1,4 +1,4 @@
-using LeakChecker.Content.Detection.ItemRecognition;
+using LeakChecker.DataParser.Content.Detection.ItemRecognition;
 
 namespace LeakChecker.DataParser.Tests.Content.Detection.ItemRecognition;
 

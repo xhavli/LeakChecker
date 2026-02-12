@@ -1,7 +1,7 @@
 using System.Buffers.Text;
 using System.Text.Json;
 
-namespace LeakChecker.Content.Detection.ItemParsing;
+namespace LeakChecker.DataParser.Content.Detection.ItemParsing;
 
 public static class HashParser
 {

@@ -1,4 +1,4 @@
-namespace LeakChecker.Utilities.Extensions;
+namespace LeakChecker.DataParser.Utilities.Extensions;
 
 public static class StringExtensions
 {

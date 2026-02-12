@@ -1,4 +1,4 @@
-namespace LeakChecker.Content;
+namespace LeakChecker.DataParser.Content;
 
 public enum ItemEnum
 {

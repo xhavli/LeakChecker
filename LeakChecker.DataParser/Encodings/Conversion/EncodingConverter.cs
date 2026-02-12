@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Text;
-using LeakChecker.Logging;
-using LeakChecker.Logging.Parse;
+using LeakChecker.DataParser.Logging;
+using LeakChecker.DataParser.Logging.Parse;
 
-namespace LeakChecker.Encodings.Conversion;
+namespace LeakChecker.DataParser.Encodings.Conversion;
 
 public static class EncodingConverter
 {

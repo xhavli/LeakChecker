@@ -1,9 +1,9 @@
-using LeakChecker.Content;
-using LeakChecker.Encodings;
-using LeakChecker.Format.Detection;
-using LeakChecker.Format.Schema;
+using LeakChecker.DataParser.Content;
+using LeakChecker.DataParser.Encodings;
+using LeakChecker.DataParser.Format.Detection;
+using LeakChecker.DataParser.Format.Schema;
 
-namespace LeakChecker.Logging.Parse;
+namespace LeakChecker.DataParser.Logging.Parse;
 
 public interface IParseLogger : IDisposable
 {

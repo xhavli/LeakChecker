@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace LeakChecker.Utilities.Configuration;
+namespace LeakChecker.DataParser.Utilities.Configuration;
 
 public static class AppConfigParser
 {

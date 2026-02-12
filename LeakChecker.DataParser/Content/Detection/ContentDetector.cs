@@ -1,13 +1,13 @@
 using System.Net.Mail;
-using LeakChecker.Content.Detection.ItemParsing;
-using LeakChecker.Content.Detection.ItemRecognition;
-using LeakChecker.Content.Detection.RecognitionService;
-using LeakChecker.Format.Schema;
-using LeakChecker.Logging;
-using LeakChecker.Logging.Parse;
-using LeakChecker.Utilities.Extensions;
+using LeakChecker.DataParser.Content.Detection.ItemParsing;
+using LeakChecker.DataParser.Content.Detection.ItemRecognition;
+using LeakChecker.DataParser.Content.Detection.RecognitionService;
+using LeakChecker.DataParser.Format.Schema;
+using LeakChecker.DataParser.Logging;
+using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Utilities.Extensions;
 
-namespace LeakChecker.Content.Detection;
+namespace LeakChecker.DataParser.Content.Detection;
 
 public static class ContentDetector
 {
@@ -137,6 +137,7 @@ public static class ContentDetector
         }
         catch (Exception e)
         {
+            // throw new NotImplementedException($"Communication with PythonNerService failed. {e.Message}");
             await logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Failure,LogContext.Content);
         }
         
@@ -173,7 +174,27 @@ public static class ContentDetector
             if (string.IsNullOrEmpty(token) || string.IsNullOrWhiteSpace(token)) continue;
 
             ItemEnum itemType = await DetectToken(token, logger);
+            
+            //TODO test hashes with salt and ip with ports
+            if (false)
             {
+                // for hash:salt
+                //if (itemType > ItemEnum.Other); //then try to add salt
+                if (i + 1 < tokens.Length)
+                {
+                    ItemEnum nextType = await DetectToken(tokens[i].Trim().TrimEnclosingChars(), logger);
+                    if (nextType != ItemEnum.Other) continue;
+                    
+                    string concatenated = token + delimiter + tokens[i].Trim().TrimEnclosingChars();
+                    itemType = await DetectToken(concatenated, logger);
+                }
+                
+                // for hashType:iterations:hashValue:salt or IPv6:port
+                for(int j = 0; j < 2 || i + j < tokens.Length; j++)
+                {
+                        string concatenated = token + delimiter + token;
+                        itemType = await DetectToken(concatenated, logger);
+                }
             }
             
             linePatterns.Add(new SchemaHeuristicRecord
@@ -211,6 +232,7 @@ public static class ContentDetector
         }
         catch (Exception e)
         {
+            // throw new NotImplementedException($"Communication with PythonNerService failed. {e.Message}");
             await logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Failure, LogContext.Content);
         }
         
@@ -236,6 +258,7 @@ public static class ContentDetector
         }
         catch (Exception e)
         {
+            // throw new NotImplementedException($"Communication with www.hashes.com failed. {e.Message}");
             await logger.Log($"Communication with www.hashes.com failed. {e.Message}", LogLevel.Failure, LogContext.Content);
         }
         

@@ -1,9 +1,9 @@
 using System.Text;
-using LeakChecker.Logging;
-using LeakChecker.Logging.Parse;
-using LeakChecker.Utilities.Extensions;
+using LeakChecker.DataParser.Logging;
+using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Utilities.Extensions;
 
-namespace LeakChecker.Content.Parsing;
+namespace LeakChecker.DataParser.Content.Parsing;
 
 public class CsvParser(Dictionary<int, ItemEnum> schema, StreamReader reader, IParseLogger logger)
 {

@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Net;
-using LeakChecker.Logging;
-using LeakChecker.Logging.Execution;
+using LeakChecker.DataParser.Logging;
+using LeakChecker.DataParser.Logging.Execution;
 
-namespace LeakChecker.Content.Detection.RecognitionService;
+namespace LeakChecker.DataParser.Content.Detection.RecognitionService;
 
 public class PythonNerService(ExecutionLogger logger)
 {

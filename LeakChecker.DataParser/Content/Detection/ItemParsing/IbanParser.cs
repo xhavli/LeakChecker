@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 using IbanNet;
 using IbanNet.Registry;
 
-namespace LeakChecker.Content.Detection.ItemParsing;
+namespace LeakChecker.DataParser.Content.Detection.ItemParsing;
 
 public static class IbanParser
 {

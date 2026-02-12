@@ -1,11 +1,11 @@
 using ExcelDataReader;
-using LeakChecker.Logging;
-using LeakChecker.Logging.Execution;
+using LeakChecker.DataParser.Logging;
+using LeakChecker.DataParser.Logging.Execution;
 using MimeDetective;
 using MimeDetective.Definitions;
 using MimeDetective.Definitions.Licensing;
 
-namespace LeakChecker.Utilities;
+namespace LeakChecker.DataParser.Utilities;
 
 public class FileHandler(ExecutionLogger logger)
 {

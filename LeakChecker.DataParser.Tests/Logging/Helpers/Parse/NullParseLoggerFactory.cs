@@ -1,4 +1,4 @@
-using LeakChecker.Logging.Parse;
+using LeakChecker.DataParser.Logging.Parse;
 
 namespace LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
 

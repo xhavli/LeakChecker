@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Text;
-using LeakChecker.Utilities;
-using LeakChecker.Utilities.Configuration;
+using LeakChecker.DataParser.Utilities;
+using LeakChecker.DataParser.Utilities.Configuration;
 
-namespace LeakChecker.Logging.Execution;
+namespace LeakChecker.DataParser.Logging.Execution;
 
 public class ExecutionLogger : IDisposable
 {

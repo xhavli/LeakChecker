@@ -1,6 +1,6 @@
 using System.Net;
-using LeakChecker.Content;
-using LeakChecker.Content.Detection.ItemParsing;
+using LeakChecker.DataParser.Content;
+using LeakChecker.DataParser.Content.Detection.ItemParsing;
 
 namespace LeakChecker.DataParser.Tests.Content.Detection.ItemParsing;
 

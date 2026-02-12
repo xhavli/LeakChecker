@@ -1,4 +1,4 @@
-namespace LeakChecker.Logging;
+namespace LeakChecker.DataParser.Logging;
 
 public enum LogLevel
 {

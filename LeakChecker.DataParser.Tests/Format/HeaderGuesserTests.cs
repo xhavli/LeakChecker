@@ -1,5 +1,5 @@
-using LeakChecker.Content;
-using LeakChecker.Format;
+using LeakChecker.DataParser.Content;
+using LeakChecker.DataParser.Format;
 
 namespace LeakChecker.DataParser.Tests.Format;
 

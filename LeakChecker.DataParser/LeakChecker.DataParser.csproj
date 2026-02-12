@@ -6,7 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
-        <RootNamespace>LeakChecker</RootNamespace>
+        <RootNamespace>LeakChecker.DataParser</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

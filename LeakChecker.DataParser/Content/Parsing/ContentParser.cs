@@ -1,13 +1,13 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
-using LeakChecker.Format;
-using LeakChecker.Format.Detection;
-using LeakChecker.Logging;
-using LeakChecker.Logging.Parse;
-using LeakChecker.Utilities.Extensions;
+using LeakChecker.DataParser.Format;
+using LeakChecker.DataParser.Format.Detection;
+using LeakChecker.DataParser.Logging;
+using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Utilities.Extensions;
 
-namespace LeakChecker.Content.Parsing;
+namespace LeakChecker.DataParser.Content.Parsing;
 
 public class ContentParser : IDisposable
 {
@@ -118,7 +118,7 @@ public class ContentParser : IDisposable
         // Detect schema
         Stopwatch sw = Stopwatch.StartNew();
         var schema = await SqlInsertDetector.DetectFormat(_linesRead, _reader, _logger, SqlSamplesLimit, _thresholdPercent);
-        await _logger.Log($"SQL INSERT schema created in {sw.Elapsed}\n");
+        await _logger.Log($"SqlInsert schema created in {sw.Elapsed}\n");
 
         // Parse SQL INSERT block with header
         _reader.AdjustPosition(sqlInsertStart);
@@ -154,7 +154,7 @@ public class ContentParser : IDisposable
         // Detect schema
         Stopwatch sw = Stopwatch.StartNew();
         var schema = await CsvFileDetector.DetectFormat(_linesRead, delimiter, _reader, _logger, CsvSamplesLimit, _thresholdPercent);
-        await _logger.Log($"CSV file schema created in {sw.Elapsed}\n");
+        await _logger.Log($"Csv file schema created in {sw.Elapsed}\n");
         
         // Parse CSV file
         _reader.AdjustPosition(csvFormatStart);
@@ -185,20 +185,37 @@ public class ContentParser : IDisposable
         _possibleAsciiTable = false;
     }
 
+    // DROP [modifiers] TABLE [modifiers] <table_name> [ , <table_name> ... ]
+    private static bool IsSqlDropTable(string line)
+    {
+        int drop = line.IndexOf("DROP ", StringComparison.OrdinalIgnoreCase);
+        if (drop != 0)
+            return false;
+
+        int table = line.IndexOf(" TABLE ", StringComparison.OrdinalIgnoreCase);
+        if (table < 0)
+            return false;
+        
+        bool validSemicolon = line.EndsWith(';') && 
+                              line.IndexOf(';') == line.LastIndexOf(';');
+
+        return drop < table && validSemicolon;
+    }
+    
     // INSERT [modifiers] INTO <table_name> [ (columns...) ] VALUES
     // ( literal , literal , literal , literal ),
     // ( ... );
     private static bool IsSqlInsertValues(string line)
     {
-        var start = line.IndexOf("INSERT ", StringComparison.OrdinalIgnoreCase);
+        int start = line.IndexOf("INSERT ", StringComparison.OrdinalIgnoreCase);
         if (start != 0)
             return false;
 
-        var into = line.IndexOf(" INTO ", StringComparison.OrdinalIgnoreCase);
+        int into = line.IndexOf(" INTO ", StringComparison.OrdinalIgnoreCase);
         if (into < 0)
             return false;
 
-        var values = line.IndexOf(" VALUES", StringComparison.OrdinalIgnoreCase);
+        int values = line.IndexOf(" VALUES", StringComparison.OrdinalIgnoreCase);
         if (values < 0)
             return false;
 
@@ -212,11 +229,11 @@ public class ContentParser : IDisposable
     // ) [options];
     private static bool IsSqlCreateTable(string line)
     {
-        var create = line.IndexOf("CREATE ", StringComparison.OrdinalIgnoreCase);
+        int create = line.IndexOf("CREATE ", StringComparison.OrdinalIgnoreCase);
         if (create != 0)
             return false;
 
-        var table = line.IndexOf(" TABLE ", StringComparison.OrdinalIgnoreCase);
+        int table = line.IndexOf(" TABLE ", StringComparison.OrdinalIgnoreCase);
         if (table < 0)
             return false;
 
@@ -225,10 +242,10 @@ public class ContentParser : IDisposable
 
     private async Task SkipSqlCreateTable()
     {
-        bool inSingle = false;
-        bool inDouble = false;
+        bool inSingle = false;  // `identifier` for MySQL
+        bool inDouble = false;  // "identifier" for PostgreSQL
+        bool inBracket = false; // [identifier] for SQL Server, T-SQL
         bool inBacktick = false;
-        bool inBracket = false; // [identifier] for T-SQL
 
         while (await _reader.ReadLineWithEndingAsync() is { } line)
         {
@@ -283,21 +300,22 @@ public class ContentParser : IDisposable
 
     private bool IsTrashOrEmpty(string line)
     {
-        line = line.Trim();
+        if (IsSqlDropTable(line)) return true;
+        
+        line = line.Replace(" ", "");
         if (string.IsNullOrWhiteSpace(line)) return true;
 
-        if (line.First() == line.Last() &&
+        if (line.Length > 2 &&
+            line.First() == line.Last() &&
             line.All(c => c == '+' || char.GetUnicodeCategory(c) == UnicodeCategory.DashPunctuation))
         {
             _possibleAsciiTable = true;
             return true;
         }
         
-        if (line.LastIndexOf("--", StringComparison.Ordinal) == 0 && _stats.Formats.Last() == FormatEnum.SqlInsert) return true;    // Sql comment
-        if (line == ";" && _stats.Formats.Last() == FormatEnum.SqlInsert) return true;
-        
-        return line.Replace(" ", "").All(ch => char.GetUnicodeCategory(ch) == UnicodeCategory.DashPunctuation 
-                                     && _stats.Formats.Last() == FormatEnum.SqlInsert); // Sql comment boundary
+        if (line.LastIndexOf("--", StringComparison.Ordinal) == 0) return true; // Sql comment
+        return line == ";" || 
+               line.All(ch => char.GetUnicodeCategory(ch) == UnicodeCategory.DashPunctuation); // Sql comment boundary
     }
 
     private void UpdateParsingState(ParsingState state)

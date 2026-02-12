@@ -1,6 +1,6 @@
-using LeakChecker.Content;
+using LeakChecker.DataParser.Content;
 
-namespace LeakChecker.Format;
+namespace LeakChecker.DataParser.Format;
 
 public static class HeaderGuesser
 {

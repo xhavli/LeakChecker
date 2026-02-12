@@ -1,11 +1,11 @@
 using System.Text;
-using LeakChecker.Content;
-using LeakChecker.Content.Detection;
-using LeakChecker.Format.Schema;
-using LeakChecker.Logging;
-using LeakChecker.Logging.Parse;
+using LeakChecker.DataParser.Content;
+using LeakChecker.DataParser.Content.Detection;
+using LeakChecker.DataParser.Format.Schema;
+using LeakChecker.DataParser.Logging;
+using LeakChecker.DataParser.Logging.Parse;
 
-namespace LeakChecker.Format.Detection;
+namespace LeakChecker.DataParser.Format.Detection;
 
 public static class SqlInsertDetector
 {

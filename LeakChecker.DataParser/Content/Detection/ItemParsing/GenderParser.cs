@@ -1,4 +1,4 @@
-namespace LeakChecker.Content.Detection.ItemParsing;
+namespace LeakChecker.DataParser.Content.Detection.ItemParsing;
 
 public static class GenderParser
 {
