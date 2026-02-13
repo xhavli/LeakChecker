@@ -1,6 +1,6 @@
 using LeakChecker.DataParser.Format.Detection;
 
-namespace LeakChecker.DataParser.Tests.Format.DelimiterDetection;
+namespace LeakChecker.DataParser.Tests.Format.Detection;
 
 public class DelimiterDetectorTests
 {
@@ -9,7 +9,7 @@ public class DelimiterDetectorTests
 
     public DelimiterDetectorTests()
     {
-        // *\LeakChecker\LeakChecker.DataParser\bin\Release\net0.0
+        // *\LeakChecker\LeakChecker.DataParser.Tests\bin\Release\net0.0
         DirectoryInfo? dir = new DirectoryInfo(Environment.CurrentDirectory);
         // *\LeakChecker
         dir = dir.Parent?.Parent?.Parent?.Parent;
