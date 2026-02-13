@@ -1,6 +1,0 @@
-Id|Name|IPv4|Password
-1|Jake|127.0.0.1|1234
-2|Kate|175.23.57.234|qwerty
-3|Josh|124.237.89.21|RealMadrid
-4|Vadim|11.24.135.78|asdf
-5|Layla|224.37.82.18.1|A1/s2*D3-f4+
