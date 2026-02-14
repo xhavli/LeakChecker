@@ -8,13 +8,13 @@ namespace LeakChecker.DataParser.Content.Parsing;
 
 public static class ExcelParser
 {
-    private const int SampleLimit = 23;
+    private const int SamplesLimit = 23;
     private const long ParseLimit = long.MaxValue;
 
     public static async Task ParseFile(string filePath, IParseLogger logger, ParseStats stats, int threshold)
     {
         Dictionary<int, Dictionary<int, ItemEnum>> schemas = 
-            await ExcelDetector.DetectFormat(0, filePath, logger, SampleLimit, threshold);
+            await ExcelDetector.DetectFormat(0, filePath, logger, SamplesLimit, threshold);
 
         await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
         using var reader = ExcelReaderFactory.CreateReader(stream);

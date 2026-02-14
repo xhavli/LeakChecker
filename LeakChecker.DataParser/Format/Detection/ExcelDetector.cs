@@ -10,7 +10,7 @@ namespace LeakChecker.DataParser.Format.Detection;
 public static class ExcelDetector
 {
     public static async Task<Dictionary<int, Dictionary<int, ItemEnum>>> DetectFormat(
-        long startSheet, string filePath, IParseLogger logger, int sampleLimit, int threshold)
+        long startSheet, string filePath, IParseLogger logger, int detectSamples, int threshold)
     {
         await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
         using var reader = ExcelReaderFactory.CreateReader(stream);
@@ -30,7 +30,7 @@ public static class ExcelDetector
             SchemaHeuristic analyzer = new();
             await logger.Log($"Sampling sheet number [{sheetNumber}] with name [{sheetName}]");
     
-            while (reader.Read() && samplesCount < sampleLimit)
+            while (reader.Read() && samplesCount < detectSamples)
             {
                 row++;
                 if (ExcelParser.IsRowEmpty(reader)) { continue; }
