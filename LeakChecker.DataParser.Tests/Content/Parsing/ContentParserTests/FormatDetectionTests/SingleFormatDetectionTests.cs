@@ -4,7 +4,7 @@ using LeakChecker.DataParser.Format;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
 
-namespace LeakChecker.DataParser.Tests.Content.Parsing.ContentParserTests.FormatDetectionTests.SingleFormatDetectionTests;
+namespace LeakChecker.DataParser.Tests.Content.Parsing.ContentParserTests.FormatDetectionTests;
 
 public class SingleFormatDetectionTests
 {
