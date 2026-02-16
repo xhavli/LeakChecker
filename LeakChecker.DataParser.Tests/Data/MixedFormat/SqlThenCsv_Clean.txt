@@ -1,0 +1,33 @@
+INSERT INTO `user_table` (`Id`, `Name`, `Gender`, `DateOfBirth`, `Address`, `IPv4`, `Email`, `Password`) VALUES
+    ('1', 'Mei', 'female', '1993/07/12', 'Beijing, CN', '45.77.201.19', 'mei@163.cn', 'lotus93'),
+    ('2', 'Юлия', 'male', '03-05-1980', 'Novosibirsk, Russia', '10.0.0.55', 'oleg@vkontakte.ru', 'qwerty'),
+    ('3', 'Amina', 'female', '', 'Casablanca', '102.67.14.200', 'amina@maroc.ma', 'minttea'),
+    ('4', 'Björn', 'male', '17.02.1975', 'Stockholm', '192.168.1.77', 'bjOrn@sweden.se', 'viking75'),
+    ('5', 'Priya', 'female', '8/9/2001', 'Bengaluru', '157.45.88.12', 'priya@inbox.in', 'curry2001'),
+    ('6', 'Carlos', 'male', '11/11/1990', 'São Paulo', '201.55.33.90', 'carlos@uol.com', 'samba11'),
+    ('7', 'Fatima', 'female', '1988', 'Dubai', '172.16.0.2', 'fa_tima@fly.emirates.ae', 'desert88'),
+    ('8', 'Liam', 'male', '04/04/2004', 'Dublin', '86.45.120.33', 'liam@eir.ie', 'shamrock4'),
+    ('9', 'Zoë', 'female', NULL, '', '203.0.113.45', 'zoe@example.net', 'butterfly'),
+    ('10', 'Ahmed', 'male', '5-6-1979', 'Cairo', '156.212.44.1', 'ahmed@egypt.eg', '1234'),
+    ('11', 'Svetlana', 'female', '12.12.1992', 'Minsk', '178.124.12.200', 'svetlama@mail.by', 'snow92'),
+    ('12', 'Marco', 'male', '1995-03-22', 'Rome', '151.100.55.77', 'marco@italia.it', 'roma95'),
+    ('13', '张', 'male', '07/07/1987', 'Seoul', '61.72.33.144', 'joon@kmail.kr', 'hanguk87'),
+    ('14', 'Isabella', 'female', '1197742783', 'Buenos Aires', '181.44.201.9', 'isa.bel@argentina.ar', 'tango2000'),
+    ('15', 'Kofi', 'male', '', 'Accra', '102.176.22.88', '', 'akwaaba');
+    
+    Nickname:Name:Gender:DateOfBirth:Address:IPv4:Email:Password
+    ___shadowPulse:Mei:female:1993/07/12:Beijing, CN:45.77.201.19:mei@163.cn:lotus93
+    BlazerShifter:Oleg:male:03-05-1980:Kyiv, UA:10.0.0.55:oleg@mail.ua:qwerty
+    echoRider(::Amina:female::Casablanca:102.67.14.200:amina@maroc.ma:minttea
+    CryptoNomadX:Björn:male:17.02.1975:Stockholm:192.168.1.77:bjOrn@sweden.se:viking75
+    lunar_Flare:Priya:female:8/9/2001:Bengaluru:157.45.88.12:priya@inbox.in:curry2001
+    Víbora-čR:Carlos:male:11/11/1990:São Paulo:201.55.33.90:carlos@uol.com:samba11
+    PixelCrafter:Fatima:female:1988:Dubai:172.16.0.2:fa_tima@fly.emirates.ae:desert88
+    driftWing-Ømega:Liam:male:04/04/2004:Dublin:86.45.120.33:liam@eir.ie:shamrock4
+    ZenithWalker:Zoë:female:::203.0.113.45:zoe@example.net:butterfly
+    ÆonPulse__9__:Ahmed:male:5-6-1979:Cairo:156.212.44.1:ahmed@egypt.eg:1234
+    stormPulse:Svetlana:female:12.12.1992:Novosibirsk:178.124.12.200:svetlama@mail.by:snow92
+    nova_jen:Marco:male:1995-03-22:Rome:151.100.55.77:marco@italia.it:roma95
+    X7X_FrostByte_X7X:张:male:07/07/1987:Seoul:61.72.33.144:joon@kmail.kr:hanguk87
+    rúnicStorm_88:Isabella:female:1197742783:Buenos Aires:181.44.201.9:isa.bel@argentina.ar:tango2000
+    NightWolf_23:Kofi:male::Accra:102.176.22.88::akwaaba

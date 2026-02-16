@@ -11,7 +11,7 @@
 "driftWing-Ømega ";"Liam";"male";"04/04/2004";"Dublin";"86.45.120.33";"liam@eir.ie";"shamrock4"
 "ZenithWalker ";"Zoë";"female";"";"";"203.0.113.45";"zoe@example.net";"butterfly"
 "ÆonPulse__9__ ";"Ahmed";"male";"5-6-1979";"Cairo";"156.212.44.1";"ahmed@egypt.eg";"1234"
-"stormPulse ";"Svetlana";"female";"12.12.1992";"NovosibirskMinsk";"178.124.12.200";"svetlama@mail.by";"snow92"
+"stormPulse ";"Svetlana";"female";"12.12.1992";"Novosibirsk";"178.124.12.200";"svetlama@mail.by";"snow92"
 "nova_jen ";"Marco";"male";"1995-03-22";"Rome";"151.100.55.77";"marco@italia.it";"roma95"
 "X7X_FrostByte_X7X";"张";"male";"07/07/1987";"Seoul";"61.72.33.144";"joon@kmail.kr";"hanguk87"
 "rúnicStorm_88 ";"Isabella";"female";"1197742783";"Buenos Aires";"181.44.201.9";"isa.bel@argentina.ar";"tango2000"
