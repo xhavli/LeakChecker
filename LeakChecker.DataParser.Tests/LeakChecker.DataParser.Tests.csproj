@@ -29,6 +29,7 @@
     <ItemGroup>
       <Folder Include="Content\Parsing\ContentParserTests\" />
       <Folder Include="Encodings\Conversion\" />
+      <Folder Include="Format\Detection\Excel\" />
     </ItemGroup>
 
 </Project>
