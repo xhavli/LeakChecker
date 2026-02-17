@@ -73,4 +73,20 @@ public class SingleFormatDetectionTests
         Assert.Single(stats.Delimiters);
         Assert.Equal(FormatEnum.SqlInsert, stats.Formats.First());
     }
+    
+    [Theory]
+    [InlineData("Excel/Single_Sheet_Clean.xlsx")]
+    public async Task ShouldDetect_SingleExcel(string fileName)
+    {
+        // Arrange
+        string filePath = Path.Combine(_testDataDirectory, fileName);
+        var stats = NullParseStats.Create(Guid.Empty, _logger, filePath);
+
+        // Act
+        await ExcelParser.ParseFile(filePath, _logger, stats, thresholdPercent: 50);
+
+        // Assert
+        Assert.Single(stats.Formats);
+        Assert.Equal(FormatEnum.Excel, stats.Formats.First());
+    }
 }
