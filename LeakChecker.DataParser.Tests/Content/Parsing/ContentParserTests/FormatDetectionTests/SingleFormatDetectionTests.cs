@@ -18,6 +18,8 @@ public class SingleFormatDetectionTests
         // *\LeakChecker
         dir = dir.Parent?.Parent?.Parent?.Parent;
         _testDataDirectory = Path.Combine(dir!.FullName, "LeakChecker.DataParser.Tests/Data/SingleFormat");
+        
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);  //TODO make test base for this
     }
         
     [Theory]

@@ -57,7 +57,7 @@ public class ExcelDetectorTests
     
     [Theory]
     [InlineData("MixedFormat/Excel_Two_Sheets.xlsx")]
-    public async Task ShouldDetect_ExcelTwoSchemas(string fileName)
+    public async Task ShouldDetect_ExpectedExcelTwoSchemas(string fileName)
     {
         // Arrange
         Dictionary<int, ItemEnum> firstSheet = new()

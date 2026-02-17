@@ -10,7 +10,7 @@ namespace LeakChecker.DataParser.Format.Detection;
 public static class ExcelDetector
 {
     public static async Task<Dictionary<int, Dictionary<int, ItemEnum>>> DetectFormat(
-        long startSheet, string filePath, IParseLogger logger, int detectSamples, int threshold)
+        long startSheet, string filePath, IParseLogger logger, int detectSamples, int thresholdPercent)
     {
         await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
         using var reader = ExcelReaderFactory.CreateReader(stream);
@@ -70,9 +70,9 @@ public static class ExcelDetector
             }
     
             await logger.LogHeuristicData(analyzer);
-            await logger.LogDominantSchema(analyzer, threshold);
+            await logger.LogDominantSchema(analyzer, thresholdPercent);
         
-            var sheetSchema = analyzer.GetDominantSchema(threshold);
+            var sheetSchema = analyzer.GetDominantSchema(thresholdPercent);
             var assigned = CredentialAssigner.Assign(sheetSchema);
             await logger.LogFinalSchema(assigned);
         

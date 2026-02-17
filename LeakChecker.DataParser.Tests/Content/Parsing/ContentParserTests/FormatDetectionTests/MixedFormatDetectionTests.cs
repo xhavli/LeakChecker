@@ -22,6 +22,7 @@ public class MixedFormatDetectionTests
         
     [Theory]
     [InlineData("SqlThenCsv_Clean.txt")]
+    [InlineData("SqlThenCsv_Messy.txt")]
     public async Task ShouldDetect_SqlThenCsv(string fileName)
     {
         // Arrange

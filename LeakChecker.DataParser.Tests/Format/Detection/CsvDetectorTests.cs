@@ -42,8 +42,6 @@ public class CsvDetectorTests
     [InlineData("Csv/Pipe_Messy.txt", '|')]
     [InlineData("Csv/Semicolon_Clean.txt", ';')]
     [InlineData("Csv/Semicolon_Messy.txt", ';')]
-    [InlineData("Csv/Space_Clean.txt", ' ')]
-    [InlineData("Csv/Space_Messy.txt", ' ')]
     [InlineData("Csv/Tab_Clean.txt", '\t')]
     [InlineData("Csv/Tab_Messy.txt", '\t')]
     public async Task ShouldDetect_ExpectedCsvSchema(string fileName, char delimiter)
@@ -58,5 +56,30 @@ public class CsvDetectorTests
 
         // Assert
         Assert.Equal(CsvSchema, schema);
+    }
+    
+    [Theory]
+    [InlineData("Csv/Space_Clean.txt", ' ')]
+    [InlineData("Csv/Space_Messy.txt", ' ')]
+    public async Task ShouldDetect_ExpectedCsvSchemaWithSpaceDelimiter(string fileName, char delimiter)
+    {
+        // Arrange
+        Dictionary<int, ItemEnum> schema = new()
+        {
+            { 0, ItemEnum.Gender },
+            { 1, ItemEnum.Timestamp },
+            { 2, ItemEnum.Location },
+            { 3, ItemEnum.Ipv4 },
+            { 4, ItemEnum.Email },
+        };
+        string filePath = Path.Combine(_testDataDirectory, fileName);
+        await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+        using var streamReader = new StreamReader(fileStream);
+
+        // Act
+        var result = await CsvFileDetector.DetectFormat(0, delimiter, streamReader, _logger, CsvSamplesLimit, ThresholdPercent);
+
+        // Assert
+        Assert.Equal(schema, result);
     }
 }

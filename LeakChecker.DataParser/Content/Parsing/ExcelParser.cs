@@ -11,10 +11,10 @@ public static class ExcelParser
     private const int SamplesLimit = 23;
     private const long ParseLimit = long.MaxValue;
 
-    public static async Task ParseFile(string filePath, IParseLogger logger, ParseStats stats, int threshold)
+    public static async Task ParseFile(string filePath, IParseLogger logger, ParseStats stats, int thresholdPercent)
     {
         Dictionary<int, Dictionary<int, ItemEnum>> schemas = 
-            await ExcelDetector.DetectFormat(0, filePath, logger, SamplesLimit, threshold);
+            await ExcelDetector.DetectFormat(0, filePath, logger, SamplesLimit, thresholdPercent);
 
         await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
         using var reader = ExcelReaderFactory.CreateReader(stream);
