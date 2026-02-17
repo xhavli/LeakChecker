@@ -12,18 +12,6 @@ public class CsvDetectorTests
     private readonly string _testDataDirectory;
     private readonly IParseLogger _logger = new NullParseLogger(string.Empty);
     
-    private static readonly Dictionary<int, ItemEnum> CsvSchema = new()
-    {
-        { 0, ItemEnum.Username },
-        { 1, ItemEnum.Name },
-        { 2, ItemEnum.Gender },
-        { 3, ItemEnum.Timestamp },
-        { 4, ItemEnum.Location },
-        { 5, ItemEnum.Ipv4 },
-        { 6, ItemEnum.Email },
-        { 7, ItemEnum.Password },
-    };
-
     public CsvDetectorTests()
     {
         // *\LeakChecker\LeakChecker.DataParser.Tests\bin\Release\net0.0
@@ -36,10 +24,6 @@ public class CsvDetectorTests
     [Theory]
     [InlineData("Csv/Colon_Clean.txt", ':')]
     [InlineData("Csv/Colon_Messy.txt", ':')]
-    [InlineData("Csv/Comma_Clean.txt", ',')]
-    [InlineData("Csv/Comma_Messy.txt", ',')]
-    [InlineData("Csv/Pipe_Clean.txt", '|')]
-    [InlineData("Csv/Pipe_Messy.txt", '|')]
     [InlineData("Csv/Semicolon_Clean.txt", ';')]
     [InlineData("Csv/Semicolon_Messy.txt", ';')]
     [InlineData("Csv/Tab_Clean.txt", '\t')]
@@ -47,15 +31,26 @@ public class CsvDetectorTests
     public async Task ShouldDetect_ExpectedCsvSchema(string fileName, char delimiter)
     {
         // Arrange
+        Dictionary<int, ItemEnum> expected = new()
+        {
+            { 0, ItemEnum.Username },
+            { 1, ItemEnum.Name },
+            { 2, ItemEnum.Gender },
+            { 3, ItemEnum.Timestamp },
+            { 4, ItemEnum.Location },
+            { 5, ItemEnum.Ipv4 },
+            { 6, ItemEnum.Email },
+            { 7, ItemEnum.Password },
+        };
         string filePath = Path.Combine(_testDataDirectory, fileName);
         await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
         using var streamReader = new StreamReader(fileStream);
 
         // Act
-        var schema = await CsvFileDetector.DetectFormat(0, delimiter, streamReader, _logger, CsvSamplesLimit, ThresholdPercent);
+        var result = await CsvFileDetector.DetectFormat(0, delimiter, streamReader, _logger, CsvSamplesLimit, ThresholdPercent);
 
         // Assert
-        Assert.Equal(CsvSchema, schema);
+        Assert.Equal(expected, result);
     }
     
     [Theory]
@@ -64,7 +59,7 @@ public class CsvDetectorTests
     public async Task ShouldDetect_ExpectedCsvSchemaWithSpaceDelimiter(string fileName, char delimiter)
     {
         // Arrange
-        Dictionary<int, ItemEnum> schema = new()
+        Dictionary<int, ItemEnum> expected = new()
         {
             { 0, ItemEnum.Gender },
             { 1, ItemEnum.Timestamp },
@@ -80,6 +75,50 @@ public class CsvDetectorTests
         var result = await CsvFileDetector.DetectFormat(0, delimiter, streamReader, _logger, CsvSamplesLimit, ThresholdPercent);
 
         // Assert
-        Assert.Equal(schema, result);
+        Assert.Equal(expected, result);
+    }
+    
+    [Theory]
+    [InlineData("Csv/Pipe_Clean.txt", '|')]
+    [InlineData("Csv/Pipe_Messy.txt", '|')]
+    public async Task ShouldDetect_ExpectedCsvSchemaWithPipeDelimiter(string fileName, char delimiter)
+    {
+        // Arrange
+        Dictionary<int, ItemEnum> expected = new()
+        {
+            { 0, ItemEnum.Gender },
+            { 1, ItemEnum.Ipv4 },
+        };
+        string filePath = Path.Combine(_testDataDirectory, fileName);
+        await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+        using var streamReader = new StreamReader(fileStream);
+
+        // Act
+        var result = await CsvFileDetector.DetectFormat(0, delimiter, streamReader, _logger, CsvSamplesLimit, ThresholdPercent);
+
+        // Assert
+        Assert.Equal(expected, result);
+    }
+    
+    [Theory]
+    [InlineData("Csv/Comma_Clean.txt", ',')]
+    [InlineData("Csv/Comma_Messy.txt", ',')]
+    public async Task ShouldDetect_ExpectedCsvSchemaWithCommaDelimiter(string fileName, char delimiter)
+    {
+        // Arrange
+        Dictionary<int, ItemEnum> expected = new()
+        {
+            { 0, ItemEnum.PhoneNumber },
+            { 1, ItemEnum.Timestamp },
+        };
+        string filePath = Path.Combine(_testDataDirectory, fileName);
+        await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+        using var streamReader = new StreamReader(fileStream);
+
+        // Act
+        var result = await CsvFileDetector.DetectFormat(0, delimiter, streamReader, _logger, CsvSamplesLimit, ThresholdPercent);
+
+        // Assert
+        Assert.Equal(expected, result);
     }
 }
