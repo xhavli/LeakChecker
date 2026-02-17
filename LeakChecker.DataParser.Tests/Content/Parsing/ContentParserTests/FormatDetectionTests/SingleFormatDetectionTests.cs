@@ -89,4 +89,22 @@ public class SingleFormatDetectionTests
         Assert.Single(stats.Formats);
         Assert.Equal(FormatEnum.Excel, stats.Formats.First());
     }
+    
+    [Theory]
+    [InlineData("AsciiTable/AsciiTable.txt")]
+    public async Task ShouldDetect_SingleAsciiTable(string fileName)
+    {
+        // Arrange
+        string filePath = Path.Combine(_testDataDirectory, fileName);
+        var stats = NullParseStats.Create(Guid.Empty, _logger, filePath);
+        using var parser = await ContentParser.CreateAsync(filePath, _logger, stats, Encoding.UTF8, thresholdPercent: 50);
+
+        // Act
+        await parser.ProcessFile();
+
+        // Assert
+        Assert.Single(stats.Formats);
+        Assert.Single(stats.Delimiters);
+        Assert.Equal(FormatEnum.AsciiTable, stats.Formats.First());
+    }
 }
