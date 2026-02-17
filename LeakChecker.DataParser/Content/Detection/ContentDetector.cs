@@ -14,7 +14,7 @@ public static class ContentDetector
     public static async Task<List<SchemaHeuristicRecord>> DetectLine(string line, char delimiter, IParseLogger logger)
     {
         List<SchemaHeuristicRecord> linePatterns = new();
-        line = line.Trim().TrimEnclosingChars();
+        line = line.Trim();
         string originLine = line;
         
         if (WebRecognizer.TryRecognize(line, out List<string> stringUris, out List<Uri> uris))

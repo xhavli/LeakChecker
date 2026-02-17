@@ -20,7 +20,6 @@ public static class CsvFileDetector
             if (samplesCount == detectSamples) break;
 
             line = line.Trim()
-                .TrimEnclosingChars()
                 .TrimOuterParentheses()
                 .TrimOuterParenthesesWithComma();    // For undetected SQL INSERT
             
