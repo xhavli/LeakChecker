@@ -7,7 +7,7 @@ using MimeDetective.Definitions.Licensing;
 
 namespace LeakChecker.DataParser.Utilities;
 
-public class FileHandler(ExecutionLogger logger)
+public class FileHelper(ExecutionLogger logger)
 {
     private static string? ApplicationName { get; } = AppDomain.CurrentDomain.FriendlyName;
 

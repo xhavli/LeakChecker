@@ -44,7 +44,7 @@ public static class Program
         var loggerFactory = provider.GetRequiredService<IParseLoggerFactory>();
         Guid executionId = Guid.NewGuid();
         var stats = new ExecutionStats(executionId, executionLogger.ExecutionStart);
-        var fileHandler = new FileHandler(executionLogger);
+        var fileHelper = new FileHelper(executionLogger);
         
         PythonNerService pythonNerService = new PythonNerService(executionLogger);
         try
@@ -63,7 +63,7 @@ public static class Program
         Console.InputEncoding = utf8;   // Enforce UTF8 encoding which can handle cyrilic characters 
         Console.OutputEncoding = utf8;
         
-        var data = FilePaths.FilesPathsUtf8;
+        var data = FilePaths.TestFiles;
         
         int threads = config.ThreadsCapacity;   // Degree of parallelism
         int capacity = config.ChannelCapacity;  // Channel capacity
@@ -100,14 +100,14 @@ public static class Program
         {
             await foreach (var filePath in channel.Reader.ReadAllAsync())
             {
-                if (!await fileHandler.IsAccessible(filePath) || !await fileHandler.IsSupported(filePath)) continue;
+                if (!await fileHelper.IsAccessible(filePath) || !await fileHelper.IsSupported(filePath)) continue;
 
                 using var parseLogger = await loggerFactory.CreateAsync(executionId, filePath);
                 ParseStats parseStats = ParseStats.Create(executionId, parseLogger, filePath);
 
                 try
                 {
-                    if (FileHandler.IsExcel(filePath))
+                    if (FileHelper.IsExcel(filePath))
                     {
                         // Avoid encoding conversion of zipped XML file
                         await ExcelParser.ParseFile(filePath, parseLogger, parseStats, config.SchemaThreshold);
@@ -119,7 +119,7 @@ public static class Program
                         //
                         // await EncodingConverter.ConvertFileToUtf8(parseLogger, encodingSegments);
 
-                        await fileHandler.IsReadable(filePath);
+                        await fileHelper.IsReadable(filePath);
                         
                         string parseFile = parseLogger.SubjectFilePath;   //TODO remove this only for test purposes
                         // string parseFile = parseLogger.SubjectTmpFilePath;    //TODO use this in deployment
