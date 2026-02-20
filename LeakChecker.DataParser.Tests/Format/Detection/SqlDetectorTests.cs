@@ -30,7 +30,7 @@ public class SqlDetectorTests
         DirectoryInfo? dir = new DirectoryInfo(Environment.CurrentDirectory);
         // *\LeakChecker
         dir = dir.Parent?.Parent?.Parent?.Parent;
-        _testDataDirectory = Path.Combine(dir!.FullName, "LeakChecker.DataParser.Tests/Data/SingleFormat");
+        _testDataDirectory = Path.Combine(dir!.FullName, "LeakChecker.DataParser.Tests/Data/FormatSingle");
     }
     
     [Theory]

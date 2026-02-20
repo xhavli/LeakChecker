@@ -25,7 +25,7 @@ public class ExcelDetectorTests
     }
     
     [Theory]
-    [InlineData("SingleFormat/Excel/Single_Sheet_Clean.xlsx")]
+    [InlineData("FormatSingle/Excel/Single_Sheet_Clean.xlsx")]
     public async Task ShouldDetect_ExpectedExcelSchema(string fileName)
     {
         // Arrange
@@ -56,7 +56,7 @@ public class ExcelDetectorTests
     }
     
     [Theory]
-    [InlineData("MixedFormat/Excel_Two_Sheets.xlsx")]
+    [InlineData("FormatMixed/Excel_Two_Sheets.xlsx")]
     public async Task ShouldDetect_ExpectedExcelTwoSchemas(string fileName)
     {
         // Arrange
