@@ -16,22 +16,22 @@ public class EncodingDetectorTests
         DirectoryInfo? dir = new DirectoryInfo(Environment.CurrentDirectory);
         // *\LeakChecker
         dir = dir.Parent?.Parent?.Parent?.Parent;
-        _testDataDirectory = Path.Combine(dir!.FullName, "LeakChecker.DataParser.Tests/Data/");
+        _testDataDirectory = Path.Combine(dir!.FullName, "LeakChecker.DataParser.Tests/Data/EncodingSingle");
 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
-
+    
     [Theory]
-    [InlineData("EncodingSingle/ascii.bin", 20127)]
-    [InlineData("EncodingSingle/gb18030.bin", 54936)]
-    [InlineData("EncodingSingle/iso2022jp.bin", 50220)]
-    [InlineData("EncodingSingle/shift_jis.bin", 932)]
-    // [InlineData("EncodingSingle/utf7.bin", 65000)]  //TODO how JD do that
-    [InlineData("EncodingSingle/utf8.bin",  65001)]
-    [InlineData("EncodingSingle/utf16le.bin", 1200)]
-    [InlineData("EncodingSingle/utf16be.bin", 1201)]
-    [InlineData("EncodingSingle/utf32le.bin", 12000)]
-    [InlineData("EncodingSingle/utf32be.bin", 12001)]
+    [InlineData("ascii", 20127)]
+    [InlineData("gb18030", 54936)]
+    [InlineData("iso2022jp", 50220)]
+    [InlineData("shift_jis", 932)]
+    // [InlineData("utf7", 65000)]  //TODO how JD do that
+    [InlineData("utf8",  65001)]
+    [InlineData("utf16le", 1200)]
+    [InlineData("utf16be", 1201)]
+    [InlineData("utf32le", 12000)]
+    [InlineData("utf32be", 12001)]
     public async Task ShouldDetect_ExpectedEncoding(string fileName, int codePage)
     {
         // Arrange
