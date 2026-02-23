@@ -9,11 +9,9 @@ public class DelimiterDetectorTests
 
     public DelimiterDetectorTests()
     {
-        // *\LeakChecker\LeakChecker.DataParser.Tests\bin\Release\net0.0
-        DirectoryInfo? dir = new DirectoryInfo(Environment.CurrentDirectory);
-        // *\LeakChecker
-        dir = dir.Parent?.Parent?.Parent?.Parent;
-        _testDataDirectory = Path.Combine(dir!.FullName, "LeakChecker.DataParser.Tests/Data/FormatSingle");
+        string currentDir = Directory.GetCurrentDirectory();
+        string projectDir = Directory.GetParent(currentDir)?.Parent?.Parent?.Parent?.FullName!;
+        _testDataDirectory = Path.Combine(projectDir, "LeakChecker.DataParser.Tests/Data/FormatSingle");
     }
         
     [Theory]

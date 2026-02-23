@@ -13,11 +13,9 @@ public class MixedFormatDetectionTests
         
     public MixedFormatDetectionTests()
     {
-        // *\LeakChecker\LeakChecker.DataParser\bin\Release\net0.0
-        DirectoryInfo? dir = new DirectoryInfo(Environment.CurrentDirectory);
-        // *\LeakChecker
-        dir = dir.Parent?.Parent?.Parent?.Parent;
-        _testDataDirectory = Path.Combine(dir!.FullName, "LeakChecker.DataParser.Tests/Data/FormatMixed");
+        string currentDir = Directory.GetCurrentDirectory();
+        string projectDir = Directory.GetParent(currentDir)?.Parent?.Parent?.Parent?.FullName!;
+        _testDataDirectory = Path.Combine(projectDir, "LeakChecker.DataParser.Tests/Data/FormatMixed");
     }
         
     [Theory]

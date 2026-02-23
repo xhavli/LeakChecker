@@ -15,11 +15,9 @@ public class ExcelDetectorTests
 
     public ExcelDetectorTests()
     {
-        // *\LeakChecker\LeakChecker.DataParser.Tests\bin\Release\net0.0
-        DirectoryInfo? dir = new DirectoryInfo(Environment.CurrentDirectory);
-        // *\LeakChecker
-        dir = dir.Parent?.Parent?.Parent?.Parent;
-        _testDataDirectory = Path.Combine(dir!.FullName, "LeakChecker.DataParser.Tests/Data");
+        string currentDir = Directory.GetCurrentDirectory();
+        string projectDir = Directory.GetParent(currentDir)?.Parent?.Parent?.Parent?.FullName!;
+        _testDataDirectory = Path.Combine(projectDir, "LeakChecker.DataParser.Tests/Data");
 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);  //TODO make test base for this
     }
