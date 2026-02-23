@@ -199,19 +199,20 @@ Author: Adam Havlík
 - `14.10.2025` - Content.Detection.ItemParsing add initial tests
 - `15.10.2025` - Content.Detection.ItemRecognition add initial tests
 - `3.11.2025` - Format.HeaderGuesser initial tests
-- `1.12.2025` - HashParserTests initial tests
-- `2.12.2025` - HashParserTests added tests
-- `7.2.2026` - HashParserTests have now 116 tests at summary
-- `10.2.2026` - Format.CredentialAssignerTests
+- `1.12.2025` - HashParser initial tests
+- `2.12.2025` - HashParser added tests
+- `7.2.2026` - HashParser tests have now 116 tests at summary
+- `10.2.2026` - Format.CredentialAssigner tests
 - `12.2.2026` - ContentParser format detection initial tests
-- `XX.2.2026` - Encodings.Detection tests
-- `XX.2.2026` - Encodings.Conversion tests
-- `XX.2.2026` - Format.Delimiter tests
-- `XX.2.2026` - Format.Schema tests
+- `13.2.2026` - Format.DelimiterDetection initial tests
+- `21.2.2026` - Encodings.Detection tests
+- `23.2.2026` - ServicesTests of availability of PythonNerService and [hashes.com](https://hashes.com/en/tools/hash_identifier)
 
 ### Module tests
 
-- `XX.10.2025` - Format.Detection
+- `13.2.2026` - Format.SqlDetector initial tests
+- `13.2.2026` - Format.CsvDetector initial tests
+- `17.2.2026` - Format.ExcelDetector initial tests
 
 ### Integration tests
 
@@ -223,8 +224,11 @@ Author: Adam Havlík
 - Refactor Python NER Service
 - When hash detected at [i] and [i+1] is other try to concatenate with delimiter for salted hash detection 
 - Proper format detection of AsciiTable if have +-+ header -> is AsciiTableCandidate and on first 2 positions of delimiter results is somewhere delimiter "|" with simmillar probability. Or properly identify first 3 lines of the file but this need more attention.
+- Make TestBase with EncProvider(RegisterEnc) and projectDir and testDir paths
 - Communication timeout for connection and request reply
 - Parse also JSON, HTML maybe XML
+- Parse also Sql REPLACE INTO
+- EncodingDetector tests for mixed encodings
 - Custom hash identification for truecrypt, veracrypt and other hashes in text form or common prefix 
 - Test Timestamps recognizer and parser for valid datetime range. What's the correct range?
 - Detect Username and plaintext Password. CredentialCandidate
@@ -261,5 +265,7 @@ Author: Adam Havlík
 - Relevant information about data breaches  
   - [leak-lookup.com](https://leak-lookup.com/breaches)
   - [haveibeenpwned.com](https://haveibeenpwned.com/PwnedWebsites)
-- Data sample creation
+- Data sample creation  
   - [tableconvert.com](https://tableconvert.com/)
+- Tests  
+  - More data = better accuracy
