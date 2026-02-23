@@ -22,11 +22,11 @@ public static class AppConfigParser
         var config = JsonSerializer.Deserialize<AppConfig>(json)
                      ?? throw new InvalidOperationException("AppConfig deserialized to null");
 
-        Validate(config);
+        ValidateConfig(config);
         return config;
     }
 
-    private static void Validate(AppConfig config)
+    private static void ValidateConfig(AppConfig config)
     {
         ValidateDirectory(config.InputDirectory, nameof(config.InputDirectory));
         ValidateDirectory(config.LogDirectory, nameof(config.LogDirectory));
