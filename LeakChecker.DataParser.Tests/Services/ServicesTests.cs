@@ -2,7 +2,7 @@ using LeakChecker.DataParser.Utilities.Configuration;
 
 namespace LeakChecker.DataParser.Tests.Services;
 
-public class ServiceTests
+public class ServicesTests
 {
     [Fact]
     public async Task IsReachable_HashesDotCom()
