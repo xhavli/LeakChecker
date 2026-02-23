@@ -42,18 +42,13 @@ public class PythonNerService(ExecutionLogger logger)
         await logger.Log($"Sending status check. CsharpPort {csharpPort}, PythonPort {pythonPort}, " +
                          $"timeout {timeoutSeconds} seconds", LogLevel.Info, LogContext.PythonNerService);
 
-        using var listener = new HttpListener();
-        listener.Prefixes.Add($"http://localhost:{csharpPort}/");
-        listener.Start();
-
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
-        using HttpClient client = new();
-
+        
         // Try to contact Python status endpoint if its already running
         try
         {
+            using HttpClient client = new();
             string statusUrl = $"http://localhost:{pythonPort}/status";
-            string status = await client.GetStringAsync(statusUrl, cts.Token);
+            string status = await client.GetStringAsync(statusUrl);
 
             if (status.Trim().Equals("ready", StringComparison.OrdinalIgnoreCase))
             {
@@ -61,7 +56,7 @@ public class PythonNerService(ExecutionLogger logger)
                 return;
             }
         }
-        catch
+        catch (TaskCanceledException e) when (!e.CancellationToken.IsCancellationRequested)
         {
             // ignored - Python not running yet
         }
@@ -69,6 +64,10 @@ public class PythonNerService(ExecutionLogger logger)
         await logger.Log("Waiting for READY notification", LogLevel.Warning, LogContext.PythonNerService);
 
         // Wait for Python start and send ready
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+        using var listener = new HttpListener();
+        listener.Prefixes.Add($"http://localhost:{csharpPort}/");
+        listener.Start();
         while (!cts.IsCancellationRequested)
         {
             try
