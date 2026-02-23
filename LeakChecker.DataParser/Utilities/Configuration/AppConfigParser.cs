@@ -4,19 +4,18 @@ namespace LeakChecker.DataParser.Utilities.Configuration;
 
 public static class AppConfigParser
 {
-    public static AppConfig LoadFromFile(string path)
+    public static AppConfig LoadFromFile(string fileName)
     {
-        // Get current working directory (bin/Debug/... or run location)
+        // *LeakChecker.DataParser\bin\Debug\net0.0
         var currentDir = Directory.GetCurrentDirectory();
 
-        // Walk up 2 folders to get to project root (same as your old code)
-        var projectDir = Directory.GetParent(currentDir)?.Parent?.Parent?.FullName
-                         ?? throw new DirectoryNotFoundException("Unable to determine project directory");
+        // *LeakChecker.DataParser
+        var projectDir = Directory.GetParent(currentDir)?.Parent?.Parent?.FullName 
+                            ?? throw new DirectoryNotFoundException("Unable to determine project directory");
 
-        // Build full path to appsettings.json
-        var jsonPath = Path.Combine(projectDir, path);
+        var jsonPath = Path.Combine(projectDir, fileName);
 
-        if (!File.Exists(jsonPath))
+        if (!File.Exists(jsonPath)) 
             throw new FileNotFoundException($"AppConfig file not found in: {jsonPath}");
 
         var json = File.ReadAllText(jsonPath);
@@ -29,36 +28,46 @@ public static class AppConfigParser
 
     private static void Validate(AppConfig config)
     {
-        ValidateDirectory(config.InputDirectory, nameof(config.InputDirectory), mustExist: true);
-        ValidateDirectory(config.LogDirectory, nameof(config.LogDirectory), mustExist: false);
-        ValidateDirectory(config.OutputDirectory, nameof(config.OutputDirectory), mustExist: true);
-        ValidateDirectory(config.TmpDirectory, nameof(config.TmpDirectory), mustExist: false);
+        ValidateDirectory(config.InputDirectory, nameof(config.InputDirectory));
+        ValidateDirectory(config.LogDirectory, nameof(config.LogDirectory));
+        ValidateDirectory(config.OutputDirectory, nameof(config.OutputDirectory));
+        ValidateDirectory(config.TmpDirectory, nameof(config.TmpDirectory));
         
-        ValidateNotNegative(config.CsharpPort);
-        ValidateNotNegative(config.PythonPort);
-        ValidateNotNegative(config.ConnectionTimeout);
-        ValidateNotNegative(config.ThreadsCapacity);
-        ValidateNotNegative(config.ChannelCapacity);
-        ValidateNotNegative(config.SchemaThreshold);
+        ValidateRange(config.CsharpPort, nameof(config.CsharpPort));
+        ValidateRange(config.PythonPort, nameof(config.PythonPort));
+        ValidateRange(config.StartupTimeoutSeconds, nameof(config.StartupTimeoutSeconds));
+        ValidateRange(config.ThreadsCapacity, nameof(config.ThreadsCapacity));
+        ValidateRange(config.ChannelCapacity, nameof(config.ChannelCapacity));
+        ValidateRange(config.SchemaThreshold, nameof(config.SchemaThreshold));
     }
 
-    private static void ValidateDirectory(string? path, string name, bool mustExist)
+    private static void ValidateDirectory(string? path, string name)
     {
         if (string.IsNullOrWhiteSpace(path))
             throw new ArgumentException($"Config value '{name}' is missing or empty");
 
         if (!Directory.Exists(path))
         {
-            if (mustExist)
-                throw new DirectoryNotFoundException($"Directory for '{name}' does not exist: '{path}'");
-
-            Directory.CreateDirectory(path); // for Log + Tmp paths
+            try
+            {
+                Directory.CreateDirectory(path);
+            }
+            catch (Exception e)
+            {
+                throw new DirectoryNotFoundException($"Directory for '{name}' does not exist: '{path}'. {e.Message}");
+            }
         }
     }
 
-    private static void ValidateNotNegative(int value)
+    private static void ValidateRange(int value, string name)
     {
-        if (value < 0)
-            throw new ArgumentOutOfRangeException(nameof(value), "Value must be zero or greater.");
+        try
+        {
+            _ = Convert.ToUInt16(value);
+        }
+        catch (Exception e)
+        {
+            throw new ArgumentOutOfRangeException(nameof(value), $"Value of {name} must be in ushort range 0-65535. {e.Message}");
+        }
     }
 }

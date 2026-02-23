@@ -50,7 +50,7 @@ public static class Program
         try
         {
             // await pythonNerService.Start(config.PythonNerService, config.PythonNerServArgs);
-            await pythonNerService.WaitForStart(config.CsharpPort, config.PythonPort, config.ConnectionTimeout);
+            await pythonNerService.WaitForStart(config.CsharpPort, config.PythonPort, config.StartupTimeoutSeconds);
         }
         catch (Exception e)
         {

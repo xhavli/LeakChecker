@@ -37,16 +37,16 @@ public class PythonNerService(ExecutionLogger logger)
         await logger.Log("PythonNerService: Started");
     }
     
-    public async Task WaitForStart(int csharpPort, int pythonPort, int timeoutMs)
+    public async Task WaitForStart(int csharpPort, int pythonPort, int timeoutSeconds)
     {
         await logger.Log($"Sending status check. CsharpPort {csharpPort}, PythonPort {pythonPort}, " +
-                         $"timeout {timeoutMs / 1000} seconds", LogLevel.Info, LogContext.PythonNerService);
+                         $"timeout {timeoutSeconds} seconds", LogLevel.Info, LogContext.PythonNerService);
 
         using var listener = new HttpListener();
         listener.Prefixes.Add($"http://localhost:{csharpPort}/");
         listener.Start();
 
-        using var cts = new CancellationTokenSource(timeoutMs);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
         using HttpClient client = new();
 
         // Try to contact Python status endpoint if its already running

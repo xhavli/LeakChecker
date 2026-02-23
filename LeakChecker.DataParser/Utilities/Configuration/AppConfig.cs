@@ -10,7 +10,7 @@ public record AppConfig
     public required string PythonNerServArgs { get; init; }
     public required int CsharpPort { get; init; }
     public required int PythonPort { get; init; }
-    public required int ConnectionTimeout { get; init; }
+    public required int StartupTimeoutSeconds { get; init; }
     public required int ThreadsCapacity { get; init; }
     public required int ChannelCapacity { get; init; }
     public required int SchemaThreshold { get; init; }

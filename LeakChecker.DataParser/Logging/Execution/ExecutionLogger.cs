@@ -87,7 +87,7 @@ public class ExecutionLogger : IDisposable
         _writer.WriteLine($"Csharp port: {config.CsharpPort}");
         _writer.WriteLine($"Python port: {config.PythonPort}");
         _writer.WriteLine();
-        _writer.WriteLine($"Connection timeout: {config.ConnectionTimeout}");
+        _writer.WriteLine($"Connection timeout: {config.StartupTimeoutSeconds}");
         _writer.WriteLine();
         _writer.WriteLine($"Threads capacity: {config.ThreadsCapacity}");
         _writer.WriteLine($"Channel capacity: {config.ChannelCapacity}");
