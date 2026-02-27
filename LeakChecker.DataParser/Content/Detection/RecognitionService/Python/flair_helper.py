@@ -1,6 +1,8 @@
+# Source: https://huggingface.co/spaces/presidio/presidio_demo/blob/main/presidio_nlp_engine_config.py
+
 from presidio_analyzer import AnalyzerEngine, RecognizerRegistry, RecognizerResult
 from typing import List
-from flairConfig import FlairRecognizer
+from flair_recognizer import FlairRecognizer
 
 # Build once at module load (when config is imported)
 flair_recognizer = FlairRecognizer(supported_language="en")

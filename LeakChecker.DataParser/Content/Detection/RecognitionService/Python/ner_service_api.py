@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
 import uvicorn
 
-from flairHelper import AnalyzeWithFlair
+from flair_helper import AnalyzeWithFlair
 
 from colorama import Fore, Style, init
 
