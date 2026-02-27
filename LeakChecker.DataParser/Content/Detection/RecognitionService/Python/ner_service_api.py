@@ -1,17 +1,17 @@
-import urllib.parse
+
+import asyncio
+import requests
 
 from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
+
 import uvicorn
+import urllib.parse
+from contextlib import asynccontextmanager
 
 from flair_helper import AnalyzeWithFlair
 
 from colorama import Fore, Style, init
-
-import requests
-import asyncio
-
-from contextlib import asynccontextmanager
 
 init()  # colorama required on Windows, non required on other OS
 
@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
         requests.post(f"http://localhost:{csharp_port}/", data="ready")
         print(f"{Fore.GREEN}[SUCCESS] Sent READY to C#{Style.RESET_ALL}")
     except Exception as e:
-        print(f"{Fore.RED}[WARNING] Sending READY to C# at startup failed: {e}{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}[WARNING] Sending READY to C# at startup failed: {e}{Style.RESET_ALL}")
 
     yield
 
@@ -41,7 +41,7 @@ def analyze_text(text: str = ""):
 
     results = AnalyzeWithFlair(text)
 
-    # Convert to list of dicts that match EntityResponse
+    # Convert to list of dicts that match C# PresidioEntity
     entities = []
     for r in results:
         entities.append({

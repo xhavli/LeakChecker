@@ -1,4 +1,4 @@
-# Source: https://huggingface.co/spaces/presidio/presidio_demo/blob/main/presidio_nlp_engine_config.py
+# Inspired by source: https://huggingface.co/spaces/presidio/presidio_demo/blob/main/presidio_nlp_engine_config.py
 
 from presidio_analyzer import AnalyzerEngine, RecognizerRegistry, RecognizerResult
 from typing import List

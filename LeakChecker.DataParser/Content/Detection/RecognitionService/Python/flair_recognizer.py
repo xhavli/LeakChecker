@@ -84,11 +84,12 @@ class FlairRecognizer(EntityRecognizer):
 
         supported_entities = supported_entities if supported_entities else self.ENTITIES
 
-        self.model = (
-            model
-            if model
-            else SequenceTagger.load(self.MODEL_LANGUAGES.get(supported_language))
-        )
+        if model:
+            self.model = model
+        else:
+            self.model = SequenceTagger.load(
+                self.MODEL_LANGUAGES.get(supported_language)
+            )
 
         super().__init__(
             supported_entities=supported_entities,
