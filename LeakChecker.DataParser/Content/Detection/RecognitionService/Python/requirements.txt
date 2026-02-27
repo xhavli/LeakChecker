@@ -1,0 +1,6 @@
+colorama==0.4.6
+fastapi==0.133.1
+flair==0.15.1
+presidio_analyzer==2.2.361
+Requests==2.32.5
+uvicorn==0.41.0
