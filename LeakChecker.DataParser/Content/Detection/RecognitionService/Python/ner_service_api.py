@@ -1,4 +1,5 @@
 
+import argparse
 import asyncio
 import requests
 
@@ -57,16 +58,24 @@ def analyze_text(text: str = ""):
 
 
 if __name__ == "__main__":
-    host = "localhost"
-    python_port = 8000
-    csharp_port = 8080
+    parser = argparse.ArgumentParser(description="Start NER Service")
 
-    print(f"{Fore.BLUE}[INFO] Starting Python NER Service on {host}:{python_port}{Style.RESET_ALL}")
+    parser.add_argument("--host", type=str, default="localhost", help="Host address")
+    parser.add_argument("--python-port", type=int, default=8000, help="Python service port")
+    parser.add_argument("--csharp-port", type=int, default=8080, help="C# service port")
+
+    args = parser.parse_args()
+
+    host = args.host
+    python_port = args.python_port
+    csharp_port = args.csharp_port
+
+    print(f"{Fore.BLUE}[INFO] Python NER Service start on {host}:{python_port}{Style.RESET_ALL}")
+    print(f"{Fore.BLUE}[INFO] C# main program expected on port {csharp_port}{Style.RESET_ALL}")
 
     uvicorn.run(
-        app, 
-        host=host, 
+        app,
+        host=host,
         port=python_port,
-        # log_level="warning",
         access_log=False
     )
