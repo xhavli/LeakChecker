@@ -14,8 +14,7 @@ public class CsvDetectorTests
     
     public CsvDetectorTests()
     {
-        string currentDir = Directory.GetCurrentDirectory();
-        string projectDir = Directory.GetParent(currentDir)?.Parent?.Parent?.Parent?.FullName!;
+        string projectDir = Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.Parent?.Parent?.FullName!;
         _testDataDirectory = Path.Combine(projectDir, "LeakChecker.DataParser.Tests/Data/FormatSingle");
     }
         

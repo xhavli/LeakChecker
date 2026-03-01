@@ -16,8 +16,7 @@ public class PythonNerService(AppConfig config, ExecutionLogger logger)
 
         try
         {
-            string currentDir = Directory.GetCurrentDirectory();
-            string projectDir = Directory.GetParent(currentDir)?.Parent?.Parent?.Parent?.FullName!;
+            string projectDir = Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.Parent?.Parent?.FullName!;
             string pythonDir = Path.Combine(projectDir, "LeakChecker.DataParser/Content/Detection/RecognitionService/Python");
             
             string pythonExe = Path.Combine(pythonDir, config.PythonVenvPath);

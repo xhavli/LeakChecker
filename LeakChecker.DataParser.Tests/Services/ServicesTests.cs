@@ -23,8 +23,7 @@ public class ServicesTests
     public async Task IsReachable_PythonNerService()
     {
         // Arrange
-        string currentDir = Directory.GetCurrentDirectory();
-        string projectDir = Directory.GetParent(currentDir)?.Parent?.Parent?.Parent?.FullName!;
+        string projectDir = Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.Parent?.Parent?.FullName!;
         string jsonPath = Path.Combine(projectDir, "LeakChecker.DataParser/appsettings.json");
         AppConfig config = AppConfigParser.LoadFromFile(jsonPath);
         string url = $"http://localhost:{config.PythonPort}/status";
