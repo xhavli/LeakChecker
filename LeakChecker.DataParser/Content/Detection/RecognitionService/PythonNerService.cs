@@ -33,7 +33,7 @@ public class PythonNerService(AppConfig config, ExecutionLogger logger)
             var psi = new ProcessStartInfo
             {
                 FileName = pythonExe,
-                Arguments = $"\"{scriptPath}\"",
+                Arguments = $"\"{scriptPath}\" --python-port {config.PythonPort} --csharp-port {config.CsharpPort}",
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
