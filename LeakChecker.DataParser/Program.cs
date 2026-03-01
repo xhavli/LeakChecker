@@ -4,6 +4,9 @@ using System.Threading.Channels;
 using LeakChecker.DataParser.Content.Detection.RecognitionService;
 using LeakChecker.DataParser.Content.Parsing;
 using LeakChecker.DataParser.Data;
+using LeakChecker.DataParser.Encodings;
+using LeakChecker.DataParser.Encodings.Conversion;
+using LeakChecker.DataParser.Encodings.Detection;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
@@ -49,8 +52,6 @@ public static class Program
         PythonNerService pythonNerService = new PythonNerService(config, executionLogger);
         try
         {
-            // await pythonNerService.Start(config.PythonNerService, config.PythonNerServArgs);
-            await pythonNerService.WaitForStart(config.CsharpPort, config.PythonPort, config.StartupTimeoutSeconds);
             await pythonNerService.Start();
             await pythonNerService.WaitStart();
         }
@@ -67,11 +68,8 @@ public static class Program
         
         var data = FilePaths.TestFiles;
         
-        int threads = config.ThreadsCapacity;   // Degree of parallelism
-        int capacity = config.ChannelCapacity;  // Channel capacity
-
         // Bounded channel = backpressure + stable memory
-        var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(capacity)
+        var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(config.ChannelCapacity)
         {
             FullMode = BoundedChannelFullMode.Wait,
             SingleWriter = true,

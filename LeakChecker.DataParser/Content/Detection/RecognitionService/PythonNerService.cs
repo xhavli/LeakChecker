@@ -12,8 +12,10 @@ public class PythonNerService(AppConfig config, ExecutionLogger logger)
 
     public async Task Start()
     {
+        if (await ServiceIsRunning()) return;
+        
         await logger.Log("Start", LogLevel.Info, LogContext.PythonNerService);
-
+        
         try
         {
             string projectDir = Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.Parent?.Parent?.FullName!;
@@ -50,60 +52,18 @@ public class PythonNerService(AppConfig config, ExecutionLogger logger)
     
     public async Task WaitStart()
     {
-        await logger.Log($"CsharpPort {config.CsharpPort} sending status check to PythonPort {config.PythonPort} with " +
-                         $"timeout {config.StartupTimeoutSeconds} seconds.", LogLevel.Info, LogContext.PythonNerService);
-        
-        // Try to contact Python status endpoint if its already running
-        try
-        {
-            using HttpClient client = new();
-            string statusUrl = $"http://localhost:{config.PythonPort}/status";
-            string status = await client.GetStringAsync(statusUrl);
-
-            if (status.Trim().Equals("ready", StringComparison.OrdinalIgnoreCase))
-            {
-                await logger.Log("Received READY via status endpoint.", LogLevel.Success, LogContext.PythonNerService);
-                return;
-            }
-        }
-        catch (HttpRequestException)
-        {
-            // ignored - Python not running yet
-        }
+        // Try to contact Python status endpoint from C#, if its already running
+        if (await ServiceIsRunning()) return;
         
         // Wait for Python start and send ready to C#
-        await logger.Log("Waiting for READY notification.", LogLevel.Warning, LogContext.PythonNerService);
-        
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(config.StartupTimeoutSeconds));
-        using var listener = new HttpListener();
-        listener.Prefixes.Add($"http://localhost:{config.CsharpPort}/");
-        listener.Start();
+        await WaitForReady();
 
-        try
+        if (!await ServiceIsRunning())
         {
-            while (true)
-            {
-                var acceptTask = listener.GetContextAsync();
-                var completed = await Task.WhenAny(acceptTask, Task.Delay(Timeout.Infinite, cts.Token));
-
-                if (completed != acceptTask)
-                    throw new TimeoutException("Waiting for READY signal: Timed out.");
-
-                var context = await acceptTask;
-
-                using var reader = new StreamReader(context.Request.InputStream);
-                var body = await reader.ReadToEndAsync(cts.Token);
-
-                if (body.Trim().Equals("ready", StringComparison.OrdinalIgnoreCase))
-                {
-                    await logger.Log("Received READY via startup notification.", LogLevel.Success, LogContext.PythonNerService);
-                    return;
-                }
-            }
-        }
-        finally
-        {
-            listener.Stop();
+            const int waitSec = 10;
+            await logger.Log($"Python service API still not reachable. Waiting extra {waitSec} seconds.",
+                LogLevel.Warning, LogContext.PythonNerService);
+            await Task.WhenAny(Task.Delay(TimeSpan.FromSeconds(waitSec)));
         }
     }
 
@@ -127,6 +87,69 @@ public class PythonNerService(AppConfig config, ExecutionLogger logger)
         catch (Exception e)
         {
             await logger.Log(e.ToString(), LogLevel.Failure, LogContext.PythonNerService);
+        }
+    }
+
+    private async Task<bool> ServiceIsRunning()
+    {
+        await logger.Log($"CsharpPort {config.CsharpPort} sending status check to PythonPort {config.PythonPort}",
+            LogLevel.Info, LogContext.PythonNerService);
+        
+        try
+        {
+            using HttpClient client = new();
+            string statusUrl = $"http://localhost:{config.PythonPort}/status";
+            string status = await client.GetStringAsync(statusUrl);
+
+            if (status.Trim().Equals("ready", StringComparison.OrdinalIgnoreCase))
+            {
+                await logger.Log("Received READY via status endpoint.", LogLevel.Success, LogContext.PythonNerService);
+                return true;
+            }
+        }
+        catch (HttpRequestException)
+        {
+            // ignored - Python not running yet
+        }
+        
+        return false;
+    }
+
+    private async Task WaitForReady()
+    {
+        await logger.Log($"Waiting for READY notification with timeout {config.StartupTimeoutSeconds} seconds.",
+            LogLevel.Warning, LogContext.PythonNerService);
+        
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(config.StartupTimeoutSeconds));
+        using var listener = new HttpListener();
+        listener.Prefixes.Add($"http://localhost:{config.CsharpPort}/");
+        listener.Start();
+
+        try
+        {
+            while (true)
+            {
+                var acceptTask = listener.GetContextAsync();
+                var completed = await Task.WhenAny(acceptTask, Task.Delay(Timeout.Infinite, cts.Token));
+
+                if (completed != acceptTask)
+                    throw new TimeoutException("Waiting for READY signal timed out.");
+
+                var context = await acceptTask;
+
+                using var reader = new StreamReader(context.Request.InputStream);
+                var body = await reader.ReadToEndAsync(cts.Token);
+
+                if (body.Trim().Equals("ready", StringComparison.OrdinalIgnoreCase))
+                {
+                    await logger.Log("Received READY via startup notification.", LogLevel.Success, LogContext.PythonNerService);
+                    return;
+                }
+            }
+        }
+        finally
+        {
+            listener.Stop();
         }
     }
 }
