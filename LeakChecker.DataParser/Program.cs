@@ -46,11 +46,13 @@ public static class Program
         var stats = new ExecutionStats(executionId, executionLogger.ExecutionStart);
         var fileHelper = new FileHelper(executionLogger);
         
-        PythonNerService pythonNerService = new PythonNerService(executionLogger);
+        PythonNerService pythonNerService = new PythonNerService(config, executionLogger);
         try
         {
             // await pythonNerService.Start(config.PythonNerService, config.PythonNerServArgs);
             await pythonNerService.WaitForStart(config.CsharpPort, config.PythonPort, config.StartupTimeoutSeconds);
+            await pythonNerService.Start();
+            await pythonNerService.WaitStart();
         }
         catch (Exception e)
         {
@@ -96,7 +98,7 @@ public static class Program
         });
 
         // Consumers: process files with bounded concurrency (threads)
-        var consumers = Enumerable.Range(0, threads).Select(_ => Task.Run(async () =>
+        var consumers = Enumerable.Range(0, config.ThreadsCapacity).Select(_ => Task.Run(async () =>
         {
             await foreach (var filePath in channel.Reader.ReadAllAsync())
             {

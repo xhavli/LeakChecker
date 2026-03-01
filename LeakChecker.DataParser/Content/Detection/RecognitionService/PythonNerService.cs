@@ -20,8 +20,8 @@ public class PythonNerService(AppConfig config, ExecutionLogger logger)
             string projectDir = Directory.GetParent(currentDir)?.Parent?.Parent?.Parent?.FullName!;
             string pythonDir = Path.Combine(projectDir, "LeakChecker.DataParser/Content/Detection/RecognitionService/Python");
             
-            string pythonExe = Path.Combine(pythonDir, ".venv", "Scripts", "python.exe");
-            string scriptPath = Path.Combine(pythonDir, "ner_service_api.py");
+            string pythonExe = Path.Combine(pythonDir, config.PythonVenvPath);
+            string scriptPath = Path.Combine(pythonDir, config.PythonScriptName);
 
             if (!File.Exists(pythonExe))
                 throw new FileNotFoundException($"Python .venv not found: {pythonExe}");
@@ -51,7 +51,7 @@ public class PythonNerService(AppConfig config, ExecutionLogger logger)
     
     public async Task WaitStart()
     {
-        await logger.Log($"Sending status check to PythonPort {config.PythonPort}, CsharpPort {config.CsharpPort} with " +
+        await logger.Log($"CsharpPort {config.CsharpPort} sending status check to PythonPort {config.PythonPort} with " +
                          $"timeout {config.StartupTimeoutSeconds} seconds.", LogLevel.Info, LogContext.PythonNerService);
         
         // Try to contact Python status endpoint if its already running

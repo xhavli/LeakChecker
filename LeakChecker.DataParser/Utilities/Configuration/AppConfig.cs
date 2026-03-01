@@ -6,8 +6,8 @@ public record AppConfig
     public required string LogDirectory { get; init; }
     public required string OutputDirectory { get; init; }
     public required string TmpDirectory { get; init; }
-    public required string PythonNerService { get; init; }
-    public required string PythonNerServArgs { get; init; }
+    public required string PythonVenvPath { get; init; }
+    public required string PythonScriptName { get; init; }
     public required int CsharpPort { get; init; }
     public required int PythonPort { get; init; }
     public required int StartupTimeoutSeconds { get; init; }
