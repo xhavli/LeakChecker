@@ -110,4 +110,9 @@ public class FileHelper(ExecutionLogger logger)
 
             return true;
     }
+    
+    public static IEnumerable<string> GetAllFiles(string path)
+    {
+        return Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories);
+    }
 }

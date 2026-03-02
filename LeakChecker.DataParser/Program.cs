@@ -60,14 +60,12 @@ public static class Program
             await executionLogger.Log(e.Message, LogLevel.Failure, LogContext.PythonNerService);
             return 1;
         }
-        
+
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         Encoding utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false); // false = no BOM
         Console.InputEncoding = utf8;   // Enforce UTF8 encoding which can handle cyrilic characters 
         Console.OutputEncoding = utf8;
-        
-        var data = FilePaths.TestFiles;
-        
+        var filePaths = FileHelper.GetAllFiles(config.InputDirectory);
         // Bounded channel = backpressure + stable memory
         var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(config.ChannelCapacity)
         {
@@ -81,7 +79,7 @@ public static class Program
         {
             try
             {
-                foreach (var filePath in data)
+                foreach (var filePath in filePaths)
                 {
                     await channel.Writer.WriteAsync(filePath);
                 }
