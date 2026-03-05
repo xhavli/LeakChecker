@@ -107,7 +107,7 @@ public static class Program
                 {
                     if (FileHelper.IsExcel(filePath))
                     {
-                        // Avoid encoding conversion of zipped XML file
+                        // Avoid encoding conversion of zipped XML which Excel is
                         await ExcelParser.ParseFile(filePath, parseLogger, parseStats, config.SchemaThreshold);
                     }
                     else
@@ -121,7 +121,7 @@ public static class Program
                         
                         string parseFile = parseLogger.SubjectFilePath;   //TODO remove this only for test purposes
                         // string parseFile = parseLogger.SubjectTmpFilePath;    //TODO use this in deployment
-                        using ContentParser contentParser = await ContentParser.CreateAsync(parseFile, parseLogger, parseStats, utf8, config.SchemaThreshold);
+                        using ContentParser contentParser = new(parseFile, parseLogger, parseStats, config.SchemaThreshold);
                         await contentParser.ProcessFile();
                     }
 

@@ -31,34 +31,19 @@ public class ContentParser : IDisposable
 
     private bool _possibleAsciiTable;
 
-    private ContentParser(int thresholdPercent, Encoding encoding, StreamReader reader, IParseLogger logger, ParseStats stats)
+    public ContentParser(string filePath, IParseLogger logger, ParseStats stats, int thresholdPercent)
     {
-        _thresholdPercent = thresholdPercent;
-        _encoding = encoding;
-        _reader = reader;
+        _encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+        var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        _reader = new StreamReader(stream, _encoding, detectEncodingFromByteOrderMarks: false);
         _logger = logger;
         _stats = stats;
+        _thresholdPercent = thresholdPercent;
     }
 
-    public static async Task<ContentParser> CreateAsync(
-        string filePath, IParseLogger logger, ParseStats stats, Encoding? encoding, int thresholdPercent)
-    {
-        await logger.LogContentHeader();
-        if (encoding == null)
-        {
-            await logger.Log("No encoding specified to ContentDetector. Set UTF-8 without BOM as default.", 
-                            LogLevel.Warning, LogContext.Content);
-            encoding ??= new UTF8Encoding(false);
-        }
-        
-        var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: false);
-        
-        return new ContentParser(thresholdPercent, encoding, reader, logger, stats);
-    }
-    
     public async Task ProcessFile()
     {
+        await _logger.LogContentHeader();
         _sw.Start();
 
         while (await _reader.ReadLineWithEndingAsync() is { } originLine)
@@ -116,9 +101,7 @@ public class ContentParser : IDisposable
         _reader.AdjustPosition(sqlInsertStart);
         
         // Detect schema
-        Stopwatch sw = Stopwatch.StartNew();
         var schema = await SqlInsertDetector.DetectFormat(_linesRead, _reader, _logger, SqlSamplesLimit, _thresholdPercent);
-        await _logger.Log($"SqlInsert schema created in {sw.Elapsed}\n");
 
         // Parse SQL INSERT block with header
         _reader.AdjustPosition(sqlInsertStart);
@@ -152,9 +135,7 @@ public class ContentParser : IDisposable
         _reader.AdjustPosition(csvFormatStart);
         
         // Detect schema
-        Stopwatch sw = Stopwatch.StartNew();
         var schema = await CsvFileDetector.DetectFormat(_linesRead, delimiter, _reader, _logger, CsvSamplesLimit, _thresholdPercent);
-        await _logger.Log($"Csv file schema created in {sw.Elapsed}\n");
         
         // Parse CSV file
         _reader.AdjustPosition(csvFormatStart);
@@ -174,13 +155,9 @@ public class ContentParser : IDisposable
         UpdateParsingState(result);
         
         if (_possibleAsciiTable && delimiter == '|')
-        {
             _stats.Formats.Add(FormatEnum.AsciiTable);
-        }
         else
-        { 
             _stats.Formats.Add(FormatEnum.Csv);
-        }
         _stats.Delimiters.Add(delimiter);
     }
 
