@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Globalization;
 using System.Text;
 using LeakChecker.DataParser.Format;
 using LeakChecker.DataParser.Format.Detection;
@@ -68,14 +67,15 @@ public class ContentParser : IDisposable
             
             string line = originLine.Trim();
             
-            if (IsTrashOrEmpty(line))
+            if (line.IsTrashOrEmpty())
             {
                 _linesRead++;
                 _readerPosition += _encoding.GetByteCount(originLine);
+                if (line.IsPossibleAsciiTable()) _possibleAsciiTable = true;
                 continue;
             }
 
-            if (IsSqlCreateTable(line))
+            if (line.IsSqlCreateTable())
             {
                 _linesRead++;
                 _readerPosition += _encoding.GetByteCount(originLine);
@@ -84,7 +84,7 @@ public class ContentParser : IDisposable
                 continue;
             }
             
-            if (IsSqlInsertValues(line))
+            if (line.IsSqlInsertValues())
             {
                 await ProcessSqlInsert();
                 _possibleAsciiTable = false;
@@ -182,62 +182,6 @@ public class ContentParser : IDisposable
             _stats.Formats.Add(FormatEnum.Csv);
         }
         _stats.Delimiters.Add(delimiter);
-        _possibleAsciiTable = false;
-    }
-
-    // DROP [modifiers] TABLE [modifiers] <table_name> [ , <table_name> ... ]
-    private static bool IsSqlDropTable(string line)
-    {
-        int drop = line.IndexOf("DROP ", StringComparison.OrdinalIgnoreCase);
-        if (drop != 0)
-            return false;
-
-        int table = line.IndexOf(" TABLE ", StringComparison.OrdinalIgnoreCase);
-        if (table < 0)
-            return false;
-        
-        bool validSemicolon = line.EndsWith(';') && 
-                              line.IndexOf(';') == line.LastIndexOf(';');
-
-        return drop < table && validSemicolon;
-    }
-    
-    // INSERT [modifiers] INTO <table_name> [ (columns...) ] VALUES
-    // ( literal , literal , literal , literal ),
-    // ( ... );
-    private static bool IsSqlInsertValues(string line)
-    {
-        int start = line.IndexOf("INSERT ", StringComparison.OrdinalIgnoreCase);
-        if (start != 0)
-            return false;
-
-        int into = line.IndexOf(" INTO ", StringComparison.OrdinalIgnoreCase);
-        if (into < 0)
-            return false;
-
-        int values = line.IndexOf(" VALUES", StringComparison.OrdinalIgnoreCase);
-        if (values < 0)
-            return false;
-
-        return start < into && into < values;
-    }
-    
-    // CREATE [modifiers] TABLE [modifiers] <table_name>
-    // ( <column> <data_type> [constraint] ,
-    //   <column> <data_type> [constraint] ,
-    //   ...
-    // ) [options];
-    private static bool IsSqlCreateTable(string line)
-    {
-        int create = line.IndexOf("CREATE ", StringComparison.OrdinalIgnoreCase);
-        if (create != 0)
-            return false;
-
-        int table = line.IndexOf(" TABLE ", StringComparison.OrdinalIgnoreCase);
-        if (table < 0)
-            return false;
-
-        return create < table;
     }
 
     private async Task SkipSqlCreateTable()
@@ -296,26 +240,6 @@ public class ContentParser : IDisposable
                 }
             }
         }
-    }
-
-    private bool IsTrashOrEmpty(string line)
-    {
-        if (IsSqlDropTable(line)) return true;
-        
-        line = line.Replace(" ", "");
-        if (string.IsNullOrWhiteSpace(line)) return true;
-
-        if (line.Length > 2 &&
-            line.First() == line.Last() &&
-            line.All(c => c == '+' || char.GetUnicodeCategory(c) == UnicodeCategory.DashPunctuation))
-        {
-            _possibleAsciiTable = true;
-            return true;
-        }
-        
-        if (line.LastIndexOf("--", StringComparison.Ordinal) == 0) return true; // Sql comment
-        return line == ";" || 
-               line.All(ch => char.GetUnicodeCategory(ch) == UnicodeCategory.DashPunctuation); // Sql comment boundary
     }
 
     private void UpdateParsingState(ParsingState state)
