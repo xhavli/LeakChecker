@@ -1,3 +1,5 @@
+// Source code: ChatGPT
+
 using System.Diagnostics;
 using System.Globalization;
 
