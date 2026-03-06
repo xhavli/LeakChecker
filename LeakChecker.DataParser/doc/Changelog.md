@@ -58,7 +58,7 @@ Author: Adam Havlík
 - `3.11.2025` - HeaderGuesser  
   Guessing predefined and hardcoded values and try to match it on ItemEnum
 - `18.11.2025` - CredentialAssigner  
-  Assigning username to only first position if is detected as other and password on second undetected position which can be higher than 0. Similar as [/etc/shadow](https://www.cyberciti.biz/faq/understanding-etcshadow-file/) 
+  Assigning username to only first position if is detected as "Other" and password on second undetected position which can be higher than first index. Similar as [/etc/shadow](https://www.cyberciti.biz/faq/understanding-etcshadow-file/) 
 - `20.12.2025` - SchemaHeuristic length normalization  
   Set final schema length to most frequent length based on delimiters count per each line. Cut in case it computed longer, fill with ItemEnum.Other if computed shorter than normalized length.
 - `30.1.2026` - ExcelDetector  
@@ -79,10 +79,10 @@ Author: Adam Havlík
   [NOTE] This model is 10x faster on Nvidia 1650Ti than on Intel 10300H. There is need to reinstall python torch from CPU to GPU.
 - `3.8.2025` - Content detections  
   - C# - [MailAddress.TryCreate()](https://learn.microsoft.com/en-us/dotnet/api/system.net.mail.mailaddress.trycreate?view=net-10.0) is good for now.
-  - C# - [DateTime.TryParse()](https://learn.microsoft.com/en-us/dotnet/api/system.datetime.tryparse?view=net-10.0) good for now.   
-    [NOTE] It cant parse 4/15/2018 12:00:00 AM from Facebook leak.
+  - C# - [DateTime.TryParse()](https://learn.microsoft.com/en-us/dotnet/api/system.datetime.tryparse?view=net-10.0)  
+    [NOTE] It cant parse 4/15/2018 12:00:00 AM from Facebook leak when delimiter is ":".
   - C# - [IPAddress.TryParse()](https://learn.microsoft.com/en-us/dotnet/api/system.net.ipaddress.tryparse?view=net-10.0) is good for now.  
-    [NOTE] It can also parse decimal or hexadecimal format. For example US phone number in local format 4085551234 can be misinterpreted as 243.132.144.130. Additional validation for IPv4:
+    [NOTE] Cant parse ip with ports, can also parse decimal or hexadecimal format. For example US phone number in local format 4085551234 can be misinterpreted as 243.132.144.130. Additional validation for IPv4:
     ```csharp
     if (ipAddress.AddressFamily == AddressFamily.InterNetwork &&
         token.Count(ch => ch == '.') == 3)
@@ -92,20 +92,20 @@ Author: Adam Havlík
   - NuGet - [PhoneNumbers](https://github.com/google/libphonenumber) by Google  
     [NOTE] It can do also optional localization. It cant process local number formats like 055 234 5678 from the United Arab Emirates.
 - `4.8.2025` - Hash identification
-  - C# - [Base64.IsValid](https://learn.microsoft.com/en-us/dotnet/api/system.buffers.text.base64.isvalid?view=net-10.0) is good, but it can mismatch some string for example hl251986 as valid Base64.
   - Hash Identification applications were manually tested with dataset from [Hashcat Examples](https://hashcat.net/wiki/doku.php?id=example_hashes).
   - [www.hashes.com](https://hashes.com/en/tools/hash_identifier) - Hash Identifier do proper validation and return most successful results ordered by its popularity, have demo its web application with well documented [api](https://hashes.com/en/docs). Chosen solution.  
     [NOTE] It can misinterpret 2), 5)... as Base64 encoded text of plaintext ''. Additional validation:
     ```csharp
     if (Base64.IsValid(hash))
     ```
-  - [HAITI](https://github.com/noraj/haiti) - Wide scale of supported hash types (600+) but do not validation, match everything including mobile number, don't have a demo.
-  - [CyberChef](https://github.com/gchq/CyberChef) - Do validation, have demo, do not support hashes with salt.
-  - [Name-That-Hash](https://github.com/bee-san/Name-That-Hash) - Wide scale of supported hash types (300+), have demo, do some validation but not 100% correct, most unknown hashes fall in "default" BigCrypt hash type.
-  - [hash-identifier](https://github.com/cadesalaberry/hash-identifier) - deprecated. Have demo. Last update is from 2015
-  - [hashID](https://github.com/psypanda/hashID) - Deprecated. Last update is from 2015
-  - [dcode.fr/hash-identifier](https://www.dcode.fr/hash-identifier) - Also good but don't have public API.
-  - [NOTE] - Other solutions are deprecated, not support salted values or support only few types of hash
+  - [HAITI](https://github.com/noraj/haiti) - Wide scale of supported hash types (600+) but it do not validation, match almost everything including mobile numbers, don't have a demo.
+  - [CyberChef](https://github.com/gchq/CyberChef) - Do validation, have demo, but not support hashes with salt.
+  - [Name-That-Hash](https://github.com/bee-san/Name-That-Hash) - Wide scale of supported hash types (300+), have demo, do some validation but not 100% correct, most unknown hashes "fallback" to BigCrypt hash type.
+  - [hash-identifier](https://github.com/cadesalaberry/hash-identifier) - Deprecated, have demo. Last update is from 2015
+  - [hashID](https://github.com/psypanda/hashID) - Deprecated, last update is from 2015
+  - [dcode.fr/hash-identifier](https://www.dcode.fr/hash-identifier) - Good in some cases but don't have public API.
+  - C# - [Base64.IsValid](https://learn.microsoft.com/en-us/dotnet/api/system.buffers.text.base64.isvalid?view=net-10.0) is good, but it can mismatch some string for example hl251986 as valid Base64.
+  - [NOTE] - Other solutions are deprecated, not support salted values or support only few hash types
 - `18.8.2025` - Named Entity Recognition of Name, Location and Organization  
   - [Microsoft Presidio](https://microsoft.github.io/presidio/) with [flair/ner-english-large](https://huggingface.co/flair/ner-english-large) model integrated after google close issue with sentencepiece used by flair.
 - `11.9.2025` - Automated recognition from text where item may contain delimiter 
@@ -151,20 +151,20 @@ Author: Adam Havlík
   
 - `1.10.2025` - Password detection [SAP/password-model](https://huggingface.co/SAP/password-model)  
   Tested with no relevant results.
-- `2.10.2025` - Username and Password opportunities 
+- `2.10.2025` - Username and Password detection opportunities 
   - Username detection
     - [C-Ilyas/Numrah_nsfw_username_classifier](https://huggingface.co/C-Ilyas/Numrah_nsfw_username_classifier) tested with no relevant results.
-  - Username and Password detection
+  - Username and Password detection opportunities
   - [deepaksiloka/PII-Detection](https://huggingface.co/deepaksiloka/PII-Detection) tested with very poor results.
   - [bigcode/starpii](https://huggingface.co/bigcode/starpii) tested with very poor results.
-- `5.10.2025` - Username and Password opportunities
+- `5.10.2025` - Username and Password detection opportunities
   - [knowledgator/gliner-pii-large-v1.0](https://huggingface.co/knowledgator/gliner-pii-large-v1.0) tested with no relevant results.
   - [Microsoft Presidio](https://microsoft.github.io/presidio/) tested as orchestrator of previously used model and models from `2.10.2025` with no relevant results.  
   [NOTE] - Most models can recognize contextual data like "User login info: username: alice, password: p@ssW0rd123".  Pure credentials as content-free data are hard to recognize, detect and validate.
-- `7.10.2025` - Password opportunities  
-  [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) tried on some possible passwords with not satisfied results.
+- `7.10.2025` - Password detection opportunities  
+  [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) tried on some possible passwords with not satisfied results. Need big data set for this and still can make a lot of mistakes. Another problem comes when items are sorted alphabetically and from beginning can continue sequence with items like "AAAA" or "0000"
 - `27.10.2025` [IbanNet](https://github.com/skwasjer/IbanNet) - validation of some common formats
-- `30.11.2025` Hash type recognition done with <www.hashes.com> 
+- `30.11.2025` Hash type recognition implemented with www.hashes.com mentioned `4.8.2025`
 
 ### Content Processing
 
@@ -174,8 +174,6 @@ Author: Adam Havlík
   CsvFileProcessor added for processing Csv file lines with given schema.
 - `19.12.2025` Malformed lines sequence check  
   Processors count sequence of lines with fields count different from expected. When reached the limit, then return back to recompute the schema.
-- `21.12.2025` Channel threading initial  
-  To avoid context switching when parsing large amount of files.
 - `31.1.2026` - ExcelParser  
   Initial of ExcelParser using [ExcelDataParser](https://github.com/ExcelDataReader/ExcelDataReader) which can read direct values of each cell in Excel row by row and column by column.
 
@@ -189,8 +187,14 @@ Author: Adam Havlík
   Custom and performance trimming of quoted text `content`` / 'content' / "content" or SQL line (content),.
 - `28.9.2025` - StreamReaderExtensions  
   Custom ReadLineWithEndingAsync return line with newline to measure of read bytes.
+- `21.12.2025` Channel threading initial  
+  To avoid context switching when parsing large amount of files.
 - `29.1.2026` - FileHandler  
   Handling file accessibility, supported file type according its mime type detected by [Mime-Detective](https://github.com/MediatedCommunications/Mime-Detective), if its excel trying to open [ExcelDataParser](https://github.com/ExcelDataReader/ExcelDataReader), readability of converted encodings scanning for lines containing a '�' as unrecognized character.
+- `1.3.2026` - All files collecting  
+  Is done with Directory.EnumeratingFiles from specified directory path by tree traversal.
+- `2.3.2026` - Archive extraction  
+  Used microsoft [RecursiveExtractor](https://github.com/microsoft/RecursiveExtractor) which is simple to use, based on popular SharpCompress, LTRData/DiscUtils and protecting against zip bombs and zip slips.
 
 ## Tests
 
@@ -221,17 +225,18 @@ Author: Adam Havlík
 ## TODOs
 
 - When row mismatch, parse it separately.
-- Refactor Python NER Service
-- When hash detected at [i] and [i+1] is other try to concatenate with delimiter for salted hash detection 
-- Proper format detection of AsciiTable if have +-+ header -> is AsciiTableCandidate and on first 2 positions of delimiter results is somewhere delimiter "|" with simmillar probability. Or properly identify first 3 lines of the file but this need more attention.
-- Make TestBase with EncProvider(RegisterEnc) and projectDir and testDir paths
+- When hash detected at `[i]` and `[i+1]` is other try to concatenate with delimiter for salted hash detection
+- Parse also `JSON`, `HTML` and `XML`
+- When all is number then not bind `ItemEnum.Other`, else try to recompute without other as an `ItemEnum.Empty`, when full numbers, bind `ItemEnum.Id`
+- Wait properly for python start. READY signal is sent earlier than running python API 
+- Make `TestBase` with EncProvider(RegisterEnc) and projectDir and testDir paths
+- Proper format detection of `AsciiTable` occur +-+ header -> is AsciiTableCandidate and on first 2 positions of delimiter results is somewhere delimiter "|" with simmillar probability. Or properly identify first 3 lines of the file but this need more attention. Maybe via reader which read first 3 lines and decide if it has `AsciiTable` header.
 - Communication timeout for connection and request reply
-- Parse also JSON, HTML maybe XML
 - Parse also Sql REPLACE INTO
-- EncodingDetector tests for mixed encodings
+- `EncodingDetector` tests for mixed encodings, cant do properly for legacy encodings.
 - Custom hash identification for truecrypt, veracrypt and other hashes in text form or common prefix 
-- Test Timestamps recognizer and parser for valid datetime range. What's the correct range?
-- Detect Username and plaintext Password. CredentialCandidate
+- Test `TimestampParser` and parser for valid datetime range. What's the correct range?
+- Detect Username and plaintext Password. CredentialCandidate???
 - Decide how to enum localhost IpV4/IpV6
 - Decide how to process a IpAddress ports
 - Decide if IpAddress parsing of cross mapped addresses are feature or limitation. Can be done by [Microsoft.Recognizers.Text.Sequence](https://github.com/microsoft/Recognizers-Text) automated recognition as Email, Guid and Urls are.
@@ -255,10 +260,9 @@ Author: Adam Havlík
   \d|[01]?\d{1,2})){3})))(%.+)?\s*$/`
   ```
   
-- Make tests for: Encoding, Format and Content
-- Regex Timeout - ReDoS
 - Test performance and profiling
 - Implement DI
+- Nice to have separated ItemEnums `FirstName`, `LastName`, `DateOfBirth`, `Age`, `Nationality`, `EyeColor`, `HairColor`, `Height`, `Weight` but this can be matched only with `HeaderGuesser`
 
 ## Notes
 
@@ -269,3 +273,16 @@ Author: Adam Havlík
   - [tableconvert.com](https://tableconvert.com/)
 - Tests  
   - More data = better accuracy
+- Python hints
+  - Create new virtual environment (.venv)
+    ```shell
+    python -m venv .venv
+    ```
+  - Activate .venv (windows)
+    ```shell
+    .venv\Scripts\activate.bat
+    ```
+  - Install required tools to .venv
+    ```shell
+    pip install -r requirements.txt
+    ```
