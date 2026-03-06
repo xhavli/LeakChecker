@@ -19,7 +19,6 @@ public class ContentParser : IDisposable
     private readonly Encoding _encoding;
     private readonly StreamReader _reader;
     // Logging and Statistics
-    private readonly Stopwatch _sw = new();
     private readonly IParseLogger _logger;
     private readonly ParseStats _stats;
     // Default constants
@@ -27,24 +26,24 @@ public class ContentParser : IDisposable
     private const int CsvSamplesLimit = 103;
     // private const long ParseLimit = 150;
     private const long ParseLimit = long.MaxValue;
-    private readonly int _thresholdPercent;
+    private readonly int _schemaThreshold;
 
     private bool _possibleAsciiTable;
 
-    public ContentParser(string filePath, IParseLogger logger, ParseStats stats, int thresholdPercent)
+    public ContentParser(string filePath, IParseLogger logger, ParseStats stats, int schemaThreshold)
     {
         _encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
         var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         _reader = new StreamReader(stream, _encoding, detectEncodingFromByteOrderMarks: false);
         _logger = logger;
         _stats = stats;
-        _thresholdPercent = thresholdPercent;
+        _schemaThreshold = schemaThreshold;
     }
 
     public async Task ProcessFile()
     {
         await _logger.LogContentHeader();
-        _sw.Start();
+        Stopwatch sw = Stopwatch.StartNew();
 
         while (await _reader.ReadLineWithEndingAsync() is { } originLine)
         {
@@ -69,7 +68,7 @@ public class ContentParser : IDisposable
                 continue;
             }
             
-            if (line.IsSqlInsertValues())
+            if (line.IsSqlInsert())
             {
                 await ProcessSqlInsert();
                 _possibleAsciiTable = false;
@@ -81,7 +80,7 @@ public class ContentParser : IDisposable
             if (line.Contains("<html", StringComparison.OrdinalIgnoreCase) ||   // looks like an HTML
                 line.Contains("<body", StringComparison.OrdinalIgnoreCase)) {}  // test if it really is a html and parse it
 
-            // Fallback
+            // Fallback to CSV format
             await ProcessCsvFile();
         }
 
@@ -90,7 +89,7 @@ public class ContentParser : IDisposable
         _stats.LinesRead = _linesRead;
         _stats.BytesRead = _readerPosition;
 
-        await _logger.Log($"Content processing finished successfully. Time taken: {_sw.Elapsed}", LogLevel.Success, LogContext.Content);
+        await _logger.Log($"Content processing finished successfully. Time taken: {sw.Elapsed}", LogLevel.Success, LogContext.Content);
     }
 
     private async Task ProcessSqlInsert()
@@ -101,12 +100,31 @@ public class ContentParser : IDisposable
         _reader.AdjustPosition(sqlInsertStart);
         
         // Detect schema
-        var schema = await SqlInsertDetector.DetectFormat(_linesRead, _reader, _logger, SqlSamplesLimit, _thresholdPercent);
+        ParsingContext detectionContext = new ParsingContext
+        {
+            Reader = _reader,
+            Logger = _logger,
+            Stats = _stats,
+            StartLine = _linesRead,
+            SamplesLimit = SqlSamplesLimit,
+            Threshold = _schemaThreshold,
+        };
+        var schema = await SqlInsertDetector.DetectSchema(detectionContext);
 
         // Parse SQL INSERT block with header
         _reader.AdjustPosition(sqlInsertStart);
-        SqlInsertParser parser = new(schema, _reader, _logger);
-        ParsingState result = await parser.ProcessSqlInsert(_linesRead, SqlSamplesLimit, ParseLimit);
+        ParsingContext parsingContext = new ParsingContext
+        {
+            Reader = _reader,
+            Logger = _logger,
+            Stats = _stats,
+            Schema = schema,
+            StartLine = _linesRead,
+            ParseLimit = ParseLimit,
+            MalformedLimit = SqlSamplesLimit,
+        };
+        SqlInsertParser parser = new(parsingContext);
+        ParsingState result = await parser.ProcessFile();
         UpdateParsingState(result);
         
         _stats.Formats.Add(FormatEnum.SqlInsert);
@@ -135,23 +153,33 @@ public class ContentParser : IDisposable
         _reader.AdjustPosition(csvFormatStart);
         
         // Detect schema
-        var schema = await CsvFileDetector.DetectFormat(_linesRead, delimiter, _reader, _logger, CsvSamplesLimit, _thresholdPercent);
+        ParsingContext detectionContext = new ParsingContext
+        {
+            Reader = _reader,
+            Logger = _logger,
+            Stats = _stats,
+            Delimiter = delimiter,
+            StartLine = _linesRead,
+            SamplesLimit = CsvSamplesLimit,
+            Threshold = _schemaThreshold,
+        };
+        var schema = await CsvDetector.DetectSchema(detectionContext);
         
         // Parse CSV file
         _reader.AdjustPosition(csvFormatStart);
-        CsvParser csvParser = new(schema, _reader, _logger);
-        ParsingState result;
-        if (schema.Values.All(v => v == ItemEnum.Other) || schema.Count == 0)    // if nothing reliable detected
+        ParsingContext parsingContext = new ParsingContext
         {
-            result = await csvParser.ProcessCsvFile(_linesRead, delimiter, CsvSamplesLimit, CsvSamplesLimit);
-            result.LinesRead = 0;
-            result.RecordsRead = 0;
-            result.MalformedRecordsRead = CsvSamplesLimit;
-            UpdateParsingState(result);
-            
-            return;
-        }
-        result = await csvParser.ProcessCsvFile(_linesRead, delimiter, CsvSamplesLimit, ParseLimit);
+            Reader = _reader,
+            Logger = _logger,
+            Stats = _stats,
+            Schema = schema,
+            Delimiter = delimiter,
+            StartLine = _linesRead,
+            ParseLimit = ParseLimit,
+            MalformedLimit = CsvSamplesLimit,
+        };
+        CsvParser parser = new(parsingContext);
+        ParsingState result = await parser.ProcessFile();
         UpdateParsingState(result);
         
         if (_possibleAsciiTable && delimiter == '|')

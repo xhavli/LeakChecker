@@ -5,14 +5,22 @@ using LeakChecker.DataParser.Utilities.Extensions;
 
 namespace LeakChecker.DataParser.Content.Parsing;
 
-public class SqlInsertParser(Dictionary<int, ItemEnum> schema, StreamReader reader, IParseLogger logger)
+public class SqlInsertParser(ParsingContext parsingContext)
 {
-    public async Task<ParsingState> ProcessSqlInsert(long startLine, int malformedLimit, long parseLimit)
+    private readonly IParseLogger _logger = parsingContext.Logger;
+    private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
+    
+    public async Task<ParsingState> ProcessFile()
     {
+        StreamReader reader = parsingContext.Reader;
+        long startLine = parsingContext.StartLine;
+        long parseLimit = parsingContext.ParseLimit;
+        int malformedLimit = parsingContext.MalformedLimit;
+    
         StringBuilder stringBuilder = new();
         Encoding encoding = reader.CurrentEncoding;
 
-        int expectedFields = schema.Count == 0 ? 0 : schema.Keys.Max() + 1;
+        int expectedFields = _schema.Count == 0 ? 0 : _schema.Keys.Max() + 1;
 
         bool afterValues = false;
         bool inQuote = false;
@@ -97,14 +105,16 @@ public class SqlInsertParser(Dictionary<int, ItemEnum> schema, StreamReader read
                             // Console.WriteLine($"\nSQL insert parsing line {startLine + linesRead}: {line}");
                             if (row.Length != expectedFields)
                             {
-                                await logger.Log($"Bad row length on line {startLine + linesRead}: expected {expectedFields}, got {row.Length} content: {line}", LogLevel.Warning);
+                                await _logger.Log($"Bad row length on line {startLine + linesRead}: expected {expectedFields}, got {row.Length} content: {line}", LogLevel.Warning);
+                                
                                 malformedRecordsRead++;
                                 malformedRecordsSequence++;
                                 if (malformedRecordsSequence >= malformedLimit)
                                 {
-                                    await logger.Log($"Parsing reach malformed limit {malformedLimit}. Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
+                                    await _logger.Log($"Parsing reach malformed limit {malformedLimit}. Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
                                     break;
                                 }
+                                
                                 continue;
                             }
 
@@ -133,7 +143,8 @@ public class SqlInsertParser(Dictionary<int, ItemEnum> schema, StreamReader read
             }
 
             // End of Sql INSERT
-            if (line.EndsWith(");") || line.EndsWith(") ;") || line.EndsWith(")\t;")) { break; }
+            if (line.EndsWith(");") || line.EndsWith(") ;") || line.EndsWith(")\t;")) 
+                break;
         }
 
         return new ParsingState
@@ -203,7 +214,8 @@ public class SqlInsertParser(Dictionary<int, ItemEnum> schema, StreamReader read
     {
         raw = raw.Trim();
         
-        if (string.Equals(raw, "NULL", StringComparison.OrdinalIgnoreCase)) {return string.Empty;}
+        if (string.Equals(raw, "NULL", StringComparison.OrdinalIgnoreCase)) 
+            return string.Empty;
 
         // strip SQL quotes
         if (raw is ['\'', _, ..] && raw[^1] == '\'')
@@ -219,9 +231,9 @@ public class SqlInsertParser(Dictionary<int, ItemEnum> schema, StreamReader read
     {
         for (int i = 0; i < row.Length; i++)
         {
-            if (!schema.TryGetValue(i, out var schemaEntry))
+            if (!_schema.TryGetValue(i, out var schemaEntry))
             {
-                await logger.Log($"Unmapped field[{i}] = {row[i]}", LogLevel.Warning, LogContext.Parsing);
+                await _logger.Log($"Unmapped field[{i}] = {row[i]}", LogLevel.Warning, LogContext.Parsing);
                 continue;
             }
 

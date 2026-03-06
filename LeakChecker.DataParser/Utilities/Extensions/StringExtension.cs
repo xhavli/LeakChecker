@@ -96,7 +96,7 @@ public static class StringExtensions
     
     
     // DROP [modifiers] TABLE [modifiers] <table_name> [ , <table_name> ... ]
-    public static bool IsSqlDropTable(this string line)
+    private static bool IsSqlDropTable(this string line)
     {
         int drop = line.IndexOf("DROP ", StringComparison.OrdinalIgnoreCase);
         if (drop != 0)
@@ -115,7 +115,7 @@ public static class StringExtensions
     // INSERT [modifiers] INTO <table_name> [ (columns...) ] VALUES
     // ( literal , literal , literal , literal ),
     // ( ... );
-    public static bool IsSqlInsertValues(this string line)
+    public static bool IsSqlInsert(this string line)
     {
         int start = line.IndexOf("INSERT ", StringComparison.OrdinalIgnoreCase);
         if (start != 0)

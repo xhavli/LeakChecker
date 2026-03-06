@@ -40,11 +40,22 @@ public class CsvDetectorTests
             { 7, ItemEnum.Password },
         };
         string filePath = Path.Combine(_testDataDirectory, fileName);
-        await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-        using var streamReader = new StreamReader(fileStream);
+        await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+        using var reader = new StreamReader(stream);
+        ParseStats stats = ParseStats.Create(Guid.Empty, _logger, filePath);
+        ParsingContext detectionContext = new ParsingContext
+        {
+            Reader = reader,
+            Logger = _logger,
+            Stats = stats,
+            Delimiter = delimiter,
+            StartLine = 0,
+            SamplesLimit = CsvSamplesLimit,
+            Threshold = ThresholdPercent,
+        };
 
         // Act
-        var result = await CsvFileDetector.DetectFormat(0, delimiter, streamReader, _logger, CsvSamplesLimit, ThresholdPercent);
+        var result = await CsvDetector.DetectSchema(detectionContext);
 
         // Assert
         Assert.Equal(expected, result);
@@ -65,11 +76,22 @@ public class CsvDetectorTests
             { 4, ItemEnum.Email },
         };
         string filePath = Path.Combine(_testDataDirectory, fileName);
-        await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-        using var streamReader = new StreamReader(fileStream);
+        await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+        using var reader = new StreamReader(stream);
+        ParseStats stats = ParseStats.Create(Guid.Empty, _logger, filePath);
+        ParsingContext detectionContext = new ParsingContext
+        {
+            Reader = reader,
+            Logger = _logger,
+            Stats = stats,
+            Delimiter = delimiter,
+            StartLine = 0,
+            SamplesLimit = CsvSamplesLimit,
+            Threshold = ThresholdPercent,
+        };
 
         // Act
-        var result = await CsvFileDetector.DetectFormat(0, delimiter, streamReader, _logger, CsvSamplesLimit, ThresholdPercent);
+        var result = await CsvDetector.DetectSchema(detectionContext);
 
         // Assert
         Assert.Equal(expected, result);
@@ -87,11 +109,22 @@ public class CsvDetectorTests
             { 1, ItemEnum.Ipv4 },
         };
         string filePath = Path.Combine(_testDataDirectory, fileName);
-        await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-        using var streamReader = new StreamReader(fileStream);
+        await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+        using var reader = new StreamReader(stream);
+        ParseStats stats = ParseStats.Create(Guid.Empty, _logger, filePath);
+        ParsingContext detectionContext = new ParsingContext
+        {
+            Reader = reader,
+            Logger = _logger,
+            Stats = stats,
+            Delimiter = delimiter,
+            StartLine = 0,
+            SamplesLimit = CsvSamplesLimit,
+            Threshold = ThresholdPercent,
+        };
 
         // Act
-        var result = await CsvFileDetector.DetectFormat(0, delimiter, streamReader, _logger, CsvSamplesLimit, ThresholdPercent);
+        var result = await CsvDetector.DetectSchema(detectionContext);
 
         // Assert
         Assert.Equal(expected, result);
@@ -109,11 +142,22 @@ public class CsvDetectorTests
             { 1, ItemEnum.Timestamp },
         };
         string filePath = Path.Combine(_testDataDirectory, fileName);
-        await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-        using var streamReader = new StreamReader(fileStream);
+        await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+        using var reader = new StreamReader(stream);
+        ParseStats stats = ParseStats.Create(Guid.Empty, _logger, filePath);
+        ParsingContext detectionContext = new ParsingContext
+        {
+            Reader = reader,
+            Logger = _logger,
+            Stats = stats,
+            Delimiter = delimiter,
+            StartLine = 0,
+            SamplesLimit = CsvSamplesLimit,
+            Threshold = ThresholdPercent,
+        };
 
         // Act
-        var result = await CsvFileDetector.DetectFormat(0, delimiter, streamReader, _logger, CsvSamplesLimit, ThresholdPercent);
+        var result = await CsvDetector.DetectSchema(detectionContext);
 
         // Assert
         Assert.Equal(expected, result);

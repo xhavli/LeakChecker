@@ -1,4 +1,3 @@
-using System.Text;
 using LeakChecker.DataParser.Content.Parsing;
 using LeakChecker.DataParser.Format;
 using LeakChecker.DataParser.Logging.Parse;
@@ -25,7 +24,7 @@ public class MixedFormatDetectionTests
         // Arrange
         string filePath = Path.Combine(_testDataDirectory, fileName);
         var stats = NullParseStats.Create(Guid.Empty, _logger, filePath);
-        using var parser = new ContentParser(filePath, _logger, stats, thresholdPercent: 50);
+        using var parser = new ContentParser(filePath, _logger, stats, schemaThreshold: 50);
 
         // Act
         await parser.ProcessFile();

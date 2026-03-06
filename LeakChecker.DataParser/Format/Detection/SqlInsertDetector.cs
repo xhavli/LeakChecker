@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Content.Detection;
@@ -11,9 +12,14 @@ public static class SqlInsertDetector
 {
     private const char Delimiter = ',';
 
-    public static async Task<Dictionary<int, ItemEnum>> DetectFormat(
-        long startLine, StreamReader reader, IParseLogger logger, int detectSamples, int threshold)
+    public static async Task<Dictionary<int, ItemEnum>> DetectSchema(ParsingContext parsingContext)
     {
+        IParseLogger logger = parsingContext.Logger;
+        StreamReader reader = parsingContext.Reader;
+        int samplesLimit = parsingContext.SamplesLimit;
+        long startLine = parsingContext.StartLine;
+        int threshold = parsingContext.Threshold;
+        
         bool inInsert = false;
         int parenDepth = 0, expectedColumns = 0;
         List<string> sqlHeaders = new();
@@ -23,9 +29,10 @@ public static class SqlInsertDetector
         var analyzer = new SchemaHeuristic();
         await logger.LogSchemaDetectionHeader();
 
+        Stopwatch sw = Stopwatch.StartNew();
         while (await reader.ReadLineAsync() is { } line)
         {
-            if (samplesCount == detectSamples) break;
+            if (samplesCount == samplesLimit) break;
             
             string trimmed = line.Trim();
 
@@ -185,6 +192,8 @@ public static class SqlInsertDetector
         }
 
         await logger.LogFinalSchema(schema);
+        await logger.Log($"SqlInsert schema created in {sw.Elapsed}\n");
+
         return schema;
     }
 

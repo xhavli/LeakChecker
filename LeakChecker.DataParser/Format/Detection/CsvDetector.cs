@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Content.Detection;
 using LeakChecker.DataParser.Format.Schema;
@@ -6,18 +7,26 @@ using LeakChecker.DataParser.Utilities.Extensions;
 
 namespace LeakChecker.DataParser.Format.Detection;
 
-public static class CsvFileDetector
+public static class CsvDetector
 {
-    public static async Task<Dictionary<int, ItemEnum >> DetectFormat(
-        long startLine, char delimiter, StreamReader reader, IParseLogger logger, int detectSamples, int threshold)
+    public static async Task<Dictionary<int, ItemEnum >> DetectSchema(ParsingContext parsingContext)
     {
+        IParseLogger logger = parsingContext.Logger;
+        StreamReader reader = parsingContext.Reader;
+        char delimiter = parsingContext.Delimiter;
+        int samplesLimit = parsingContext.SamplesLimit;
+        long startLine = parsingContext.StartLine;
+        int threshold = parsingContext.Threshold;
+        
+        
         int samplesCount = 0;
         SchemaHeuristic analyzer = new();
         await logger.LogSchemaDetectionHeader();
 
+        Stopwatch sw = Stopwatch.StartNew();
         while (await reader.ReadLineAsync() is { } line)
         {
-            if (samplesCount == detectSamples) break;
+            if (samplesCount == samplesLimit) break;
 
             line = line.Trim()
                 .TrimOuterParentheses()
@@ -37,7 +46,9 @@ public static class CsvFileDetector
         
         var schema = analyzer.GetDominantSchema(threshold);
         var assigned = CredentialAssigner.Assign(schema);
+        
         await logger.LogFinalSchema(assigned);
+        await logger.Log($"Csv file schema created in {sw.Elapsed}\n");
         
         return assigned;
     }

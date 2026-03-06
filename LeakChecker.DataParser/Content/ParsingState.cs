@@ -1,4 +1,4 @@
-namespace LeakChecker.DataParser.Content.Parsing;
+namespace LeakChecker.DataParser.Content;
 
 public class ParsingState
 {

@@ -5,12 +5,21 @@ using LeakChecker.DataParser.Utilities.Extensions;
 
 namespace LeakChecker.DataParser.Content.Parsing;
 
-public class CsvParser(Dictionary<int, ItemEnum> schema, StreamReader reader, IParseLogger logger)
+public class CsvParser(ParsingContext parsingContext)
 {
-    public async Task<ParsingState> ProcessCsvFile(long startLine, char delimiter, int malformedLimit, long parseLimit)
+    private readonly IParseLogger _logger = parsingContext.Logger;
+    private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
+    
+    public async Task<ParsingState> ProcessFile()
     {
+        StreamReader reader = parsingContext.Reader;
+        long startLine = parsingContext.StartLine;
+        char delimiter = parsingContext.Delimiter;
+        long parseLimit = parsingContext.ParseLimit;
+        int malformedLimit = parsingContext.MalformedLimit;
+        
         Encoding encoding = reader.CurrentEncoding;
-        int expectedFields = schema.Count == 0 ? 0 : schema.Keys.Max() + 1;
+        int expectedFields = _schema.Count == 0 ? 0 : _schema.Keys.Max() + 1;
         
         int malformedRecordsSequence = 0;
         int malformedRecordsRead = 0;
@@ -32,12 +41,12 @@ public class CsvParser(Dictionary<int, ItemEnum> schema, StreamReader reader, IP
             
             if (row.Length != expectedFields)
             {
-                await logger.Log($"Bad row length at line {startLine + linesRead}: expected {expectedFields}, got {row.Length} content: {line}", LogLevel.Warning);
+                await _logger.Log($"Bad row length at line {startLine + linesRead}: expected {expectedFields}, got {row.Length} content: {line}", LogLevel.Warning);
                 malformedRecordsRead++;
                 malformedRecordsSequence++;
                 if (malformedRecordsSequence >= malformedLimit)
                 {
-                    await logger.Log($"Parsing reach malformed limit {malformedLimit}. Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
+                    await _logger.Log($"Parsing reach malformed limit {malformedLimit}. Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
                     break;
                 }
                 continue;
@@ -67,10 +76,10 @@ public class CsvParser(Dictionary<int, ItemEnum> schema, StreamReader reader, IP
         {
             string value = row[i].Trim();
 
-            if (schema.TryGetValue(i, out var schemaEntry))
+            if (_schema.TryGetValue(i, out var schemaEntry))
             {
                 int nextIndex = i + 1;
-                while (nextIndex < row.Length && schema.TryGetValue(nextIndex, out var cont) && cont == ItemEnum.Previous)
+                while (nextIndex < row.Length && _schema.TryGetValue(nextIndex, out var cont) && cont == ItemEnum.Previous)
                 {
                     string nextVal = row[nextIndex].Trim();
                     if (!string.IsNullOrEmpty(nextVal))
@@ -85,7 +94,7 @@ public class CsvParser(Dictionary<int, ItemEnum> schema, StreamReader reader, IP
             else
             {
                 // No schema for this field -> log warning
-                await logger.Log($"Unmapped CSV field[{i}] = {value}", LogLevel.Warning, LogContext.Parsing);
+                await _logger.Log($"Unmapped CSV field[{i}] = {value}", LogLevel.Warning, LogContext.Parsing);
                 //todo exception to higher logic to search for new pattern
                 i++;
             }

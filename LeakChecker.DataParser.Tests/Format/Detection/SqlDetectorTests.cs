@@ -43,9 +43,19 @@ public class SqlDetectorTests
         string filePath = Path.Combine(_testDataDirectory, fileName);
         await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
         using var streamReader = new StreamReader(fileStream);
+        ParseStats stats = ParseStats.Create(Guid.Empty, _logger, filePath);
+        ParsingContext detectionContext = new ParsingContext
+        {
+            Reader = streamReader,
+            Logger = _logger,
+            Stats = stats,
+            StartLine = 0,
+            SamplesLimit = SqlSamplesLimit,
+            Threshold = ThresholdPercent,
+        };
 
         // Act
-        var schema = await SqlInsertDetector.DetectFormat(0, streamReader, _logger, SqlSamplesLimit, ThresholdPercent);
+        var schema = await SqlInsertDetector.DetectSchema(detectionContext);
 
         // Assert
         Assert.Equal(SqlSchema, schema);
