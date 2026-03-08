@@ -52,7 +52,7 @@ public class CsvParser(ParsingContext parsingContext)
                 continue;
             }
 
-            await ParseRow(delimiter, row);
+            await ParseRow(delimiter.ToString(), row);
             malformedRecordsSequence = 0;
             recordsRead++;
 
@@ -68,36 +68,55 @@ public class CsvParser(ParsingContext parsingContext)
         };
     }
 
-    private async Task ParseRow(char delimiter, string[] row)
+    private async Task ParseRow(string delimiter, string[] row)
     {
-        int i = 0;
+        Dictionary<ItemEnum, List<string>> record = new();
         
+        int i = 0;
         while (i < row.Length)
         {
             string value = row[i].Trim();
-
-            if (_schema.TryGetValue(i, out var schemaEntry))
+            if (string.IsNullOrWhiteSpace(value))
             {
-                int nextIndex = i + 1;
-                while (nextIndex < row.Length && _schema.TryGetValue(nextIndex, out var cont) && cont == ItemEnum.Previous)
-                {
-                    string nextVal = row[nextIndex].Trim();
-                    if (!string.IsNullOrEmpty(nextVal))
-                        value += delimiter + nextVal;
-                    nextIndex++;
-                }
-
-                // TODO: forward to content storage
-                // Console.WriteLine($"[{i}] {schemaEntry} = {value}");
-                i = nextIndex;
+                i++;
+                continue;
             }
-            else
+
+            if (!_schema.TryGetValue(i, out var itemType))
             {
                 // No schema for this field -> log warning
                 await _logger.Log($"Unmapped CSV field[{i}] = {value}", LogLevel.Warning, LogContext.Parsing);
                 //todo exception to higher logic to search for new pattern
                 i++;
+                continue;
             }
+            
+            int nextIndex = i + 1;
+            while (nextIndex < row.Length && 
+                   _schema.TryGetValue(nextIndex, out var nextType) && 
+                   nextType == ItemEnum.Previous)
+            {
+                string nextValue = row[nextIndex].Trim();
+                if (!string.IsNullOrEmpty(nextValue))
+                {
+                    value += delimiter;
+                    value += nextValue;
+                }
+                nextIndex++;
+            }
+
+            if (!record.TryGetValue(itemType, out var list))
+            {
+                list = new List<string>();
+                record[itemType] = list;
+            }
+
+            list.Add(value);
+            
+            // TODO: forward to content storage
+            // Console.WriteLine($"[{i}] {schemaEntry} = {value}");
+            
+            i = nextIndex;
         }
     }
 }
