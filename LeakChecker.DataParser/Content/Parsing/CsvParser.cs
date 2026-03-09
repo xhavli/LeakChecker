@@ -1,4 +1,5 @@
 using System.Text;
+using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Utilities.Extensions;
@@ -9,6 +10,8 @@ public class CsvParser(ParsingContext parsingContext)
 {
     private readonly IParseLogger _logger = parsingContext.Logger;
     private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
+    private readonly Guid _parseId = parsingContext.Stats.ParseId;
+    private readonly List<Dictionary<ItemEnum, List<string>>> _cachePoco = new();
     
     public async Task<ParsingState> ProcessFile()
     {
@@ -58,6 +61,8 @@ public class CsvParser(ParsingContext parsingContext)
 
             if (recordsRead == parseLimit) break;
         }
+        
+        await DatabaseFacade.SaveMany(_cachePoco, _parseId);
         
         return new ParsingState
         {
@@ -117,6 +122,16 @@ public class CsvParser(ParsingContext parsingContext)
             // Console.WriteLine($"[{i}] {schemaEntry} = {value}");
             
             i = nextIndex;
+        }
+
+        _cachePoco.Add(record);
+        
+        if (_cachePoco.Count > 2000)
+        {
+            await _logger.Log($"Flushing {_cachePoco.Count} records from cache");
+            await DatabaseFacade.SaveMany(_cachePoco, _parseId);
+            _cachePoco.Clear();
+            await _logger.Log("Flush done");
         }
     }
 }
