@@ -11,8 +11,8 @@ namespace LeakChecker.DataParser.Logging.Parse;
 
 public class ParseLogger : IParseLogger
 {
-    public Guid ParseId {get; }
-    public Guid ExecutionId {get; }
+    public Guid ParseId { get; }
+    public Guid ExecutionId { get; }
     public DateTime ParseStart { get; }
     public string SubjectFileName { get; }
     public string SubjectFilePath { get; }
@@ -58,8 +58,10 @@ public class ParseLogger : IParseLogger
         string tmpFilePath = Path.Combine(config.TmpDirectory, logFileName);
 
         bool isDevelopment = string.Equals(config.Environment.Trim(), "Development", StringComparison.OrdinalIgnoreCase);
-        var writer = new StreamWriter(logFilePath, append: true, encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
-        writer.AutoFlush = isDevelopment;
+        var writer = new StreamWriter(logFilePath, append: true, encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
+        {
+            AutoFlush = isDevelopment
+        };
         
         var logger = new ParseLogger(parseId, executionId, parseStart, subjectFilePath, tmpFilePath, writer, config.Verbose);
         
@@ -308,7 +310,7 @@ public class ParseLogger : IParseLogger
     
     public async Task LogFinalSchema(Dictionary<int, ItemEnum> schema)
     {
-        await LogLineAsync("Final schema + assigned or guessed:");
+        await LogLineAsync("Final schema = Dominant + (Assigned or Guessed):");
 
         foreach (var kvp in schema.OrderBy(k => k.Key))
             await LogLineAsync($"   Position {kvp.Key} = {kvp.Value}");
