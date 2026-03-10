@@ -8,11 +8,11 @@ namespace LeakChecker.DataParser.Content.Parsing;
 
 public class CsvParser(ParsingContext parsingContext)
 {
+    private readonly char _delimiter = parsingContext.Delimiter;
+    private readonly Guid _parseId = parsingContext.Stats.ParseId;
     private readonly IParseLogger _logger = parsingContext.Logger;
     private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
-    private readonly Guid _parseId = parsingContext.Stats.ParseId;
     private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new();
-    private readonly char _delimiter = parsingContext.Delimiter;
     
     public async Task<ParsingState> ParseFile()
     {
@@ -24,12 +24,12 @@ public class CsvParser(ParsingContext parsingContext)
         Encoding encoding = reader.CurrentEncoding;
         int expectedFields = _schema.Count == 0 ? 0 : _schema.Keys.Max() + 1;
         
-        int malformedRecordsSequence = 0;
-        int malformedRecordsRead = 0;
-        long recordsRead = 0;
         long linesRead = 0;
         long bytesRead = 0;
-
+        long recordsRead = 0;
+        int malformedRecordsRead = 0;
+        int malformedRecordsSequence = 0;
+        
         while (await reader.ReadLineWithEndingAsync() is { } line)
         {
             linesRead++;
@@ -63,8 +63,9 @@ public class CsvParser(ParsingContext parsingContext)
                 await DatabaseFacade.SaveUserMany(_cachedRecords, _parseId);
                 _cachedRecords.Clear();
             }
-            malformedRecordsSequence = 0;
+            
             recordsRead++;
+            malformedRecordsSequence = 0;
 
             if (recordsRead == parseLimit)
                 break;
