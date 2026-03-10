@@ -11,13 +11,13 @@ public class CsvParser(ParsingContext parsingContext)
     private readonly IParseLogger _logger = parsingContext.Logger;
     private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
     private readonly Guid _parseId = parsingContext.Stats.ParseId;
-    private readonly List<Dictionary<ItemEnum, List<string>>> _cachePoco = new();
+    private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new();
+    private readonly char _delimiter = parsingContext.Delimiter;
     
-    public async Task<ParsingState> ProcessFile()
+    public async Task<ParsingState> ParseFile()
     {
         StreamReader reader = parsingContext.Reader;
         long startLine = parsingContext.StartLine;
-        char delimiter = parsingContext.Delimiter;
         long parseLimit = parsingContext.ParseLimit;
         int malformedLimit = parsingContext.MalformedLimit;
         
@@ -35,34 +35,42 @@ public class CsvParser(ParsingContext parsingContext)
             linesRead++;
             bytesRead += encoding.GetByteCount(line);
         
-            line = line.Trim();
-            if (string.IsNullOrWhiteSpace(line)) continue;
-
-            // Console.WriteLine($"\nCSV file parsing line {startLine + linesRead}: {line}");
-
-            string[] row = line.Split(delimiter);
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+            
+            string[] row = line.Split(_delimiter);
             
             if (row.Length != expectedFields)
             {
-                await _logger.Log($"Bad row length at line {startLine + linesRead}: expected {expectedFields}, got {row.Length} content: {line}", LogLevel.Warning);
+                await _logger.Log($"Bad row length at line {startLine + linesRead}: expected {expectedFields}, " +
+                                  $"got {row.Length} content: {line}", LogLevel.Warning);
+                
                 malformedRecordsRead++;
                 malformedRecordsSequence++;
                 if (malformedRecordsSequence >= malformedLimit)
                 {
-                    await _logger.Log($"Parsing reach malformed limit {malformedLimit}. Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
+                    await _logger.Log($"Parsing reach malformed limit {malformedLimit}. " +
+                                      $"Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
                     break;
                 }
+                
                 continue;
             }
 
-            await ParseRow(delimiter.ToString(), row);
+            await ParseRow(row);
+            if (_cachedRecords.Count > 2000)
+            {
+                await DatabaseFacade.SaveUserMany(_cachedRecords, _parseId);
+                _cachedRecords.Clear();
+            }
             malformedRecordsSequence = 0;
             recordsRead++;
 
-            if (recordsRead == parseLimit) break;
+            if (recordsRead == parseLimit)
+                break;
         }
         
-        await DatabaseFacade.SaveMany(_cachePoco, _parseId);
+        await DatabaseFacade.SaveUserMany(_cachedRecords, _parseId);
         
         return new ParsingState
         {
@@ -73,65 +81,61 @@ public class CsvParser(ParsingContext parsingContext)
         };
     }
 
-    private async Task ParseRow(string delimiter, string[] row)
+    private async Task ParseRow(string[] row)
     {
         Dictionary<ItemEnum, List<string>> record = new();
         
         int i = 0;
         while (i < row.Length)
         {
-            string value = row[i].Trim();
-            if (string.IsNullOrWhiteSpace(value))
+            string raw = row[i];
+            if (string.IsNullOrWhiteSpace(raw))
             {
                 i++;
                 continue;
             }
 
-            if (!_schema.TryGetValue(i, out var itemType))
+            if (!_schema.TryGetValue(i, out ItemEnum itemType))
             {
-                // No schema for this field -> log warning
-                await _logger.Log($"Unmapped CSV field[{i}] = {value}", LogLevel.Warning, LogContext.Parsing);
-                //todo exception to higher logic to search for new pattern
+                await _logger.Log($"Unmapped CSV field[{i}] = {raw.Trim()}", LogLevel.Warning, LogContext.Parsing);
                 i++;
                 continue;
             }
             
-            int nextIndex = i + 1;
-            while (nextIndex < row.Length && 
-                   _schema.TryGetValue(nextIndex, out var nextType) && 
-                   nextType == ItemEnum.Previous)
-            {
-                string nextValue = row[nextIndex].Trim();
-                if (!string.IsNullOrEmpty(nextValue))
-                {
-                    value += delimiter;
-                    value += nextValue;
-                }
-                nextIndex++;
-            }
+            string value = BuildValue(row, i, out int nextIndex);
 
             if (!record.TryGetValue(itemType, out var list))
-            {
-                list = new List<string>();
-                record[itemType] = list;
-            }
+                record[itemType] = list = new List<string>();
 
             list.Add(value);
-            
-            // TODO: forward to content storage
-            // Console.WriteLine($"[{i}] {schemaEntry} = {value}");
-            
             i = nextIndex;
         }
 
-        _cachePoco.Add(record);
-        
-        if (_cachePoco.Count > 2000)
+        // TODO: forward to content storage
+        _cachedRecords.Add(record);
+    }
+    
+    private string BuildValue(string[] row, int startIndex, out int nextIndex)
+    {
+        string firstValue = row[startIndex].Trim();
+        StringBuilder? builder = null;
+
+        nextIndex = startIndex + 1;
+        while (nextIndex < row.Length &&
+               _schema.TryGetValue(nextIndex, out ItemEnum nextType) &&
+               nextType == ItemEnum.Previous)
         {
-            await _logger.Log($"Flushing {_cachePoco.Count} records from cache");
-            await DatabaseFacade.SaveMany(_cachePoco, _parseId);
-            _cachePoco.Clear();
-            await _logger.Log("Flush done");
+            string nextValue = row[nextIndex].Trim();
+            if (!string.IsNullOrEmpty(nextValue))
+            {
+                builder ??= new StringBuilder(firstValue);
+                builder.Append(_delimiter);
+                builder.Append(nextValue);
+            }
+
+            nextIndex++;
         }
+
+        return builder?.ToString() ?? firstValue;
     }
 }
