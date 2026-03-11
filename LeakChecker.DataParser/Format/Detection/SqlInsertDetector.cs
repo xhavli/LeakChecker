@@ -16,23 +16,25 @@ public static class SqlInsertDetector
     {
         IParseLogger logger = parsingContext.Logger;
         StreamReader reader = parsingContext.Reader;
-        int samplesLimit = parsingContext.SamplesLimit;
-        long startLine = parsingContext.StartLine;
         int threshold = parsingContext.Threshold;
+        long startLine = parsingContext.StartLine;
+        int samplesLimit = parsingContext.SamplesLimit;
         
         bool inInsert = false;
-        int parenDepth = 0, expectedColumns = 0;
+        int parenDepth = 0;
+        int samplesCount = 0;
+        int expectedColumns = 0;
         List<string> sqlHeaders = new();
         StringBuilder stringBuilder = new();
 
-        int samplesCount = 0;
         var analyzer = new SchemaHeuristic();
         await logger.LogSchemaDetectionHeader();
 
         Stopwatch sw = Stopwatch.StartNew();
         while (await reader.ReadLineAsync() is { } line)
         {
-            if (samplesCount == samplesLimit) break;
+            if (samplesCount == samplesLimit)
+                break;
             
             string trimmed = line.Trim();
 
@@ -68,6 +70,7 @@ public static class SqlInsertDetector
                         expectedColumns = sqlHeaders.Count;
 
                         await logger.LogSqlInsertHeader(subject, sqlHeaders, trimmed);
+                        parsingContext.Stats.Context.Add(subject);
 
                         // Move to VALUES part, if present
                         int valuesPos = trimmed.IndexOf("VALUES", StringComparison.OrdinalIgnoreCase);
@@ -77,7 +80,8 @@ public static class SqlInsertDetector
                         }
                         else
                         {
-                            continue; // Wait for VALUES on following lines
+                            // Wait for VALUES on following lines
+                            continue;
                         }
                     }
                     else
@@ -121,8 +125,8 @@ public static class SqlInsertDetector
 
                     if (c == ')')
                     {
-                        stringBuilder.Append(c);
                         parenDepth--;
+                        stringBuilder.Append(c);
 
                         if (parenDepth == 0)
                         {
@@ -135,8 +139,8 @@ public static class SqlInsertDetector
                             // Validate column count
                             if (row.Length != expectedColumns)
                             {
-                                await logger.Log($"Bad row length on line {startLine}: expected {expectedColumns}, got {row.Length} content: {tuple}", 
-                                    LogLevel.Warning);
+                                await logger.Log($"Bad row length on line {startLine}: expected {expectedColumns}, " +
+                                                 $"got {row.Length} content: {tuple}", LogLevel.Warning);
                             }
                             
                             List<SchemaHeuristicRecord> linePatterns = new();
@@ -145,7 +149,9 @@ public static class SqlInsertDetector
                             for (int j = 0; j < row.Length; j++)
                             {
                                 string value = row[j];
-                                if (string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value)) continue;
+                                if (string.IsNullOrWhiteSpace(value))
+                                    continue;
+                                
                                 ItemEnum item = await ContentDetector.DetectToken(value, logger);
                                 // Console.WriteLine($"[{j}] {item} = {value}");
 
@@ -162,18 +168,21 @@ public static class SqlInsertDetector
                             stringBuilder.Clear();
 
                             // End of Sql INSERT
-                            if (trimmed.EndsWith(");") || trimmed.EndsWith(") ;") || trimmed.EndsWith(")\t;")) { break; }
+                            if (trimmed.EndsWith(");") || trimmed.EndsWith(") ;") || trimmed.EndsWith(")\t;"))
+                                break;
                         }
 
                         continue;
                     }
                 }
 
-                if (parenDepth > 0 || inQuote) { stringBuilder.Append(c); }
+                if (parenDepth > 0 || inQuote)
+                    stringBuilder.Append(c);
             }
             
             // End of Sql INSERT
-            if (trimmed.EndsWith(");") || trimmed.EndsWith(") ;") || trimmed.EndsWith(")\t;")) { break; }
+            if (trimmed.EndsWith(");") || trimmed.EndsWith(") ;") || trimmed.EndsWith(")\t;"))
+                break;
         }
 
         await logger.LogHeuristicData(analyzer);
@@ -182,12 +191,12 @@ public static class SqlInsertDetector
         var schema = analyzer.GetDominantSchema(threshold);
         var guessed = HeaderGuesser.GuessColumns(sqlHeaders);
 
-        foreach (var (idx, guess) in guessed)
+        foreach (var (index, guess) in guessed)
         {
-            if (!schema.TryGetValue(idx, out var existing) || 
+            if (!schema.TryGetValue(index, out ItemEnum existing) || 
                 existing == ItemEnum.Other || existing == ItemEnum.Null)
             {
-                schema[idx] = guess;
+                schema[index] = guess;
             }
         }
 
@@ -231,6 +240,7 @@ public static class SqlInsertDetector
                 stringBuilder.Append(c);
             }
         }
+        
         if (stringBuilder.Length > 0)
             fields.Add(stringBuilder.ToString().Trim().Trim('\''));
 
