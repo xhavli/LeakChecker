@@ -18,7 +18,6 @@ public static class CsvDetector
         long startLine = parsingContext.StartLine;
         int threshold = parsingContext.Threshold;
         
-        
         int samplesCount = 0;
         SchemaHeuristic analyzer = new();
         await logger.LogSchemaDetectionHeader();
@@ -26,26 +25,29 @@ public static class CsvDetector
         Stopwatch sw = Stopwatch.StartNew();
         while (await reader.ReadLineAsync() is { } line)
         {
-            if (samplesCount == samplesLimit) break;
+            if (samplesCount == samplesLimit)
+                break;
 
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+            
             line = line.Trim()
                 .TrimOuterParentheses()
-                .TrimOuterParenthesesWithComma();    // For undetected SQL INSERT
-            
-            if (string.IsNullOrWhiteSpace(line)) { continue; }
+                .TrimOuterParenthesesWithComma();   // For undetected SQL INSERT
             
             samplesCount++;
             await logger.LogSample($"CSV file sample {samplesCount} on line {startLine + samplesCount}: {line}");
+            
             var linePatterns = await ContentDetector.DetectLine(line, delimiter, logger);
-            int lineDelimitersCount = line.Count(ch => ch == delimiter);
-            analyzer.AddLinePatterns(linePatterns, lineDelimitersCount);
+            int delimitersCount = line.Count(ch => ch == delimiter);
+            analyzer.AddLinePatterns(linePatterns, delimitersCount);
         }
         
         await logger.LogHeuristicData(analyzer);
         await logger.LogDominantSchema(analyzer, threshold);
         
-        var schema = analyzer.GetDominantSchema(threshold);
-        var assigned = CredentialAssigner.Assign(schema);
+        var original = analyzer.GetDominantSchema(threshold);
+        var assigned = CredentialAssigner.Assign(original);
         
         await logger.LogFinalSchema(assigned);
         await logger.Log($"Csv file schema created in {sw.Elapsed}\n");
