@@ -201,8 +201,8 @@ public static class ContentDetector
             
             linePatterns.Add(new SchemaHeuristicRecord
             {
-                Attribute = itemType,
                 Position = i,
+                Attribute = itemType,
                 DelimitersInside = token.Count(ch => ch == delimiter)
             });
             // Console.WriteLine($"[{i}] {itemType} = {token}");
@@ -276,9 +276,11 @@ public static class ContentDetector
     private static int CountDelimitersBefore(string line, string word, char delimiter)
     {
         int index = line.IndexOf(word, StringComparison.InvariantCultureIgnoreCase);
-        if (index <= 0) return 0;
+        if (index <= 0)
+            return 0;
 
         ReadOnlySpan<char> span = line.AsSpan(0, index);
+        
         int count = 0;
         foreach (char ch in span)
         {
