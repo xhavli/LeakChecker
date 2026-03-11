@@ -10,7 +10,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
     private readonly IParseLogger _logger = parsingContext.Logger;
     private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
     
-    public async Task<ParsingState> ProcessFile()
+    public async Task<ParsingState> ParseFile()
     {
         StreamReader reader = parsingContext.Reader;
         long startLine = parsingContext.StartLine;

@@ -124,7 +124,7 @@ public class ContentParser : IDisposable
             MalformedLimit = SqlSamplesLimit,
         };
         SqlInsertParser parser = new(parsingContext);
-        ParsingState result = await parser.ProcessFile();
+        ParsingState result = await parser.ParseFile();
         UpdateParsingState(result);
         
         _stats.Formats.Add(FormatEnum.SqlInsert);
@@ -179,7 +179,7 @@ public class ContentParser : IDisposable
             MalformedLimit = CsvSamplesLimit,
         };
         CsvParser parser = new(parsingContext);
-        ParsingState result = await parser.ProcessFile();
+        ParsingState result = await parser.ParseFile();
         UpdateParsingState(result);
         
         if (_possibleAsciiTable && delimiter == '|')
