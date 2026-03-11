@@ -1,4 +1,5 @@
 using System.Text;
+using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Utilities.Extensions;
@@ -7,8 +8,10 @@ namespace LeakChecker.DataParser.Content.Parsing;
 
 public class SqlInsertParser(ParsingContext parsingContext)
 {
+    private readonly Guid _parseId = parsingContext.Stats.ParseId;
     private readonly IParseLogger _logger = parsingContext.Logger;
     private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
+    private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new();
     
     public async Task<ParsingState> ParseFile()
     {
@@ -105,13 +108,15 @@ public class SqlInsertParser(ParsingContext parsingContext)
                             // Console.WriteLine($"\nSQL insert parsing line {startLine + linesRead}: {line}");
                             if (row.Length != expectedFields)
                             {
-                                await _logger.Log($"Bad row length on line {startLine + linesRead}: expected {expectedFields}, got {row.Length} content: {line}", LogLevel.Warning);
+                                await _logger.Log($"Bad row length on line {startLine + linesRead}: expected {expectedFields}, " +
+                                                  $"got {row.Length} content: {line}", LogLevel.Warning);
                                 
                                 malformedRecordsRead++;
                                 malformedRecordsSequence++;
                                 if (malformedRecordsSequence >= malformedLimit)
                                 {
-                                    await _logger.Log($"Parsing reach malformed limit {malformedLimit}. Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
+                                    await _logger.Log($"Parsing reach malformed limit {malformedLimit}. " +
+                                                      $"Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
                                     break;
                                 }
                                 
@@ -119,6 +124,11 @@ public class SqlInsertParser(ParsingContext parsingContext)
                             }
 
                             await ParseRow(row);
+                            if (_cachedRecords.Count > 2000)
+                            {
+                                await DatabaseFacade.SaveUserMany(_cachedRecords, _parseId);
+                                _cachedRecords.Clear();
+                            }
                             malformedRecordsSequence = 0;
                             recordsRead++;
 
@@ -147,6 +157,8 @@ public class SqlInsertParser(ParsingContext parsingContext)
                 break;
         }
 
+        await DatabaseFacade.SaveUserMany(_cachedRecords, _parseId);
+        
         return new ParsingState
         {
             MalformedRecordsRead = malformedRecordsRead,
@@ -229,16 +241,33 @@ public class SqlInsertParser(ParsingContext parsingContext)
 
     private async Task ParseRow(string[] row)
     {
+        Dictionary<ItemEnum, List<string>> record = new();
+        
         for (int i = 0; i < row.Length; i++)
         {
-            if (!_schema.TryGetValue(i, out var schemaEntry))
+            string value = row[i];
+            
+            if (string.IsNullOrWhiteSpace(value))
+                continue;
+            
+            if (!_schema.TryGetValue(i, out var itemType))
             {
-                await _logger.Log($"Unmapped field[{i}] = {row[i]}", LogLevel.Warning, LogContext.Parsing);
+                await _logger.Log($"Unmapped field[{i}] = {value}", LogLevel.Warning, LogContext.Parsing);
                 continue;
             }
+            
+            if (!record.TryGetValue(itemType, out var list))
+            {
+                list = new List<string>();
+                record[itemType] = list;
+            }
 
-            // TODO: forward to content storage
+            list.Add(value);
+
             // Console.WriteLine($"[{i}] {schemaEntry} = {row[i]}");
         }
+        
+        // TODO: forward to content storage
+        _cachedRecords.Add(record);
     }
 }
