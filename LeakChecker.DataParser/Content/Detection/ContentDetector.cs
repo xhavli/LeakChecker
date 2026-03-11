@@ -168,10 +168,12 @@ public static class ContentDetector
         string[] tokens = line.Split(delimiter);
         for (int i = 0; i < tokens.Length; i++)
         {
-            if (linePatterns.Any(lp => lp.Position == i)) continue;
+            if (linePatterns.Any(lp => lp.Position == i))
+                continue;
 
             string token = tokens[i].Trim().TrimEnclosingChars();
-            if (string.IsNullOrEmpty(token) || string.IsNullOrWhiteSpace(token)) continue;
+            if (string.IsNullOrWhiteSpace(token))
+                continue;
 
             ItemEnum itemType = await DetectToken(token, logger);
             
@@ -211,9 +213,12 @@ public static class ContentDetector
     
     public static async Task<ItemEnum> DetectToken(string token, IParseLogger logger)
     {
-        if (WebRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Web;
-        if (EmailRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Email;
-        if (TimestampRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Timestamp;
+        if (WebRecognizer.TryRecognize(token, out _, out _))
+            return ItemEnum.Web;
+        if (EmailRecognizer.TryRecognize(token, out _, out _))
+            return ItemEnum.Email;
+        if (TimestampRecognizer.TryRecognize(token, out _, out _))
+            return ItemEnum.Timestamp;
         
         try
         {
@@ -236,25 +241,28 @@ public static class ContentDetector
             await logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Failure, LogContext.Content);
         }
         
-        if (GuidRecognizer.TryRecognize(token, out _, out _)) return ItemEnum.Id;
-        if (GenderParser.TryParse(token, out _)) return ItemEnum.Gender;
-        if (MaritalStatusParser.TryParse(token, out _)) return ItemEnum.MaritalStatus;
-        if (IpAddressParser.TryParse(token, out ItemEnum itemType, out _)) return itemType;
-        if (PhoneNumberParser.TryParse(token, out _)) return ItemEnum.PhoneNumber;
-        if (MacAddressParser.TryParse(token, out _)) return ItemEnum.Mac;
-        if (IbanParser.TryParse(token)) return ItemEnum.Iban;
-        
-        if (TimestampParser.TryParse(token, out ItemEnum timeType, out _)) return timeType;
-        // TODO bypass for faster detection in development because www.hashes.com responds take a while
-        // Console.ForegroundColor = ConsoleColor.Red;
-        // Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");
-        // Console.ResetColor();
-        // return ItemEnum.Other;
+        if (GuidRecognizer.TryRecognize(token, out _, out _))
+            return ItemEnum.Id;
+        if (GenderParser.TryParse(token, out _))
+            return ItemEnum.Gender;
+        if (MaritalStatusParser.TryParse(token, out _))
+            return ItemEnum.MaritalStatus;
+        if (IpAddressParser.TryParse(token, out ItemEnum itemType, out _))
+            return itemType;
+        if (PhoneNumberParser.TryParse(token, out _))
+            return ItemEnum.PhoneNumber;
+        if (MacAddressParser.TryParse(token, out _))
+            return ItemEnum.Mac;
+        if (IbanParser.TryParse(token))
+            return ItemEnum.Iban;
+        if (TimestampParser.TryParse(token, out ItemEnum timeType, out _))
+            return timeType;
         
         try
         {
             var (isHash, hashType) = await HashParser.TryParse(token);
-            if (isHash) return hashType;
+            if (isHash)
+                return hashType;
         }
         catch (Exception e)
         {
@@ -262,9 +270,6 @@ public static class ContentDetector
             await logger.Log($"Communication with www.hashes.com failed. {e.Message}", LogLevel.Failure, LogContext.Content);
         }
         
-        // Console.ForegroundColor = ConsoleColor.Red;
-        // Console.WriteLine($"[UNRECOGNIZED TOKEN]: {token}");
-        // Console.ResetColor();
         return ItemEnum.Other;
     }
 

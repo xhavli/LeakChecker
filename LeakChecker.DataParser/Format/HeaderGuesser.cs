@@ -280,7 +280,7 @@ public static class HeaderGuesser
 
     public static ItemEnum GuessItem(string header)
     {
-        if (string.IsNullOrEmpty(header))
+        if (string.IsNullOrWhiteSpace(header))
         {
             Console.WriteLine("Header have empty label");
             return ItemEnum.Null;

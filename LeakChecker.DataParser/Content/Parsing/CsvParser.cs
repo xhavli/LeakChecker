@@ -127,7 +127,7 @@ public class CsvParser(ParsingContext parsingContext)
                nextType == ItemEnum.Previous)
         {
             string nextValue = row[nextIndex].Trim();
-            if (!string.IsNullOrEmpty(nextValue))
+            if (!string.IsNullOrWhiteSpace(nextValue))
             {
                 builder ??= new StringBuilder(firstValue);
                 builder.Append(_delimiter);
