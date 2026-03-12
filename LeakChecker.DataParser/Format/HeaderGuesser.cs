@@ -53,7 +53,7 @@ public static class HeaderGuesser
                 new("datetime", MatchPolicy.Substring),
                 new("date-time", MatchPolicy.Substring),
                 new("date_time", MatchPolicy.Substring),
-                new("dateofbirth", MatchPolicy.Substring),  //TODO create DoB?
+                new("dateofbirth", MatchPolicy.Substring),
                 new("date-of-birth", MatchPolicy.Substring),
                 new("date_of_birth", MatchPolicy.Substring),
                 new("created", MatchPolicy.Token),
@@ -387,16 +387,10 @@ public static class HeaderGuesser
         var results = scores.OrderByDescending(kv => kv.Value).ToList();
         var (bestMatch, bestScore) = results.First();
         
-        // Console.WriteLine($"{header}");
-        // foreach (var res in results)
-        // {
-        //     Console.WriteLine($"{res.Key}: {res.Value}");
-        // }
-        
         return bestScore > 1 ? bestMatch : ItemEnum.Other;
     }
     
-    private static IEnumerable<string> TokenizeHeader(string header)
+    private static List<string> TokenizeHeader(string header)
     {
         var parts = new List<string>();
         string current = "";
@@ -439,5 +433,19 @@ public static class HeaderGuesser
         }
 
         return parts;
+    }
+
+    public static Dictionary<int, ItemEnum> BindGuessed(Dictionary<int, ItemEnum> schema, Dictionary<int, ItemEnum> guessed)
+    {
+        foreach (var (index, guess) in guessed)
+        {
+            if (!schema.TryGetValue(index, out ItemEnum existing) || 
+                existing == ItemEnum.Other || existing == ItemEnum.Null)
+            {
+                schema[index] = guess;
+            }
+        }
+
+        return schema;
     }
 }
