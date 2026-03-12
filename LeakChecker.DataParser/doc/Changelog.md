@@ -224,9 +224,11 @@ Author: Adam Havlík
 
 ## TODOs
 
+- Implement proper Appconfig and DI
 - When row mismatch, parse it separately.
-- When hash detected at `[i]` and `[i+1]` is other try to concatenate with delimiter for salted hash detection
+- When hash detected at `[i]` and `[i+1]` is other try to concatenate with delimiter for salted hash detection.
 - Parse also `JSON`, `HTML` and `XML`
+- Make something like TestBase class where will be registered EncProvider, created logger or set env variable.
 - When all is number then not bind `ItemEnum.Other`, else try to recompute without other as an `ItemEnum.Empty`, when full numbers, bind `ItemEnum.Id`
 - Wait properly for python start. READY signal is sent earlier than running python API 
 - Make `TestBase` with EncProvider(RegisterEnc) and projectDir and testDir paths
@@ -261,7 +263,6 @@ Author: Adam Havlík
   ```
   
 - Test performance and profiling
-- Implement DI
 - Nice to have separated ItemEnums `FirstName`, `LastName`, `DateOfBirth`, `Age`, `Nationality`, `EyeColor`, `HairColor`, `Height`, `Weight` but this can be matched only with `HeaderGuesser`
 
 ## Notes
@@ -285,4 +286,15 @@ Author: Adam Havlík
   - Install required tools to .venv
     ```shell
     pip install -r requirements.txt
-    ```
+    ``` 
+  - MongoDB
+    - [MongoDB Shell](https://www.mongodb.com/try/download/shell)
+    - [MongoDB Server](https://www.mongodb.com/try/download/community)
+    - Run MongoDB locally
+      ```bash
+      .\mongod.exe --dbpath "..\..\data"
+      ```
+    - Search in DB
+      ```bash
+      db.users.find({ Username: { $regex: "^MyUsername234$", $options: "i" } })
+      ```
