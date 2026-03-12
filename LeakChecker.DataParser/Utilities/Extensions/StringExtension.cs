@@ -14,10 +14,7 @@ public static class StringExtensions
 
         // Case: ' ... ', " ... ", ` ... `, | ... |
         if (first == last && first is '\'' or '"' or '`' or '|')
-        {
-            // Slice without allocating, then create string once
             return span.Slice(1, span.Length - 2).ToString();
-        }
 
         return input;
     }
@@ -95,7 +92,7 @@ public static class StringExtensions
     }
     
     
-    // DROP [modifiers] TABLE [modifiers] <table_name> [ , <table_name> ... ]
+    // DROP [modifiers] TABLE [modifiers] <table_name> [ , <table_name> ... ] ;
     private static bool IsSqlDropTable(this string line)
     {
         int drop = line.IndexOf("DROP ", StringComparison.OrdinalIgnoreCase);
