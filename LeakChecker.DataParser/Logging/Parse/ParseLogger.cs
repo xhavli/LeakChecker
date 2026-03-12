@@ -228,13 +228,13 @@ public class ParseLogger : IParseLogger
         await LogLineAsync();
     }
 
-    public async Task LogSqlInsertHeader(string subject, IList<string> headers, string fullHeader)
+    public async Task LogSqlInsertHeader(SqlInsertDetector.SqlHeader header)
     {
-        await Log($"SQL INSERT header: {fullHeader}");
-        await LogLineAsync($"SQL INSERT subject: {subject}");
-
-        for (int i = 0; i < headers.Count; i++)
-            await LogLineAsync($"[{i}] {headers[i]}");
+        await Log($"SQL insert header: {header.FullHeader}");
+        await LogLineAsync($"SQL insert subject: {header.Subject}");
+        
+        for (int i = 0; i < header.Headers.Count; i++)
+            await LogLineAsync($"   [{i}] {header.Headers[i]}");
         
         await LogLineAsync();
     }

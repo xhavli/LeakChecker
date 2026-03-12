@@ -25,7 +25,7 @@ public sealed class NullParseLogger(string path) : IParseLogger
     public Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int count) => Task.CompletedTask;
     public Task LogSchemaDetectionHeader() => Task.CompletedTask;
     public Task LogSample(string sample) => Task.CompletedTask;
-    public Task LogSqlInsertHeader(string subject, IList<string> headers, string fullHeader) => Task.CompletedTask;
+    public Task LogSqlInsertHeader(SqlInsertDetector.SqlHeader header) => Task.CompletedTask;
     public Task LogHeuristicData(SchemaHeuristic analyzer) => Task.CompletedTask;
     public Task LogDominantSchema(SchemaHeuristic analyzer, double threshold) => Task.CompletedTask;
     public Task LogFinalSchema(Dictionary<int, ItemEnum> schema) => Task.CompletedTask; 

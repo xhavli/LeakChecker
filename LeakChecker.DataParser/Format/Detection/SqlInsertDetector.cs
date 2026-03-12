@@ -10,6 +10,9 @@ namespace LeakChecker.DataParser.Format.Detection;
 
 public static class SqlInsertDetector
 {
+    private const string Insert = "INSERT";
+    private const string Into = "INTO";
+    private const string Values = "VALUES";
     private const char Delimiter = ',';
 
     public static async Task<Dictionary<int, ItemEnum>> DetectSchema(ParsingContext parsingContext)
@@ -17,84 +20,57 @@ public static class SqlInsertDetector
         IParseLogger logger = parsingContext.Logger;
         StreamReader reader = parsingContext.Reader;
         int threshold = parsingContext.Threshold;
-        long startLine = parsingContext.StartLine;
+        long linesRead = parsingContext.StartLine;
         int samplesLimit = parsingContext.SamplesLimit;
         
-        bool inInsert = false;
         int parenDepth = 0;
-        int samplesCount = 0;
-        int expectedColumns = 0;
-        List<string> sqlHeaders = new();
-        StringBuilder stringBuilder = new();
+        int samplesRead = 0;
+        int expectedCols = 0;
+        StringBuilder sb = new();
 
+        Stopwatch sw = Stopwatch.StartNew();
         var analyzer = new SchemaHeuristic();
         await logger.LogSchemaDetectionHeader();
 
-        Stopwatch sw = Stopwatch.StartNew();
+        bool inQuote = false;
+        SqlHeader? header = null;
+        string tempLine = string.Empty;
         while (await reader.ReadLineAsync() is { } line)
         {
-            if (samplesCount == samplesLimit)
+            linesRead++;
+            
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+            
+            if (samplesRead >= samplesLimit)
                 break;
             
-            string trimmed = line.Trim();
-
-            if (!inInsert)
+            line = line.Trim();
+            
+            if (header is null)
             {
-                // Detect INSERT [...] INTO
-                int intoPos = trimmed.IndexOf("INTO", StringComparison.OrdinalIgnoreCase);
+                if (tempLine.Length > 4096)
+                    tempLine = tempLine[^2048..];
+                
+                tempLine += line;
+                tempLine += ' ';
+                
+                header = TryParseSqlHeader(tempLine);
+                if (header is null)
+                    continue;
+                
+                expectedCols = header.Headers.Count;
 
-                if (trimmed.StartsWith("INSERT ", StringComparison.OrdinalIgnoreCase) &&
-                    intoPos >= "INSERT ".Length)
-                {
-                    // Find column list parentheses
-                    int openParen = trimmed.IndexOf('(', intoPos);
-                    int closeParen = trimmed.IndexOf(')', openParen + 1);
+                await logger.LogSqlInsertHeader(header);
+                parsingContext.Stats.Context.Add(header.Subject);
 
-                    if (openParen > intoPos && closeParen > openParen)
-                    {
-                        inInsert = true;
-
-                        // Extract subject (table name)
-                        string subject = trimmed
-                            .Substring(intoPos + "INTO".Length, openParen - (intoPos + "INTO".Length))
-                            .Trim(' ', '`', '"', '[', ']');
-
-                        // Extract columns
-                        string columnList = trimmed.Substring(openParen + 1, closeParen - openParen - 1);
-
-                        sqlHeaders = columnList
-                            .Split(Delimiter)
-                            .Select(h => h.Trim(' ', '`', '"', '[', ']'))
-                            .ToList();
-
-                        expectedColumns = sqlHeaders.Count;
-
-                        await logger.LogSqlInsertHeader(subject, sqlHeaders, trimmed);
-                        parsingContext.Stats.Context.Add(subject);
-
-                        // Move to VALUES part, if present
-                        int valuesPos = trimmed.IndexOf("VALUES", StringComparison.OrdinalIgnoreCase);
-                        if (valuesPos >= 0)
-                        {
-                            line = trimmed.Substring(valuesPos + "VALUES".Length);
-                        }
-                        else
-                        {
-                            // Wait for VALUES on following lines
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        // No column list -> skip
-                        continue;
-                    }
-                }
+                if (string.IsNullOrEmpty(header.ValuesTail))
+                    continue;
+                
+                line = header.ValuesTail.Trim();
             }
-
-            // If we're inside VALUES
-            bool inQuote = false;
-
+            
+            // If inside VALUES
             for (int i = 0; i < line.Length; i++)
             {
                 char c = line[i];
@@ -104,12 +80,14 @@ public static class SqlInsertDetector
                     // Handle doubled single quote '' as escape
                     if (inQuote && i + 1 < line.Length && line[i + 1] == '\'')
                     {
-                        stringBuilder.Append('\'');
+                        sb.Append('\'');
+                        sb.Append('\'');
                         i++; // skip the second quote
                         continue;
                     }
+                    
                     inQuote = !inQuote;
-                    stringBuilder.Append(c);
+                    sb.Append(c);
                     continue;
                 }
 
@@ -117,8 +95,10 @@ public static class SqlInsertDetector
                 {
                     if (c == '(')
                     {
-                        if (parenDepth == 0) stringBuilder.Clear();
-                        stringBuilder.Append(c);
+                        if (parenDepth == 0)
+                            sb.Clear();
+                        
+                        sb.Append(c);
                         parenDepth++;
                         continue;
                     }
@@ -126,49 +106,34 @@ public static class SqlInsertDetector
                     if (c == ')')
                     {
                         parenDepth--;
-                        stringBuilder.Append(c);
+                        sb.Append(c);
 
                         if (parenDepth == 0)
                         {
-                            // Extract tuple (row)
-                            string tuple = stringBuilder.ToString().Trim(',', ';', ' ');
-                            string[] row = ParseTuple(tuple);
-
-                            samplesCount++;
+                            samplesRead++;
                             
-                            // Validate column count
-                            if (row.Length != expectedColumns)
+                            // Extract tuple (row)
+                            string tuple = sb.ToString().Trim(',', ';', ' ');
+                            string[] row = TupleToArray(tuple);
+                            
+                            // Validate column length
+                            if (row.Length != expectedCols)
                             {
-                                await logger.Log($"Bad row length on line {startLine}: expected {expectedColumns}, " +
+                                await logger.Log($"Bad row length on line {linesRead}: expected {expectedCols}, " +
                                                  $"got {row.Length} content: {tuple}", LogLevel.Warning);
                             }
                             
-                            List<SchemaHeuristicRecord> linePatterns = new();
+                            await logger.LogSample($"SQL insert sample {samplesRead} on line {linesRead}: {tuple}");
 
-                            await logger.LogSample($"SQL insert sample {samplesCount} on line {startLine + samplesCount}: {tuple}");
-                            for (int j = 0; j < row.Length; j++)
-                            {
-                                string value = row[j];
-                                if (string.IsNullOrWhiteSpace(value))
-                                    continue;
-                                
-                                ItemEnum item = await ContentDetector.DetectToken(value, logger);
-                                // Console.WriteLine($"[{j}] {item} = {value}");
+                            var linePatterns = await AnalyzeRow(row, logger);
 
-                                linePatterns.Add(new SchemaHeuristicRecord
-                                {
-                                    Attribute = item,
-                                    Position = j,
-                                    DelimitersInside = value.Count(ch => ch == Delimiter)
-                                });
-                            }
+                            int delimitersCount = tuple.Count(ch => ch == Delimiter);
+                            analyzer.AddLinePatterns(linePatterns, delimitersCount);
                             
-                            int lineDelimitersCount = line.Count(ch => ch == Delimiter) - 1;    // -1 because value is exact number of columns, not delimiters
-                            analyzer.AddLinePatterns(linePatterns, lineDelimitersCount);
-                            stringBuilder.Clear();
+                            sb.Clear();
 
                             // End of Sql INSERT
-                            if (trimmed.EndsWith(");") || trimmed.EndsWith(") ;") || trimmed.EndsWith(")\t;"))
+                            if (IsSqlInsertEnd(line))
                                 break;
                         }
 
@@ -177,73 +142,161 @@ public static class SqlInsertDetector
                 }
 
                 if (parenDepth > 0 || inQuote)
-                    stringBuilder.Append(c);
+                    sb.Append(c);
             }
             
             // End of Sql INSERT
-            if (trimmed.EndsWith(");") || trimmed.EndsWith(") ;") || trimmed.EndsWith(")\t;"))
+            if (IsSqlInsertEnd(line))
                 break;
         }
 
         await logger.LogHeuristicData(analyzer);
         await logger.LogDominantSchema(analyzer, threshold);
         
-        var schema = analyzer.GetDominantSchema(threshold);
-        var guessed = HeaderGuesser.GuessColumns(sqlHeaders);
+        var original = analyzer.GetDominantSchema(threshold);
+        var guessed = HeaderGuesser.GuessColumns(header!.Headers);
+        var assigned = HeaderGuesser.BindGuessed(original, guessed);
 
-        foreach (var (index, guess) in guessed)
-        {
-            if (!schema.TryGetValue(index, out ItemEnum existing) || 
-                existing == ItemEnum.Other || existing == ItemEnum.Null)
-            {
-                schema[index] = guess;
-            }
-        }
-
-        await logger.LogFinalSchema(schema);
+        await logger.LogFinalSchema(assigned);
         await logger.Log($"SqlInsert schema created in {sw.Elapsed}\n");
 
-        return schema;
+        return assigned;
     }
 
-    private static string[] ParseTuple(string tuple)
+    private static SqlHeader? TryParseSqlHeader(string line)
     {
-        if (tuple.StartsWith('(') && tuple.EndsWith(')')) 
-            tuple = tuple.Substring(1, tuple.Length - 2);
+        line = line.Trim();
+
+        int insertPos = line.IndexOf(Insert, StringComparison.OrdinalIgnoreCase);
+        if (insertPos == -1)
+            return null;
+
+        int intoPos = line.IndexOf(Into, insertPos, StringComparison.OrdinalIgnoreCase);
+        if (intoPos == -1)
+            return null;
+
+        int openParen = line.IndexOf('(', intoPos);
+        if (openParen == -1)
+            return null;
+
+        int closeParen = line.IndexOf(')', openParen + 1);
+        if (closeParen == -1)
+            return null;
+
+        int valuesPos = line.IndexOf(Values, closeParen, StringComparison.OrdinalIgnoreCase);
+        if (valuesPos == -1)
+            return null;
+
+        string subject = line[(intoPos + Into.Length)..openParen]
+            .Trim(' ', '`', '"', '[', ']');
+
+        string columnList = line[(openParen + 1)..closeParen];
+
+        List<string> headers = columnList
+            .Split(Delimiter)
+            .Select(h => h.Trim(' ', '`', '"', '[', ']'))
+            .ToList();
+
+        string valuesTail = line[(valuesPos + Values.Length)..];
+        string fullHeader = line.Substring(insertPos, valuesPos - insertPos + Values.Length); //include VALUES
+
+        return new SqlHeader
+        {
+            Subject = subject,
+            Headers = headers,
+            FullHeader = fullHeader,
+            ValuesTail = valuesTail,
+        };
+    }
+    
+    private static string[] TupleToArray(string tuple)
+    {
+        if (string.IsNullOrEmpty(tuple))
+            return [];
+
+        int start = 0;
+        int end = tuple.Length;
+
+        if (tuple[0] == '(' && tuple[^1] == ')')
+        {
+            start = 1;
+            end--;
+        }
 
         bool inQuote = false;
-        List<string> fields = new();
-        StringBuilder stringBuilder = new();
+        var sb = new StringBuilder();
+        var fields = new List<string>();
 
-        for (int i = 0; i < tuple.Length; i++)
+        for (int i = start; i < end; i++)
         {
             char c = tuple[i];
+
             if (c == '\'')
             {
-                if (inQuote && i + 1 < tuple.Length && tuple[i + 1] == '\'')
+                if (inQuote && i + 1 < end && tuple[i + 1] == '\'')
                 {
-                    stringBuilder.Append('\'');
+                    sb.Append('\''); // escaped quote: ''
                     i++;
                 }
                 else
                 {
                     inQuote = !inQuote;
                 }
-            }
-            else if (c == Delimiter && !inQuote)
-            {
-                fields.Add(stringBuilder.ToString().Trim().Trim('\''));
-                stringBuilder.Clear();
-            }
-            else
-            {
-                stringBuilder.Append(c);
-            }
-        }
-        
-        if (stringBuilder.Length > 0)
-            fields.Add(stringBuilder.ToString().Trim().Trim('\''));
 
+                continue;
+            }
+
+            if (c == Delimiter && !inQuote)
+            {
+                fields.Add(sb.ToString().Trim());
+                sb.Clear();
+                continue;
+            }
+
+            sb.Append(c);
+        }
+
+        fields.Add(sb.ToString().Trim());
         return fields.ToArray();
+    }
+
+    private static async Task<List<SchemaHeuristicRecord>> AnalyzeRow(string[] row, IParseLogger logger)
+    {
+        List<SchemaHeuristicRecord> linePatterns = new();
+                            
+        for (int j = 0; j < row.Length; j++)
+        {
+            string value = row[j];
+                                
+            if (string.IsNullOrWhiteSpace(value))
+                continue;
+                                
+            ItemEnum item = await ContentDetector.DetectToken(value, logger);
+            // Console.WriteLine($"[{j}] {item} = {value}");
+
+            linePatterns.Add(new SchemaHeuristicRecord
+            {
+                Position = j,
+                Attribute = item,
+                DelimitersInside = value.Count(ch => ch == Delimiter)
+            });
+        }
+
+        return linePatterns;
+    }
+    
+    private static bool IsSqlInsertEnd(string line)
+    {
+        return line.EndsWith(");", StringComparison.Ordinal)
+               || line.EndsWith(") ;", StringComparison.Ordinal)
+               || line.EndsWith(")\t;", StringComparison.Ordinal);
+    }
+    
+    public class SqlHeader
+    {
+        public string Subject = string.Empty;
+        public List<string> Headers = new();
+        public string FullHeader = string.Empty;
+        public string ValuesTail = string.Empty;
     }
 }
