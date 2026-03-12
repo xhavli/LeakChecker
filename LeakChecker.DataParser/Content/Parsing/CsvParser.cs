@@ -119,7 +119,7 @@ public class CsvParser(ParsingContext parsingContext)
     private string BuildValue(string[] row, int startIndex, out int nextIndex)
     {
         string firstValue = row[startIndex].Trim();
-        StringBuilder? builder = null;
+        StringBuilder? sb = null;
 
         nextIndex = startIndex + 1;
         while (nextIndex < row.Length &&
@@ -129,14 +129,14 @@ public class CsvParser(ParsingContext parsingContext)
             string nextValue = row[nextIndex].Trim();
             if (!string.IsNullOrWhiteSpace(nextValue))
             {
-                builder ??= new StringBuilder(firstValue);
-                builder.Append(_delimiter);
-                builder.Append(nextValue);
+                sb ??= new StringBuilder(firstValue);
+                sb.Append(_delimiter);
+                sb.Append(nextValue);
             }
 
             nextIndex++;
         }
 
-        return builder?.ToString() ?? firstValue;
+        return sb?.ToString() ?? firstValue;
     }
 }
