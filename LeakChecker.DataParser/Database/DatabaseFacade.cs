@@ -1,4 +1,6 @@
 using LeakChecker.DataParser.Content;
+using LeakChecker.DataParser.Content.Detection.ItemParsing;
+using LeakChecker.DataParser.Logging.Parse;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -9,21 +11,13 @@ public static class DatabaseFacade
     
     private static readonly InsertManyOptions UnorderedOptions = new() { IsOrdered = false };
     
-    public static async Task SaveOne(Dictionary<ItemEnum, List<string>> record, Guid parseId)
+    public static async Task SaveUserOne(Dictionary<ItemEnum, List<string>> record, Guid parseId)
     {
-        var document = CreateDocument(record, parseId);
-        await Collection.InsertOneAsync(document);
-    }
-
-    public static async Task SaveMany(List<BsonDocument> records)
-    {
-        if (records.Count == 0)
-            return;
-        
-        await Collection.InsertManyAsync(records, UnorderedOptions);
+        var document = CreateUserDocument(record, parseId);
+        await UserCollection.InsertOneAsync(document);
     }
     
-    public static async Task SaveMany(List<Dictionary<ItemEnum, List<string>>> records, Guid parseId)
+    public static async Task SaveUserMany(List<Dictionary<ItemEnum, List<string>>> records, Guid parseId)
     {
         if (records.Count == 0)
             return;
@@ -32,22 +26,59 @@ public static class DatabaseFacade
         
         foreach (var record in records)
         {
-            documents.Add(CreateDocument(record, parseId));
+            documents.Add(CreateUserDocument(record, parseId));
         }
         
-        await Collection.InsertManyAsync(documents, UnorderedOptions);
+        await UserCollection.InsertManyAsync(documents, UnorderedOptions);
     }
 
-    public static BsonDocument CreateDocument(Dictionary<ItemEnum, List<string>> record, Guid parseId )
+    private static BsonDocument CreateUserDocument(Dictionary<ItemEnum, List<string>> record, Guid parseId)
+    {
+        var document = new BsonDocument
+        {
+            { "ParseId", new BsonBinaryData(parseId, GuidRepresentation.Standard) }
+        };
+
+        foreach (var property in record)
+        {
+            ItemEnum type = property.Key;
+            var values = new List<BsonValue>();
+
+            foreach (var item in property.Value)
+            {
+                var normalized = TimestampParser.NormalizeValue(property.Key, item);
+
+                type = normalized.Type;
+                values.Add(BsonValue.Create(normalized.Value));
+            }
+
+            document.Add(type.ToString(), new BsonArray(values));
+        }
+
+        return document;
+    }
+
+    public static async Task SaveParseMany(List<ParseStats> stats)
+    {
+        if (stats.Count == 0)
+            return;
+
+        var documents = new List<BsonDocument>();
+        
+        foreach (var stat in stats)
+        {
+            documents.Add(CreateParseDocument(stat));
+        }
+        
+        await UserCollection.InsertManyAsync(documents, UnorderedOptions);
+    }
+
+    private static BsonDocument CreateParseDocument(ParseStats stats)
     {
         BsonDocument document = new BsonDocument();
-        document.Add("ParseId", new BsonBinaryData(parseId, GuidRepresentation.Standard));
-
-        foreach (var item in record)
-        {
-            //TODO depends on enum, convert it to correct data type - specially DateTime
-            document.Add(item.Key.ToString(), new BsonArray(item.Value));
-        }
+        document.Add("ParseId", new BsonBinaryData(stats.ParseId, GuidRepresentation.Standard));
+        document.Add("ExecutionId", new BsonBinaryData(stats.ExecutionId, GuidRepresentation.Standard));
+        //TODO add more properties
 
         return document;
     }
