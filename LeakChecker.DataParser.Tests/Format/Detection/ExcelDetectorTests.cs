@@ -46,7 +46,7 @@ public class ExcelDetectorTests
         
         // Act
         Dictionary<int, Dictionary<int, ItemEnum>> result = 
-            await ExcelDetector.DetectFormat(0, filePath, _logger, SamplesLimit, ThresholdPercent);
+            await ExcelDetector.DetectFormat(filePath, _logger, SamplesLimit, ThresholdPercent);
 
         // Assert
         Assert.Equal(expectedSchema, result);
@@ -80,7 +80,7 @@ public class ExcelDetectorTests
         
         // Act
         Dictionary<int, Dictionary<int, ItemEnum>> result = 
-            await ExcelDetector.DetectFormat(0, filePath, _logger, SamplesLimit, ThresholdPercent);
+            await ExcelDetector.DetectFormat(filePath, _logger, SamplesLimit, ThresholdPercent);
 
         // Assert
         Assert.Equal(expectedSchema, result);

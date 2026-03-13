@@ -10,43 +10,44 @@ namespace LeakChecker.DataParser.Format.Detection;
 public static class ExcelDetector
 {
     public static async Task<Dictionary<int, Dictionary<int, ItemEnum>>> DetectFormat(
-        long startSheet, string filePath, IParseLogger logger, int detectSamples, int thresholdPercent)
+        string filePath, IParseLogger logger, int detectSamples, int thresholdPercent)
     {
         await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
         using var reader = ExcelReaderFactory.CreateReader(stream);
         
         await logger.LogSchemaDetectionHeader();
-        Dictionary<int, Dictionary<int, ItemEnum>> schema = new();
+        Dictionary<int, Dictionary<int, ItemEnum>> schemas = new();
         
         int sheetNumber = 0;
         do
         {
             sheetNumber++;
-            string sheetName = reader.Name; // Context
+            string sheetName = reader.Name;
     
             int row = 0;
             int samplesCount = 0;
             
             SchemaHeuristic analyzer = new();
-            await logger.Log($"Sampling sheet number [{sheetNumber}] with name [{sheetName}]");
+            await logger.Log($"Sampling sheet number [{sheetNumber}] with name [{sheetName}].");
     
             while (reader.Read() && samplesCount < detectSamples)
             {
                 row++;
-                if (ExcelParser.IsRowEmpty(reader)) { continue; }
+                
+                if (ExcelParser.IsRowEmpty(reader))
+                    continue;
+                
                 samplesCount++;
-                
-                await logger.LogSample(""); // Write blank line to make log more readable
-                
                 List<SchemaHeuristicRecord> linePatterns = new();
+                await logger.LogSample(""); // Write blank line to make log more readable
                 
                 int columns = reader.FieldCount;
                 for (int column = 0; column < columns; column++)
                 {
                     string value = reader.GetValue(column)?.ToString() ?? string.Empty; // GetValue(i)? is necessary to have wit ? because can be null
-                    if (string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value))
+                    if (string.IsNullOrWhiteSpace(value))
                     {
-                        await logger.LogSample($"Excel sample {samplesCount}: row [{row}] column [{column}] value: [NULL]");
+                        await logger.LogSample($"Excel sample {samplesCount}: row [{row}] column [{column}] value: [EMPTY]");
                         linePatterns.Add(new SchemaHeuristicRecord
                         {
                             Attribute = ItemEnum.Empty,
@@ -66,20 +67,21 @@ public static class ExcelDetector
                     });
                 }
                 
-                analyzer.AddLinePatterns(linePatterns, columns - 1);    // -1 because value is exact number of columns, not delimiters
+                analyzer.AddLinePatterns(linePatterns, columns - 1);    // -1 because value is exact number of columns, not delimiters between
             }
     
             await logger.LogHeuristicData(analyzer);
             await logger.LogDominantSchema(analyzer, thresholdPercent);
         
-            var sheetSchema = analyzer.GetDominantSchema(thresholdPercent);
-            var assigned = CredentialAssigner.Assign(sheetSchema);
+            var original = analyzer.GetDominantSchema(thresholdPercent);
+            var assigned = CredentialAssigner.Assign(original);
+            
             await logger.LogFinalSchema(assigned);
         
-            schema.Add(sheetNumber, assigned);
+            schemas.Add(sheetNumber, assigned);
         }
         while (reader.NextResult());
         
-        return schema;
+        return schemas;
     }
 }
