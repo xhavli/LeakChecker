@@ -11,11 +11,15 @@ namespace LeakChecker.DataParser.Content.Detection;
 
 public static class ContentDetector
 {
+    private const string Person = "PERSON";
+    private const string Location = "LOCATION";
+    private const string Organization = "ORGANIZATION";
+    
     public static async Task<List<SchemaHeuristicRecord>> DetectLine(string line, char delimiter, IParseLogger logger)
     {
-        List<SchemaHeuristicRecord> linePatterns = new();
         line = line.Trim();
         string originLine = line;
+        List<SchemaHeuristicRecord> linePatterns = new();
         
         if (WebRecognizer.TryRecognize(line, out List<string> stringUris, out List<Uri> uris))
         {
@@ -99,7 +103,7 @@ public static class ContentDetector
                 string entityType = entity.Type;
                 switch (entityType)
                 {
-                    case "PERSON":
+                    case Person:
                         linePatterns.Add(new SchemaHeuristicRecord
                         {
                             Attribute = ItemEnum.Name,
@@ -107,7 +111,7 @@ public static class ContentDetector
                             DelimitersInside = item.Count(ch => ch == delimiter)
                         });
                         break;
-                    case "LOCATION":
+                    case Location:
                         linePatterns.Add(new SchemaHeuristicRecord
                         {
                             Attribute = ItemEnum.Location,
@@ -115,7 +119,7 @@ public static class ContentDetector
                             DelimitersInside = item.Count(ch => ch == delimiter)
                         });
                         break;
-                    case "ORGANIZATION":
+                    case Organization:
                         linePatterns.Add(new SchemaHeuristicRecord
                         {
                             Attribute = ItemEnum.Organization,
@@ -166,12 +170,14 @@ public static class ContentDetector
         }
         
         string[] tokens = line.Split(delimiter);
+        
         for (int i = 0; i < tokens.Length; i++)
         {
             if (linePatterns.Any(lp => lp.Position == i))
                 continue;
 
             string token = tokens[i].Trim().TrimEnclosingChars();
+            
             if (string.IsNullOrWhiteSpace(token))
                 continue;
 
@@ -215,8 +221,10 @@ public static class ContentDetector
     {
         if (WebRecognizer.TryRecognize(token, out _, out _))
             return ItemEnum.Web;
+        
         if (EmailRecognizer.TryRecognize(token, out _, out _))
             return ItemEnum.Email;
+        
         if (TimestampRecognizer.TryRecognize(token, out _, out _))
             return ItemEnum.Timestamp;
         
@@ -228,9 +236,9 @@ public static class ContentDetector
                 string entityType = analyzeResults.First().Type;
                 return entityType switch
                 {
-                    "PERSON" => ItemEnum.Name,
-                    "LOCATION" => ItemEnum.Location,
-                    "ORGANIZATION" => ItemEnum.Organization,
+                    Person => ItemEnum.Name,
+                    Location => ItemEnum.Location,
+                    Organization => ItemEnum.Organization,
                     _ => throw new Exception($"Unknown entity type: {entityType} returned from PythonNerService"),
                 };
             }
@@ -243,18 +251,25 @@ public static class ContentDetector
         
         if (GuidRecognizer.TryRecognize(token, out _, out _))
             return ItemEnum.Id;
+        
         if (GenderParser.TryParse(token, out _))
             return ItemEnum.Gender;
+        
         if (MaritalStatusParser.TryParse(token, out _))
             return ItemEnum.MaritalStatus;
+        
         if (IpAddressParser.TryParse(token, out ItemEnum itemType, out _))
             return itemType;
+        
         if (PhoneNumberParser.TryParse(token, out _))
             return ItemEnum.PhoneNumber;
+        
         if (MacAddressParser.TryParse(token, out _))
             return ItemEnum.Mac;
+        
         if (IbanParser.TryParse(token))
             return ItemEnum.Iban;
+        
         if (TimestampParser.TryParse(token, out ItemEnum timeType, out _))
             return timeType;
         
