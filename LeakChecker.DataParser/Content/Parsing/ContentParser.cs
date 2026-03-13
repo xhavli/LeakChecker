@@ -40,14 +40,15 @@ public class ContentParser : IDisposable
         _schemaThreshold = schemaThreshold;
     }
 
-    public async Task ProcessFile()
+    public async Task ParseFile()
     {
         await _logger.LogContentHeader();
         Stopwatch sw = Stopwatch.StartNew();
 
         while (await _reader.ReadLineWithEndingAsync() is { } originLine)
         {
-            if (_recordsRead >= ParseLimit) break;
+            if (_recordsRead >= ParseLimit)
+                break;
             
             string line = originLine.Trim();
             
@@ -201,8 +202,8 @@ public class ContentParser : IDisposable
             _linesRead++;
 
             _readerPosition += _encoding.GetByteCount(line);
+            
             line = line.Trim();
-
             ReadOnlySpan<char> span = line.AsSpan();
 
             for (int i = 0; i < span.Length; i++)

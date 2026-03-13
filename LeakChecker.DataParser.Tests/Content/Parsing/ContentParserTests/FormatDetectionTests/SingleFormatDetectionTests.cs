@@ -40,7 +40,7 @@ public class SingleFormatDetectionTests
         using var parser = new ContentParser(filePath, _logger, stats, schemaThreshold: 50);
 
         // Act
-        await parser.ProcessFile();
+        await parser.ParseFile();
 
         // Assert
         Assert.Single(stats.Formats);
@@ -63,7 +63,7 @@ public class SingleFormatDetectionTests
         using var parser = new ContentParser(filePath, _logger, stats, schemaThreshold: 50);
 
         // Act
-        await parser.ProcessFile();
+        await parser.ParseFile();
 
         // Assert
         Assert.Single(stats.Formats);
@@ -97,7 +97,7 @@ public class SingleFormatDetectionTests
         using var parser = new ContentParser(filePath, _logger, stats, schemaThreshold: 50);
 
         // Act
-        await parser.ProcessFile();
+        await parser.ParseFile();
 
         // Assert
         Assert.Single(stats.Formats);

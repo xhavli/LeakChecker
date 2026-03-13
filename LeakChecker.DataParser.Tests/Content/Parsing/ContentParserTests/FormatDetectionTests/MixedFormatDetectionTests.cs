@@ -27,7 +27,7 @@ public class MixedFormatDetectionTests
         using var parser = new ContentParser(filePath, _logger, stats, schemaThreshold: 50);
 
         // Act
-        await parser.ProcessFile();
+        await parser.ParseFile();
 
         // Assert
         Assert.Equal(2, stats.Formats.Count);
