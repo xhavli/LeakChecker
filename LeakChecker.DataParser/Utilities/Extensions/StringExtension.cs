@@ -19,8 +19,8 @@ public static class StringExtensions
         char first = span[0];
         char last = span[^1];
 
-        // Case: ' ... ', " ... ", ` ... `, | ... |
-        if (first == last && first is '\'' or '"' or '`' or '|')
+        // Case: ' ... ', ` ... `, " ... ", | ... |
+        if (first == last && first is '\'' or '`' or '"' or '|')
             return span.Slice(1, span.Length - 2).ToString();
 
         return input;
@@ -99,6 +99,7 @@ public static class StringExtensions
     }
     
     
+    
     // DROP [modifiers] TABLE [modifiers] <table_name> [ , <table_name> ... ] ;
     private static bool IsSqlDropTable(this string line)
     {
@@ -124,16 +125,24 @@ public static class StringExtensions
         int start = line.IndexOf(Insert, StringComparison.OrdinalIgnoreCase);
         if (start != 0)
             return false;
-
+        
         int into = line.IndexOf(Into, StringComparison.OrdinalIgnoreCase);
         if (into < 0)
+            return false;
+        
+        int openParen = line.IndexOf('(', into);
+        if (openParen == -1)
+            return false;
+        
+        int closeParen = line.IndexOf(')', openParen + 1);
+        if (closeParen == -1)
             return false;
 
         int values = line.IndexOf(Values, StringComparison.OrdinalIgnoreCase);
         if (values < 0)
             return false;
 
-        return start < into && into < values;
+        return start < into && into < openParen && openParen < closeParen && closeParen < values;
     }
     
     // CREATE [modifiers] TABLE [modifiers] <table_name>
@@ -161,8 +170,8 @@ public static class StringExtensions
                || line.EndsWith(")\t;", StringComparison.Ordinal);
     }
     
-    // +----+
-    // ------
+    // +----+ or ------
+    // ASCII Table header
     public static bool IsPossibleAsciiTable(this string line)
     {
         return line.Length > 2 &&
