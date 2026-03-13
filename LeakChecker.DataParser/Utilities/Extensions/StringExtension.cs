@@ -4,6 +4,13 @@ namespace LeakChecker.DataParser.Utilities.Extensions;
 
 public static class StringExtensions
 {
+    private const string Insert = "INSERT ";
+    private const string Into = " INTO ";
+    private const string Values = " VALUES";
+    private const string Create = "CREATE ";
+    private const string Table = " TABLE ";
+    private const string Drop = "DROP ";
+    
     public static string TrimEnclosingChars(this string input)
     {
         if (input.Length < 2) return input;
@@ -95,11 +102,11 @@ public static class StringExtensions
     // DROP [modifiers] TABLE [modifiers] <table_name> [ , <table_name> ... ] ;
     private static bool IsSqlDropTable(this string line)
     {
-        int drop = line.IndexOf("DROP ", StringComparison.OrdinalIgnoreCase);
+        int drop = line.IndexOf(Drop, StringComparison.OrdinalIgnoreCase);
         if (drop != 0)
             return false;
 
-        int table = line.IndexOf(" TABLE ", StringComparison.OrdinalIgnoreCase);
+        int table = line.IndexOf(Table, StringComparison.OrdinalIgnoreCase);
         if (table < 0)
             return false;
         
@@ -114,15 +121,15 @@ public static class StringExtensions
     // ( ... );
     public static bool IsSqlInsert(this string line)
     {
-        int start = line.IndexOf("INSERT ", StringComparison.OrdinalIgnoreCase);
+        int start = line.IndexOf(Insert, StringComparison.OrdinalIgnoreCase);
         if (start != 0)
             return false;
 
-        int into = line.IndexOf(" INTO ", StringComparison.OrdinalIgnoreCase);
+        int into = line.IndexOf(Into, StringComparison.OrdinalIgnoreCase);
         if (into < 0)
             return false;
 
-        int values = line.IndexOf(" VALUES", StringComparison.OrdinalIgnoreCase);
+        int values = line.IndexOf(Values, StringComparison.OrdinalIgnoreCase);
         if (values < 0)
             return false;
 
@@ -136,11 +143,11 @@ public static class StringExtensions
     // ) [options];
     public static bool IsSqlCreateTable(this string line)
     {
-        int create = line.IndexOf("CREATE ", StringComparison.OrdinalIgnoreCase);
+        int create = line.IndexOf(Create, StringComparison.OrdinalIgnoreCase);
         if (create != 0)
             return false;
 
-        int table = line.IndexOf(" TABLE ", StringComparison.OrdinalIgnoreCase);
+        int table = line.IndexOf(Table, StringComparison.OrdinalIgnoreCase);
         if (table < 0)
             return false;
 
