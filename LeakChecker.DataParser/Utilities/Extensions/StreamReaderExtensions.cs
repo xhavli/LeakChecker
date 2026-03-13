@@ -96,10 +96,8 @@ public static class StreamReaderExtensions
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when offset is negative or greater than the stream length.
     /// </exception>
-    public static void AdjustPosition(this StreamReader? reader, long offset)
+    public static void AdjustPosition(this StreamReader reader, long offset)
     {
-        ArgumentNullException.ThrowIfNull(reader);
-
         if (offset < 0)
             throw new ArgumentOutOfRangeException(nameof(offset), "Offset cannot be negative.");
 
@@ -109,7 +107,7 @@ public static class StreamReaderExtensions
         if (offset > reader.BaseStream.Length)
             throw new ArgumentOutOfRangeException(nameof(offset), "Offset exceeds the length of the stream.");
 
-        reader.BaseStream.Seek(offset, SeekOrigin.Begin);
         reader.DiscardBufferedData();
+        reader.BaseStream.Seek(offset, SeekOrigin.Begin);
     }
 }
