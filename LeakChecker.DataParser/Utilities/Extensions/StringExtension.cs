@@ -147,6 +147,13 @@ public static class StringExtensions
         return create < table;
     }
     
+    public static bool IsSqlInsertEnd(this string line)
+    {
+        return line.EndsWith(");", StringComparison.Ordinal)
+               || line.EndsWith(") ;", StringComparison.Ordinal)
+               || line.EndsWith(")\t;", StringComparison.Ordinal);
+    }
+    
     // +----+
     // ------
     public static bool IsPossibleAsciiTable(this string line)

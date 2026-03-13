@@ -5,6 +5,7 @@ using LeakChecker.DataParser.Content.Detection;
 using LeakChecker.DataParser.Format.Schema;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Utilities.Extensions;
 
 namespace LeakChecker.DataParser.Format.Detection;
 
@@ -133,7 +134,7 @@ public static class SqlInsertDetector
                             sb.Clear();
 
                             // End of Sql INSERT
-                            if (IsSqlInsertEnd(line))
+                            if (line.IsSqlInsertEnd())
                                 break;
                         }
 
@@ -146,7 +147,7 @@ public static class SqlInsertDetector
             }
             
             // End of Sql INSERT
-            if (IsSqlInsertEnd(line))
+            if (line.IsSqlInsertEnd())
                 break;
         }
 
@@ -283,13 +284,6 @@ public static class SqlInsertDetector
         }
 
         return linePatterns;
-    }
-    
-    private static bool IsSqlInsertEnd(string line)
-    {
-        return line.EndsWith(");", StringComparison.Ordinal)
-               || line.EndsWith(") ;", StringComparison.Ordinal)
-               || line.EndsWith(")\t;", StringComparison.Ordinal);
     }
     
     public class SqlHeader
