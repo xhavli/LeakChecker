@@ -8,6 +8,7 @@ namespace LeakChecker.DataParser.Content.Parsing;
 
 public class SqlInsertParser(ParsingContext parsingContext)
 {
+    private const string Values = "VALUES";
     private readonly Guid _parseId = parsingContext.Stats.ParseId;
     private readonly IParseLogger _logger = parsingContext.Logger;
     private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
@@ -25,34 +26,36 @@ public class SqlInsertParser(ParsingContext parsingContext)
 
         int expectedFields = _schema.Count == 0 ? 0 : _schema.Keys.Max() + 1;
 
-        bool afterValues = false;
-        bool inQuote = false;
         int parenDepth = 0;
+        bool inQuote = false;
+        bool afterValues = false;
 
-        int malformedRecordsSequence = 0;
-        int malformedRecordsRead = 0;
-        long recordsRead = 0;
-        long linesRead = 0;
         long bytesRead = 0;
+        long linesRead = 0;
+        long recordsRead = 0;
+        int malformedRecordsRead = 0;
+        int malformedRecordsSequence = 0;
 
         while (await reader.ReadLineWithEndingAsync() is { } line)
         {
             linesRead++;
             bytesRead += encoding.GetByteCount(line);
 
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+            
             line = line.Trim();
             if (string.IsNullOrWhiteSpace(line)) continue;
 
             // Detect VALUES position
             if (!afterValues)
             {
-                const string valuesKeyword = "VALUES";
-                int pos = line.IndexOf(valuesKeyword, StringComparison.OrdinalIgnoreCase);
+                int valuesPos = line.IndexOf(Values, StringComparison.OrdinalIgnoreCase);
 
-                if (pos < 0)    // Wait for VALUES on another line
+                if (valuesPos < 0)    // Wait for VALUES on another line
                     continue;
 
-                line = line.Substring(pos + valuesKeyword.Length);
+                line = line.Substring(valuesPos + Values.Length);
                 afterValues = true;
             }
 
@@ -153,7 +156,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
             }
 
             // End of Sql INSERT
-            if (line.EndsWith(");") || line.EndsWith(") ;") || line.EndsWith(")\t;")) 
+            if (line.IsSqlInsertEnd()) 
                 break;
         }
 
@@ -161,10 +164,10 @@ public class SqlInsertParser(ParsingContext parsingContext)
         
         return new ParsingState
         {
-            MalformedRecordsRead = malformedRecordsRead,
-            RecordsRead = recordsRead,
             LinesRead = linesRead,
             BytesRead = bytesRead,
+            RecordsRead = recordsRead,
+            MalformedRecordsRead = malformedRecordsRead,
         };
     }
 
