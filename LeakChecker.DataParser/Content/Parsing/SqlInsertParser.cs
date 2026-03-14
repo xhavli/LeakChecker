@@ -45,7 +45,6 @@ public class SqlInsertParser(ParsingContext parsingContext)
                 continue;
             
             line = line.Trim();
-            if (string.IsNullOrWhiteSpace(line)) continue;
 
             // Detect VALUES position
             if (!afterValues)
