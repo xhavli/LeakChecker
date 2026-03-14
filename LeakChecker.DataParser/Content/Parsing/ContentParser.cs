@@ -250,10 +250,22 @@ public class ContentParser : IDisposable
 
     private void UpdateParsingState(ParsingState state)
     {
-        _malformedRecordsRead += state.MalformedRecordsRead;
-        _recordsRead += state.RecordsRead;
         _linesRead += state.LinesRead;
+        _recordsRead += state.RecordsRead;
         _readerPosition += state.BytesRead;
+        _malformedRecordsRead += state.MalformedRecordsRead;
+
+        if (_readerPosition <= _reader.BaseStream.Length)
+        {
+            _reader.AdjustPosition(_readerPosition);
+        }
+        else
+        {
+            
+            _logger.Log($"UpdateParsingState _readerPosition is greater than file size in bytes. {_readerPosition} - {_reader.BaseStream.Length} " +
+                        $"= {_readerPosition - _reader.BaseStream.Length} bytes. Setting BaseStream.Length", LogLevel.Warning, LogContext.Parsing);
+            _readerPosition = _reader.BaseStream.Length;
+        }
     }
     
     public void Dispose()

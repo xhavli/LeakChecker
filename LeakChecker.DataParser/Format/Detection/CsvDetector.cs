@@ -2,6 +2,7 @@ using System.Diagnostics;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Content.Detection;
 using LeakChecker.DataParser.Format.Schema;
+using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Utilities.Extensions;
 
@@ -18,6 +19,7 @@ public static class CsvDetector
         long startLine = parsingContext.StartLine;
         int threshold = parsingContext.Threshold;
         
+        int linesRead = 0;
         int samplesCount = 0;
         SchemaHeuristic analyzer = new();
         await logger.LogSchemaDetectionHeader();
@@ -25,6 +27,15 @@ public static class CsvDetector
         Stopwatch sw = Stopwatch.StartNew();
         while (await reader.ReadLineAsync() is { } line)
         {
+            linesRead++;
+            
+            if (line.IsSqlInsert())
+            {
+                await logger.Log($"Detected SQL Insert while sampling CSV file on line {startLine + linesRead}: {line}. " +
+                                  $"Returning back to recompute schema.", LogLevel.Warning);
+                break;
+            }
+            
             if (samplesCount == samplesLimit)
                 break;
 
@@ -36,7 +47,7 @@ public static class CsvDetector
                 .TrimOuterParenthesesWithComma();   // For undetected SQL INSERT
             
             samplesCount++;
-            await logger.LogSample($"CSV file sample {samplesCount} on line {startLine + samplesCount}: {line}");
+            await logger.LogSample($"CSV file sample {samplesCount} on line {startLine + linesRead}: {line}");
             
             var linePatterns = await ContentDetector.DetectLine(line, delimiter, logger);
             int delimitersCount = line.Count(ch => ch == delimiter);

@@ -32,12 +32,20 @@ public class CsvParser(ParsingContext parsingContext)
         
         while (await reader.ReadLineWithEndingAsync() is { } line)
         {
+            if (line.IsSqlInsert())
+            {
+                await _logger.Log($"Detected SQL Insert while parsing CSV file on line {startLine + linesRead}: {line}. " +
+                                  $"Returning back to recompute schema.", LogLevel.Warning, LogContext.Parsing);
+                break;
+            }
+            
             linesRead++;
             bytesRead += encoding.GetByteCount(line);
         
             if (string.IsNullOrWhiteSpace(line))
                 continue;
-            
+
+            line = line.Trim();
             string[] row = line.Split(_delimiter);
             
             if (row.Length != expectedFields)
@@ -50,7 +58,7 @@ public class CsvParser(ParsingContext parsingContext)
                 if (malformedRecordsSequence >= malformedLimit)
                 {
                     await _logger.Log($"Parsing reach malformed limit {malformedLimit}. " +
-                                      $"Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
+                                      $"Returning back to recompute schema.", LogLevel.Warning, LogContext.Parsing);
                     break;
                 }
                 
@@ -75,10 +83,10 @@ public class CsvParser(ParsingContext parsingContext)
         
         return new ParsingState
         {
-            MalformedRecordsRead = malformedRecordsRead,
-            RecordsRead = recordsRead,
             LinesRead = linesRead,
             BytesRead = bytesRead,
+            RecordsRead = recordsRead,
+            MalformedRecordsRead = malformedRecordsRead,
         };
     }
 
