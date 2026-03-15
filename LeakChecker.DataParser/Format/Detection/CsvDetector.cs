@@ -63,6 +63,9 @@ public static class CsvDetector
         await logger.LogFinalSchema(assigned);
         await logger.Log($"Csv file schema created in {sw.Elapsed}\n");
         
+        //TODO add context to stats
+        parsingContext.Stats.Schemas.Add(assigned);
+        
         return assigned;
     }
 }

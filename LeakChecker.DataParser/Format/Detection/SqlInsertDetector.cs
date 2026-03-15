@@ -61,11 +61,9 @@ public static class SqlInsertDetector
                     continue;
                 
                 expectedCols = header.Headers.Count;
-
                 await logger.LogSqlInsertHeader(header);
-                parsingContext.Stats.Context.Add(header.Subject);
 
-                if (string.IsNullOrEmpty(header.ValuesTail))
+                if (string.IsNullOrWhiteSpace(header.ValuesTail))
                     continue;
                 
                 line = header.ValuesTail.Trim();
@@ -160,6 +158,9 @@ public static class SqlInsertDetector
 
         await logger.LogFinalSchema(assigned);
         await logger.Log($"SqlInsert schema created in {sw.Elapsed}\n");
+        
+        parsingContext.Stats.Schemas.Add(assigned);
+        parsingContext.Stats.Context.Add(header.Subject);
 
         return assigned;
     }

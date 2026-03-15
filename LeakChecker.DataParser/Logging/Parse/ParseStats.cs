@@ -1,4 +1,5 @@
 using System.Text;
+using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Format;
 
@@ -20,6 +21,7 @@ public class ParseStats
     public List<char> Delimiters { get; set; } = new();
     public List<FormatEnum> Formats { get; set; } = new();
     public List<string> Context { get; set; } = new();
+    public List<Dictionary<int, ItemEnum>> Schemas { get; set; } = new();
     public DateTime ParseStart { get; init; } = DateTime.Now;
     public DateTime ParseEnd { get; set; }
     
