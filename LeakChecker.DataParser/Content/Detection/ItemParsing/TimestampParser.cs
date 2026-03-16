@@ -66,7 +66,8 @@ public static class TimestampParser
     }
     
     /// <summary>
-    /// Normalize Timestamp, UnixSeconds, UnixMilliseconds, NetTicks, FileTime to C# DateTime.
+    /// Normalize ItemEnum: Timestamp, UnixSeconds, UnixMilliseconds, NetTicks, FileTime to
+    /// ItemEnum.Timestamp and convert string value to C# DateTime.
     /// Others keep original type and original string value.
     /// </summary>
     /// <param name="type">ItemEnum</param>
