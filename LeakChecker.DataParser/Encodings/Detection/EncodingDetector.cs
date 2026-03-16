@@ -22,21 +22,18 @@ public class EncodingDetector(IParseLogger logger, ParseStats stats)
 
         if (encSegments.Count == 1)
         {
-            await logger.Log($"Encoding detection finished successfully. Detected consistent [{encSegments[0].Encoding!.WebName}] " +
-                             $"with [{encSegments[0].Confidence:F2}] confidence. Time taken: {sw.Elapsed}.",
-                            LogLevel.Success, LogContext.Encoding);
+            await logger.Log($"Encoding detection finished successfully. Detected consistent [{encSegments[0].Encoding?.WebName}] with " +
+                             $"[{encSegments[0].Confidence:F2}] confidence. Time taken: {sw.Elapsed}.", LogLevel.Success, LogContext.Encoding);
         }
         else if (encSegments.Count > 1)
         {
-            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var distinctEncSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var segment in encSegments)
                 if (segment.Encoding?.WebName is { } name)
-                    set.Add(name);
-            int differentEncodings = set.Count;
+                    distinctEncSet.Add(name);
 
-            await logger.Log("Encoding detection finished successfully. Detected concatenated encoding with " +
-                             $"{differentEncodings} different encodings. Time taken: {sw.Elapsed}.",
-                            LogLevel.Success, LogContext.Encoding);
+            await logger.Log($"Encoding detection finished successfully. Detected concatenated encoding with {distinctEncSet.Count} " +
+                             $"distinct encodings. Time taken: {sw.Elapsed}.", LogLevel.Success, LogContext.Encoding);
         }
         else
         {
@@ -55,7 +52,6 @@ public class EncodingDetector(IParseLogger logger, ParseStats stats)
     {
         await logger.Log("Detection of consistent encoding.");
         
-        string message;
         var segments = new List<EncodingSegment>();
         await using var stream = File.OpenRead(logger.SubjectFilePath);
 
@@ -77,17 +73,11 @@ public class EncodingDetector(IParseLogger logger, ParseStats stats)
         }
 
         if (result?.Detected == null)
-        {
-            message = "Consistent encoding detection failed: returned [NULL].";
-        }
+            await logger.Log("Consistent encoding detection failed: returned [NULL].");
         else
-        {
-            message = $"Consistent encoding detection not satisfied: detected [{result.Detected?.Encoding?.WebName}] " +
-                      $"with low confidence [{result.Detected?.Confidence:F2}].";
-        }
+            await logger.Log($"Consistent encoding detection not satisfied: detected [{result.Detected?.Encoding?.WebName}] " +
+                             $"with low confidence [{result.Detected?.Confidence:F2}]."); 
 
-        await logger.Log(message);
-        
         return segments;
     }
     
