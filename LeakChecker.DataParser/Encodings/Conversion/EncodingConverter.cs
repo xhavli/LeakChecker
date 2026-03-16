@@ -17,6 +17,7 @@ public static class EncodingConverter
         string inputFilePath = logger.SubjectFilePath;
         string outputFilePath = logger.SubjectTmpFilePath;
         Stopwatch sw = Stopwatch.StartNew();
+        Encoding utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false); // no BOM
         
         // If file is already in UTF-8 as a single UTF-8 segment, just copy
         if (encodingSegments is [{ Encoding: not null }] && Equals(encodingSegments[0].Encoding?.WebName, Encoding.UTF8.WebName))
@@ -27,16 +28,14 @@ public static class EncodingConverter
         }
 
         await using var inputStream = File.OpenRead(inputFilePath);
-        await using var outputStream = new StreamWriter(outputFilePath, false, 
-            new UTF8Encoding(encoderShouldEmitUTF8Identifier: false) // no BOM
-        );
+        await using var outputStream = new StreamWriter(outputFilePath, false, utf8);
 
         foreach (var segment in encodingSegments)
         {
             if (segment.Encoding == null)
             {
                 await logger.LogEncodingConversion($"Encoding missing for encoding segment [{segment.ToByteString()}]. Set UTF-8 as default.");
-                segment.Encoding = Encoding.UTF8;
+                segment.Encoding = utf8;
             }
 
             inputStream.Seek(segment.StartOffset, SeekOrigin.Begin);
