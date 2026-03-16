@@ -40,7 +40,7 @@ public class EncodingDetector(IParseLogger logger, ParseStats stats)
         }
         else
         {
-            await logger.Log("Encoding detection failed. Detector did not detect any encoding. Time taken: {sw.Elapsed}.",
+            await logger.Log($"Encoding detection failed. Detector did not detect any encoding. Time taken: {sw.Elapsed}.",
                             LogLevel.Warning, LogContext.Encoding);
         }
         
