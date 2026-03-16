@@ -65,6 +65,13 @@ public static class TimestampParser
         return false;
     }
     
+    /// <summary>
+    /// Normalize Timestamp, UnixSeconds, UnixMilliseconds, NetTicks, FileTime to C# DateTime.
+    /// Others keep original type and original string value.
+    /// </summary>
+    /// <param name="type">ItemEnum</param>
+    /// <param name="value">String</param>
+    /// <returns>Normalized or original type and value</returns>
     public static (ItemEnum Type, object Value) NormalizeValue(ItemEnum type, string value)
     {
         return type switch
