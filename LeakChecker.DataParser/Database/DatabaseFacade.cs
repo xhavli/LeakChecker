@@ -46,6 +46,7 @@ public static class DatabaseFacade
 
             foreach (var item in property.Value)
             {
+                //Normalize only timestamp formats, others keep untouched
                 var normalized = TimestampParser.NormalizeValue(property.Key, item);
 
                 type = normalized.Type;
@@ -67,19 +68,9 @@ public static class DatabaseFacade
         
         foreach (var stat in stats)
         {
-            documents.Add(CreateParseDocument(stat));
+            documents.Add(stat.ToBsonDocument());
         }
         
-        await UserCollection.InsertManyAsync(documents, UnorderedOptions);
-    }
-
-    private static BsonDocument CreateParseDocument(ParseStats stats)
-    {
-        BsonDocument document = new BsonDocument();
-        document.Add("ParseId", new BsonBinaryData(stats.ParseId, GuidRepresentation.Standard));
-        document.Add("ExecutionId", new BsonBinaryData(stats.ExecutionId, GuidRepresentation.Standard));
-        //TODO add more properties
-
-        return document;
+        await ParseCollection.InsertManyAsync(documents, UnorderedOptions);
     }
 }

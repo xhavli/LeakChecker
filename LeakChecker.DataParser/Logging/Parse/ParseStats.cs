@@ -2,6 +2,7 @@ using System.Text;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Format;
+using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Logging.Parse;
 
@@ -42,6 +43,41 @@ public class ParseStats
             FilePath = filePath, 
             FileSize = new FileInfo(filePath).Length 
         }; 
+    }
+
+    public BsonDocument ToBsonDocument()
+    {
+        var document = new BsonDocument
+        {
+            { nameof(ParseId), new BsonBinaryData(ParseId, GuidRepresentation.Standard) },
+            { nameof(ExecutionId), new BsonBinaryData(ExecutionId, GuidRepresentation.Standard) },
+            { nameof(FileName), FileName is null ? BsonNull.Value : FileName },
+            { nameof(FilePath), FilePath is null ? BsonNull.Value : FilePath },
+            { nameof(FileSize), FileSize },
+            { nameof(MalformedRecordsRead), MalformedRecordsRead },
+            { nameof(LinesRead), LinesRead },
+            { nameof(BytesRead), BytesRead },
+            { nameof(RecordsRead), RecordsRead },
+            { nameof(Encoding), Encoding?.WebName is null ? BsonNull.Value : Encoding.WebName },
+            // { nameof(EncodingSegments), new BsonArray(EncodingSegments.Select(segment => new BsonDocument
+            //     {
+            //         { "Start", segment.StartOffset },
+            //         { "Length", segment.Length },
+            //         { "Encoding", segment.Encoding?.WebName is null ? BsonNull.Value : segment.Encoding.WebName }
+            //     }))
+            // },
+            { nameof(Delimiters), new BsonArray(Delimiters.Select(d => d.ToString())) },
+            { nameof(Formats), new BsonArray(Formats.Select(f => f.ToString())) },
+            { nameof(Context), new BsonArray(Context) },
+            { nameof(Schemas), new BsonArray(Schemas.Select(schema =>
+                new BsonDocument(schema.Select(kvp =>
+                    new BsonElement(kvp.Key.ToString(), kvp.Value.ToString())))))
+            },
+            { nameof(ParseStart), ParseStart.ToUniversalTime() },
+            { nameof(ParseEnd), ParseEnd.ToUniversalTime() },
+        };
+
+        return document;
     }
 }
 
