@@ -98,7 +98,10 @@ public static class Program
         {
             await foreach (var filePath in channel.Reader.ReadAllAsync())
             {
-                if (!await fileHelper.IsAccessible(filePath) || !await fileHelper.IsSupported(filePath)) continue;
+                await executionLogger.Log("Started: " + Path.GetFileName(filePath), LogLevel.Info, LogContext.Parsing);
+                
+                if (!await fileHelper.IsAccessible(filePath) || !await fileHelper.IsSupported(filePath))
+                    continue;
 
                 using var parseLogger = await loggerFactory.CreateAsync(executionId, filePath);
                 ParseStats parseStats = ParseStats.Create(executionId, parseLogger, filePath);
@@ -122,18 +125,18 @@ public static class Program
                         string parseFile = parseLogger.SubjectFilePath;   //TODO remove this only for test purposes
                         // string parseFile = parseLogger.SubjectTmpFilePath;    //TODO use this in deployment
                         using ContentParser contentParser = new(parseFile, parseLogger, parseStats, config.SchemaThreshold);
-                        await contentParser.ProcessFile();
+                        await contentParser.ParseFile();
                     }
 
                     await parseLogger.LogFileStats(parseStats);
                     
                     lock (stats)
                     {
-                        stats.MalformedRecordsRead += parseStats.MalformedRecordsRead;
-                        stats.RecordsParsed += parseStats.RecordsRead;
+                        stats.FilesParsed.Add(parseStats.ParseId);
                         stats.LinesParsed += parseStats.LinesRead;
                         stats.BytesParsed += parseStats.BytesRead;
-                        stats.FilesParsed.Add(parseStats.ParseId);
+                        stats.RecordsParsed += parseStats.RecordsRead;
+                        stats.MalformedRecordsRead += parseStats.MalformedRecordsRead;
                     }
                 }
                 catch (Exception e)
@@ -162,7 +165,7 @@ public static class Program
         stats.ExecutionEnd = DateTime.Now;
         await executionLogger.LogExecutionStats(stats);
         
-        await executionLogger.Log($"Execution finished successfully. Parsed {data.Length} files. Current DateTime is " +
+        await executionLogger.Log($"Execution finished successfully. Parsed {filePaths.Length} files. Current DateTime is " +
                          $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Main);
         await executionLogger.Log("Program will exit with exit code 0");
         return 0;
