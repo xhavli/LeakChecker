@@ -6,24 +6,23 @@ using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Logging.Parse;
 
-public class ParseStats
+public class ParseStats(Guid executionId, IParseLogger parseLogger, string filePath) : IParseStats
 {
-    public Guid ParseId { get; init; }
-    public Guid ExecutionId { get; init; }
-    public string? FileName { get; init; }
-    public string? FilePath { get; init; }
-    public long FileSize { get; init; }
+    public Guid ParseId { get; init; } = parseLogger.ParseId;
+    public Guid ExecutionId { get; init; } = executionId;
+    public string FilePath { get; init; } = filePath;
+    public long FileSize { get; init; } = new FileInfo(filePath).Length;
     public long MalformedRecordsRead { get; set; }
     public long LinesRead { get; set; }
     public long BytesRead { get; set; }
     public long RecordsRead { get; set; }
     public Encoding? Encoding { get; set; }
     public List<EncodingSegment> EncodingSegments { get; set; } = new();
-    public List<char> Delimiters { get; set; } = new();
-    public List<FormatEnum> Formats { get; set; } = new();
-    public List<string> Context { get; set; } = new();
-    public List<Dictionary<int, ItemEnum>> Schemas { get; set; } = new();
-    public DateTime ParseStart { get; init; } = DateTime.Now;
+    public List<char> Delimiters { get; init; } = new();
+    public List<FormatEnum> Formats { get; init; } = new();
+    public List<string> Context { get; init; } = new();
+    public List<Dictionary<int, ItemEnum>> Schemas { get; init; } = new();
+    public DateTime ParseStart { get; init; } = parseLogger.ParseStart;
     public DateTime ParseEnd { get; set; }
     
     public TimeSpan Duration => ParseEnd - ParseStart;
@@ -31,19 +30,6 @@ public class ParseStats
     public double LineSpeed => Duration.TotalSeconds > 0 ? LinesRead / Duration.TotalSeconds : 0;
     public double Accuracy =>
         RecordsRead <= 0 ? 0 : Math.Max(0, (double)(RecordsRead - MalformedRecordsRead) / RecordsRead * 100);
-    
-    public static ParseStats Create(Guid executionId, IParseLogger parseLogger, string filePath) 
-    { 
-        return new ParseStats 
-        { 
-            ParseId = parseLogger.ParseId, 
-            ExecutionId = executionId, 
-            ParseStart = parseLogger.ParseStart, 
-            FileName = Path.GetFileName(filePath), 
-            FilePath = filePath, 
-            FileSize = new FileInfo(filePath).Length 
-        }; 
-    }
 
     public BsonDocument ToBsonDocument()
     {
@@ -51,8 +37,7 @@ public class ParseStats
         {
             { nameof(ParseId), new BsonBinaryData(ParseId, GuidRepresentation.Standard) },
             { nameof(ExecutionId), new BsonBinaryData(ExecutionId, GuidRepresentation.Standard) },
-            { nameof(FileName), FileName is null ? BsonNull.Value : FileName },
-            { nameof(FilePath), FilePath is null ? BsonNull.Value : FilePath },
+            { nameof(FilePath), FilePath },
             { nameof(FileSize), FileSize },
             { nameof(MalformedRecordsRead), MalformedRecordsRead },
             { nameof(LinesRead), LinesRead },
