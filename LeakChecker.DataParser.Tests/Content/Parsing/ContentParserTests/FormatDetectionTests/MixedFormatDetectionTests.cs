@@ -7,7 +7,7 @@ namespace LeakChecker.DataParser.Tests.Content.Parsing.ContentParserTests.Format
 
 public class MixedFormatDetectionTests
 {
-    private readonly IParseLogger _logger = new NullParseLogger(string.Empty);
+    private readonly IParseLogger _logger = new NullParseLogger();
     private readonly string _testDataDirectory;
         
     public MixedFormatDetectionTests()

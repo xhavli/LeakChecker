@@ -33,8 +33,8 @@ public class EncodingDetectorTests
     {
         // Arrange
         string filePath = Path.Combine(_testDataDirectory, fileName);
-        IParseLogger logger = new NullParseLogger(filePath);
         var stats = NullParseStats.Create(Guid.Empty, logger, filePath);
+        IParseLogger logger = new NullParseLogger();
         EncodingDetector encodingDetector = new(logger, stats);
 
         Encoding expected = Encoding.GetEncoding(codePage);

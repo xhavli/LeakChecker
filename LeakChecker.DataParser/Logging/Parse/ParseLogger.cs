@@ -327,7 +327,7 @@ public class ParseLogger : IParseLogger
         await LogLineAsync("             [X] FILE PARSE STATS [X]");
         await LogLineAsync("------------------------------------------------");
 
-        await LogLineAsync($"File name: {stats.FileName}");
+        await LogLineAsync($"File name: {Path.GetFileName(stats.FilePath)}");
         await LogLineAsync($"Parse ID: {stats.ParseId}");
 
         string originEnc = string.IsNullOrEmpty(stats.Encoding?.WebName) ? "[NULL]" : stats.Encoding.WebName;

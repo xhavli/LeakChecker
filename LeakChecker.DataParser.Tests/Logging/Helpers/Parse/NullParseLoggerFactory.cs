@@ -9,5 +9,5 @@ namespace LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
 public sealed class NullParseLoggerFactory : IParseLoggerFactory
 {
     public Task<IParseLogger> CreateAsync(Guid executionId, string filePath)
-        => Task.FromResult<IParseLogger>(new NullParseLogger(filePath));
+        => Task.FromResult<IParseLogger>(new NullParseLogger());
 }
