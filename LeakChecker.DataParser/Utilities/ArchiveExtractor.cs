@@ -10,34 +10,38 @@ public static class ArchiveExtractor
         ".tar.bz2", ".tar.gz", ".tar.lz", ".tar.lzma", ".tar.lzo", ".tar.xz", ".tar.z", ".tar.zst"
     ];
     
-    public static async Task<IEnumerable<string>> ExtractArchives(IEnumerable<string> paths, string outputPath)
+    public static async Task<IEnumerable<string>> ExtractArchives(IEnumerable<string> inputPaths, string extractionPath)
     {
         var extractor = new Extractor();
-        List<string> pathsToParse = new();
+        List<string> outputPaths = new();
 
-        foreach (var path in paths)
+        foreach (var path in inputPaths)
         {
             foreach (var entry in extractor.Extract(path))
             {
                 if (entry.Parent == null)
                 {
                     // Not an archive
-                    pathsToParse.Add(path);
+                    outputPaths.Add(path);
                     continue;
                 }
 
                 string relativeArchivePath = GetRelativeArchivePath(path, entry.FullPath);
                 string relativePath = NormalizeArchiveRelativePath(relativeArchivePath);
-                string dstPath = Path.Combine(outputPath, relativePath);
+                string dstPath = Path.Combine(extractionPath, relativePath);
+
+                string? directory = Path.GetDirectoryName(dstPath);
+                if (!string.IsNullOrEmpty(directory))
+                    Directory.CreateDirectory(directory);
 
                 await using var outStream = File.Create(dstPath);
                 await entry.Content.CopyToAsync(outStream);
                 
-                pathsToParse.Add(dstPath);
+                outputPaths.Add(dstPath);
             }
         }
         
-        return pathsToParse;
+        return outputPaths;
     }
     
     private static string GetRelativeArchivePath(string sourcePath, string entryFullPath)
