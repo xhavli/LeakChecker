@@ -65,7 +65,12 @@ public static class Program
         Encoding utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false); // false = no BOM
         Console.InputEncoding = utf8;   // Enforce UTF8 encoding which can handle cyrilic characters 
         Console.OutputEncoding = utf8;
-        var filePaths = FileHelper.GetAllFiles(config.InputDirectory);
+        
+        // var inputPaths = FileHelper.GetAllFiles(config.InputDirectory);
+        // var paths = await ArchiveExtractor.ExtractArchives(inputPaths, config.TmpDirectory);
+        // var paths = FileHelper.GetAllFiles(config.InputDirectory);
+        var paths = FilePaths.Utf8;
+        
         // Bounded channel = backpressure + stable memory
         var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(config.ChannelCapacity)
         {
