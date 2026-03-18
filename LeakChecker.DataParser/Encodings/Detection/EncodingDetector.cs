@@ -6,7 +6,7 @@ using UtfUnknown;
 
 namespace LeakChecker.DataParser.Encodings.Detection;
 
-public class EncodingDetector(IParseLogger logger, ParseStats stats)
+public class EncodingDetector(string filePath, IParseLogger logger, IParseStats stats)
 {
     public async Task<List<EncodingSegment>> DetectFileEncodings()
     {
@@ -53,7 +53,7 @@ public class EncodingDetector(IParseLogger logger, ParseStats stats)
         await logger.Log("Detection of consistent encoding.");
         
         var segments = new List<EncodingSegment>();
-        await using var stream = File.OpenRead(logger.SubjectFilePath);
+        await using var stream = File.OpenRead(filePath);
 
         // Ensure detector will read all logger
         var result = CharsetDetector.DetectFromStream(stream, stream.Length);
@@ -91,7 +91,7 @@ public class EncodingDetector(IParseLogger logger, ParseStats stats)
         var buffer = new byte[sampleSize];
         var segments = new List<EncodingSegment>();
 
-        await using var stream = File.OpenRead(logger.SubjectFilePath);
+        await using var stream = File.OpenRead(filePath);
 
         while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
         {
@@ -112,7 +112,7 @@ public class EncodingDetector(IParseLogger logger, ParseStats stats)
             else
             {
                 // Precise fallback detection
-                var preciseSegments = await DetectEncodingBoundaries(logger.SubjectFilePath, offset, bytesRead);
+                var preciseSegments = await DetectEncodingBoundaries(offset, bytesRead);
                 segments.AddRange(preciseSegments);
             }
 
@@ -122,8 +122,7 @@ public class EncodingDetector(IParseLogger logger, ParseStats stats)
         return segments;
     }
     
-    private static async Task<List<EncodingSegment>> DetectEncodingBoundaries(
-        string filePath, long startOffset, long length, float confidenceThreshold = 0.99f)
+    private async Task<List<EncodingSegment>> DetectEncodingBoundaries(long startOffset, long length, float confidenceThreshold = 0.99f)
     {
         var segments = new List<EncodingSegment>();
         byte[] buffer = new byte[64 * 1024]; // Reused buffer for efficiency

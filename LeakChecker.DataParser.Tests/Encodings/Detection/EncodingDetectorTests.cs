@@ -1,7 +1,6 @@
 using System.Text;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Encodings.Detection;
-using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
 
 namespace LeakChecker.DataParser.Tests.Encodings.Detection;
@@ -33,9 +32,9 @@ public class EncodingDetectorTests
     {
         // Arrange
         string filePath = Path.Combine(_testDataDirectory, fileName);
-        var stats = NullParseStats.Create(Guid.Empty, logger, filePath);
-        IParseLogger logger = new NullParseLogger();
-        EncodingDetector encodingDetector = new(logger, stats);
+        NullParseStats stats = new NullParseStats();
+        NullParseLogger logger = new NullParseLogger();
+        EncodingDetector encodingDetector = new(filePath, logger, stats);
 
         Encoding expected = Encoding.GetEncoding(codePage);
 

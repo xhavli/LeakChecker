@@ -8,7 +8,7 @@ public class ParsingContext
     public required StreamReader Reader;
     public Dictionary<int, ItemEnum> Schema = new();
 
-    public required ParseStats Stats;
+    public required IParseStats Stats;
     public required IParseLogger Logger;
 
     public long StartLine;

@@ -1,14 +1,13 @@
 using System.Text;
 using LeakChecker.DataParser.Content.Parsing;
 using LeakChecker.DataParser.Format;
-using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
 
 namespace LeakChecker.DataParser.Tests.Content.Parsing.ContentParserTests.FormatDetectionTests;
 
 public class SingleFormatDetectionTests
 {
-    private readonly IParseLogger _logger = new NullParseLogger();
+    private readonly NullParseLogger _logger = new();
     private readonly string _testDataDirectory;
         
     public SingleFormatDetectionTests()
@@ -36,7 +35,7 @@ public class SingleFormatDetectionTests
     {
         // Arrange
         string filePath = Path.Combine(_testDataDirectory, fileName);
-        var stats = NullParseStats.Create(Guid.Empty, _logger, filePath);
+        NullParseStats stats = new NullParseStats();
         using var parser = new ContentParser(filePath, _logger, stats, schemaThreshold: 50);
 
         // Act
@@ -59,7 +58,7 @@ public class SingleFormatDetectionTests
     {
         // Arrange
         string filePath = Path.Combine(_testDataDirectory, fileName);
-        var stats = NullParseStats.Create(Guid.Empty, _logger, filePath);
+        NullParseStats stats = new NullParseStats();
         using var parser = new ContentParser(filePath, _logger, stats, schemaThreshold: 50);
 
         // Act
@@ -77,7 +76,7 @@ public class SingleFormatDetectionTests
     {
         // Arrange
         string filePath = Path.Combine(_testDataDirectory, fileName);
-        var stats = NullParseStats.Create(Guid.Empty, _logger, filePath);
+        NullParseStats stats = new NullParseStats();
 
         // Act
         await ExcelParser.ParseFile(filePath, _logger, stats, thresholdPercent: 50);
@@ -93,7 +92,7 @@ public class SingleFormatDetectionTests
     {
         // Arrange
         string filePath = Path.Combine(_testDataDirectory, fileName);
-        var stats = NullParseStats.Create(Guid.Empty, _logger, filePath);
+        NullParseStats stats = new NullParseStats();
         using var parser = new ContentParser(filePath, _logger, stats, schemaThreshold: 50);
 
         // Act

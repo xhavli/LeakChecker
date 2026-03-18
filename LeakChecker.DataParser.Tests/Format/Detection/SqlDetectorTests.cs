@@ -10,7 +10,7 @@ public class SqlDetectorTests
     private const int SqlSamplesLimit = 31;
     private const int ThresholdPercent = 50;
     private readonly string _testDataDirectory;
-    private readonly IParseLogger _logger = new NullParseLogger();
+    private readonly NullParseLogger _logger = new();
     
     private static readonly Dictionary<int, ItemEnum> SqlSchema = new()
     {
@@ -43,7 +43,7 @@ public class SqlDetectorTests
         string filePath = Path.Combine(_testDataDirectory, fileName);
         await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
         using var streamReader = new StreamReader(fileStream);
-        ParseStats stats = ParseStats.Create(Guid.Empty, _logger, filePath);
+        NullParseStats stats = new NullParseStats();
         ParsingContext detectionContext = new ParsingContext
         {
             Reader = streamReader,

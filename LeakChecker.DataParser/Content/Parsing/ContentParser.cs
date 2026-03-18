@@ -19,8 +19,8 @@ public class ContentParser : IDisposable
     private readonly Encoding _encoding;
     private readonly StreamReader _reader;
     // Logging and Statistics
+    private readonly IParseStats _stats;
     private readonly IParseLogger _logger;
-    private readonly ParseStats _stats;
     // Default constants
     private const int SqlSamplesLimit = 31;
     private const int CsvSamplesLimit = 103;
@@ -30,7 +30,7 @@ public class ContentParser : IDisposable
 
     private bool _possibleAsciiTable;
 
-    public ContentParser(string filePath, IParseLogger logger, ParseStats stats, int schemaThreshold)
+    public ContentParser(string filePath, IParseLogger logger, IParseStats stats, int schemaThreshold)
     {
         _encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
         var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);

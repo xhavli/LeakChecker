@@ -1,6 +1,5 @@
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Format.Detection;
-using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
 
 namespace LeakChecker.DataParser.Tests.Format.Detection;
@@ -10,7 +9,7 @@ public class CsvDetectorTests
     private const int CsvSamplesLimit = 103;
     private const int ThresholdPercent = 50;
     private readonly string _testDataDirectory;
-    private readonly IParseLogger _logger = new NullParseLogger();
+    private readonly NullParseLogger _logger = new();
     
     public CsvDetectorTests()
     {
@@ -42,7 +41,7 @@ public class CsvDetectorTests
         string filePath = Path.Combine(_testDataDirectory, fileName);
         await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
         using var reader = new StreamReader(stream);
-        ParseStats stats = ParseStats.Create(Guid.Empty, _logger, filePath);
+        NullParseStats stats = new NullParseStats();
         ParsingContext detectionContext = new ParsingContext
         {
             Reader = reader,
@@ -78,7 +77,7 @@ public class CsvDetectorTests
         string filePath = Path.Combine(_testDataDirectory, fileName);
         await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
         using var reader = new StreamReader(stream);
-        ParseStats stats = ParseStats.Create(Guid.Empty, _logger, filePath);
+        NullParseStats stats = new NullParseStats();
         ParsingContext detectionContext = new ParsingContext
         {
             Reader = reader,
@@ -111,7 +110,7 @@ public class CsvDetectorTests
         string filePath = Path.Combine(_testDataDirectory, fileName);
         await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
         using var reader = new StreamReader(stream);
-        ParseStats stats = ParseStats.Create(Guid.Empty, _logger, filePath);
+        NullParseStats stats = new NullParseStats();
         ParsingContext detectionContext = new ParsingContext
         {
             Reader = reader,
@@ -144,7 +143,7 @@ public class CsvDetectorTests
         string filePath = Path.Combine(_testDataDirectory, fileName);
         await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
         using var reader = new StreamReader(stream);
-        ParseStats stats = ParseStats.Create(Guid.Empty, _logger, filePath);
+        NullParseStats stats = new NullParseStats();
         ParsingContext detectionContext = new ParsingContext
         {
             Reader = reader,
