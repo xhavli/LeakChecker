@@ -34,7 +34,7 @@ public static class SqlInsertDetector
         await logger.LogSchemaDetectionHeader();
 
         bool inQuote = false;
-        SqlHeader? header = null;
+        SqlInsertHeader? header = null;
         string tempLine = string.Empty;
         while (await reader.ReadLineAsync() is { } line)
         {
@@ -165,7 +165,7 @@ public static class SqlInsertDetector
         return assigned;
     }
 
-    private static SqlHeader? TryParseSqlHeader(string line)
+    private static SqlInsertHeader? TryParseSqlHeader(string line)
     {
         line = line.Trim();
 
@@ -202,7 +202,7 @@ public static class SqlInsertDetector
         string valuesTail = line[(valuesPos + Values.Length)..];
         string fullHeader = line.Substring(insertPos, valuesPos - insertPos + Values.Length); //include VALUES
 
-        return new SqlHeader
+        return new SqlInsertHeader
         {
             Subject = subject,
             Headers = headers,
@@ -285,13 +285,5 @@ public static class SqlInsertDetector
         }
 
         return linePatterns;
-    }
-    
-    public class SqlHeader
-    {
-        public string Subject = string.Empty;
-        public List<string> Headers = new();
-        public string FullHeader = string.Empty;
-        public string ValuesTail = string.Empty;
     }
 }

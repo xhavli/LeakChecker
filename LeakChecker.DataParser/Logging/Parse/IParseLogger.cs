@@ -23,7 +23,7 @@ public interface IParseLogger : IDisposable
     Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int count);
     Task LogSchemaDetectionHeader();
     Task LogSample(string sample);
-    Task LogSqlInsertHeader(SqlInsertDetector.SqlHeader header);
+    Task LogSqlInsertHeader(SqlInsertHeader insertHeader);
     Task LogHeuristicData(SchemaHeuristic analyzer);
     Task LogDominantSchema(SchemaHeuristic analyzer, double threshold);
     Task LogFinalSchema(Dictionary<int, ItemEnum> schema);
