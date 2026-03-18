@@ -10,7 +10,7 @@ public class CsvDetectorTests
     private const int CsvSamplesLimit = 103;
     private const int ThresholdPercent = 50;
     private readonly string _testDataDirectory;
-    private readonly IParseLogger _logger = new NullParseLogger(string.Empty);
+    private readonly IParseLogger _logger = new NullParseLogger();
     
     public CsvDetectorTests()
     {
