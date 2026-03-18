@@ -8,9 +8,7 @@ namespace LeakChecker.DataParser.Logging.Parse;
 public interface IParseLogger : IDisposable
 {
     Guid ParseId { get; }
-    Guid ExecutionId { get; }
     DateTime ParseStart { get; }
-    string SubjectFileName { get; }
     string SubjectFilePath { get; }
     string SubjectTmpFilePath { get; }
 

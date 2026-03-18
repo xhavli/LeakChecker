@@ -11,6 +11,8 @@ public class ParseStats(Guid executionId, IParseLogger parseLogger, string fileP
     public Guid ParseId { get; init; } = parseLogger.ParseId;
     public Guid ExecutionId { get; init; } = executionId;
     public string FilePath { get; init; } = filePath;
+    public string FileName => Path.GetFileName(FilePath);
+    public string TmpFilePath { get; set; } = string.Empty;
     public long FileSize { get; init; } = new FileInfo(filePath).Length;
     public long MalformedRecordsRead { get; set; }
     public long LinesRead { get; set; }

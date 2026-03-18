@@ -10,9 +10,7 @@ namespace LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
 public sealed class NullParseLogger : IParseLogger
 {
     public Guid ParseId => Guid.Empty;
-    public Guid ExecutionId => Guid.Empty;
     public DateTime ParseStart => DateTime.MaxValue;
-    public string SubjectFileName => string.Empty;
     public string SubjectFilePath => string.Empty;
     public string SubjectTmpFilePath => string.Empty;
 

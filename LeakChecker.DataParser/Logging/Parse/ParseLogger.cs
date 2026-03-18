@@ -14,10 +14,9 @@ public class ParseLogger : IParseLogger
     public Guid ParseId { get; }
     public Guid ExecutionId { get; }
     public DateTime ParseStart { get; }
-    public string SubjectFileName { get; }
     public string SubjectFilePath { get; }
     public string SubjectTmpFilePath { get; }
-    private bool Verbose { get; }
+    private readonly bool _verbose;
     private readonly StreamWriter _writer;
     private const ConsoleColor InfoColor = ConsoleColor.DarkBlue;
     private const ConsoleColor WarningColor = ConsoleColor.DarkYellow;
@@ -36,17 +35,13 @@ public class ParseLogger : IParseLogger
         ParseId = parseId;
         ExecutionId = executionId;
         ParseStart = parseStart;
-        SubjectFileName = Path.GetFileName(subjectFilePath);
         SubjectFilePath = subjectFilePath;
         SubjectTmpFilePath = tmpFilePath;
         _writer = writer;
-        Verbose = verbose;
+        _verbose = verbose;
     }
 
-    public static async Task<IParseLogger> CreateAsync(
-        AppConfig config,
-        Guid executionId,
-        string subjectFilePath)
+    public static async Task<IParseLogger> CreateAsync(AppConfig config, Guid executionId, string subjectFilePath)
     {
         Guid parseId = Guid.NewGuid();
         DateTime parseStart = DateTime.Now;
@@ -72,7 +67,7 @@ public class ParseLogger : IParseLogger
     
     private async Task LogLineAsync(string message = "")
     {
-        if (Verbose) Console.WriteLine(message);
+        if (_verbose) Console.WriteLine(message);
         await _writer.WriteLineAsync(message);
     }
     
@@ -81,7 +76,7 @@ public class ParseLogger : IParseLogger
         string log = context is null ? $"[{DateTime.Now:T}] {level.GetString()} {message}"
                                      : $"[{DateTime.Now:T}] {level.GetString()} {context.Value.GetString()} {message}";
         
-        if (!Verbose)   // Log without colored console print
+        if (!_verbose)   // Log without colored console print
         {
             await LogLineAsync(log);
             return;

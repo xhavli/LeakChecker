@@ -107,7 +107,7 @@ public static class Program
                     continue;
 
                 using var parseLogger = await loggerFactory.CreateAsync(executionId, filePath);
-                ParseStats parseStats = ParseStats.Create(executionId, parseLogger, filePath);
+                ParseStats parseStats = new ParseStats(executionId, parseLogger, filePath);
 
                 try
                 {
@@ -118,7 +118,7 @@ public static class Program
                     }
                     else
                     {
-                        // EncodingDetector encodingDetector = new(parseLogger, parseStats);
+                        // EncodingDetector encodingDetector = new(filePath, parseLogger, parseStats);
                         // List<EncodingSegment> encodingSegments = await encodingDetector.DetectFileEncodings();
                         //
                         // await EncodingConverter.ConvertFileToUtf8(parseLogger, encodingSegments);
@@ -144,21 +144,18 @@ public static class Program
                 }
                 catch (Exception e)
                 {
-                    await executionLogger.Log($"{parseLogger.ParseId} : {parseLogger.SubjectFileName}: {e}", LogLevel.Failure, LogContext.Main);
+                    await executionLogger.Log($"{parseStats.ParseId} : {parseStats.FileName}: {e}", LogLevel.Failure, LogContext.Main);
                 }
                 finally
                 {
-                    // try
-                    // {
-                    //     File.Delete(parseLogger.SubjectTmpFilePath);
-                    // }
-                    // catch (Exception e)
-                    // {
-                    //     await ExecutionLogger.Log($"{parseId} : {parseLogger.SubjectFileName}: {e}", LogLevel.Warning, LogContext.Main);
-                    // }
+                    if (parseLogger.SubjectFilePath.StartsWith(config.TmpDirectory, StringComparison.OrdinalIgnoreCase))
+                        File.Delete(parseLogger.SubjectFilePath);
+                    
+                    if (parseLogger.SubjectTmpFilePath.StartsWith(config.TmpDirectory, StringComparison.OrdinalIgnoreCase))
+                        File.Delete(parseLogger.SubjectTmpFilePath);
                 }
 
-                await executionLogger.Log($"Finished: {parseLogger.SubjectFileName}", LogLevel.Success, LogContext.Parsing);
+                await executionLogger.Log($"Finished: {parseStats.FileName}", LogLevel.Success, LogContext.Parsing);
             }
         })).ToArray();
 
