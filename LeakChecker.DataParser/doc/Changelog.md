@@ -193,7 +193,7 @@ Author: Adam Havlík
   Handling file accessibility, supported file type according its mime type detected by [Mime-Detective](https://github.com/MediatedCommunications/Mime-Detective), if its excel trying to open [ExcelDataParser](https://github.com/ExcelDataReader/ExcelDataReader), readability of converted encodings scanning for lines containing a '�' as unrecognized character.
 - `1.3.2026` - All files collecting  
   Is done with Directory.EnumeratingFiles from specified directory path by tree traversal.
-- `2.3.2026` - Archive extraction  
+- `2.3.2026` - ArchiveExtractor  
   Used microsoft [RecursiveExtractor](https://github.com/microsoft/RecursiveExtractor) which is simple to use, based on popular SharpCompress, LTRData/DiscUtils and protecting against zip bombs and zip slips.
 
 ## Tests
@@ -224,11 +224,14 @@ Author: Adam Havlík
 
 ## TODOs
 
-- Implement proper Appconfig and DI
+- Add Csv then Sql test
+- Fix byte counting position tracking system
+- Implement proper Appconfig and DI, getting of threshold, parsers samples...
 - When row mismatch, parse it separately.
 - When hash detected at `[i]` and `[i+1]` is other try to concatenate with delimiter for salted hash detection.
 - Parse also `JSON`, `HTML` and `XML`
 - Make something like TestBase class where will be registered EncProvider, created logger or set env variable.
+- Replace StringExtension IsSqlInsert with ReaderExtension IsSqlInsert which will read predefined lines returns true/false and discard buffers
 - When all is number then not bind `ItemEnum.Other`, else try to recompute without other as an `ItemEnum.Empty`, when full numbers, bind `ItemEnum.Id`
 - Wait properly for python start. READY signal is sent earlier than running python API 
 - Make `TestBase` with EncProvider(RegisterEnc) and projectDir and testDir paths
