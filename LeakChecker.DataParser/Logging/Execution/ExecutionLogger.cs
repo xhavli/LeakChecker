@@ -8,7 +8,6 @@ namespace LeakChecker.DataParser.Logging.Execution;
 public class ExecutionLogger : IDisposable
 {
     public readonly DateTime ExecutionStart;
-    private bool Verbose { get; } = true;
     private readonly StreamWriter _writer;
     private readonly SemaphoreSlim _lock = new(1, 1);
     private const ConsoleColor InfoColor = ConsoleColor.DarkBlue;
@@ -24,15 +23,17 @@ public class ExecutionLogger : IDisposable
         string reportFileName = $"{fileTimeStamp}.txt";
         string reportFilePath = Path.Combine(config.LogDirectory, reportFileName);
 
-        _writer = new StreamWriter(reportFilePath, append: true, encoding: Encoding.UTF8);
-        _writer.AutoFlush = true;
+        _writer = new StreamWriter(reportFilePath, append: true, encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
+        {
+            AutoFlush = true
+        };
         
         CreateReportHeader(config);
     }
     
     private async Task LogLineAsync(string message = "")
     {
-        if (Verbose) Console.WriteLine(message);
+        Console.WriteLine(message);
 
         await _lock.WaitAsync();
         try
