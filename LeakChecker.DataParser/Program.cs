@@ -66,10 +66,8 @@ public static class Program
         Console.InputEncoding = utf8;   // Enforce UTF8 encoding which can handle cyrilic characters 
         Console.OutputEncoding = utf8;
         
-        // var inputPaths = FileHelper.GetAllFiles(config.InputDirectory);
-        // var paths = await ArchiveExtractor.ExtractArchives(inputPaths, config.TmpDirectory);
-        // var paths = FileHelper.GetAllFiles(config.InputDirectory);
-        var paths = FilePaths.Utf8;
+        var inputPaths = FileHelper.GetAllFiles(config.InputDirectory);
+        var paths = await ArchiveExtractor.ExtractArchives(inputPaths, config.TmpDirectory);
         
         // Bounded channel = backpressure + stable memory
         var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(config.ChannelCapacity)
@@ -84,9 +82,9 @@ public static class Program
         {
             try
             {
-                foreach (var filePath in filePaths)
+                foreach (var path in paths)
                 {
-                    await channel.Writer.WriteAsync(filePath);
+                    await channel.Writer.WriteAsync(path);
                 }
 
                 channel.Writer.TryComplete();
@@ -170,7 +168,7 @@ public static class Program
         stats.ExecutionEnd = DateTime.Now;
         await executionLogger.LogExecutionStats(stats);
         
-        await executionLogger.Log($"Execution finished successfully. Parsed {filePaths.Length} files. Current DateTime is " +
+        await executionLogger.Log($"Execution finished successfully. Parsed {paths.Count()} files. Current DateTime is " +
                          $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Main);
         await executionLogger.Log("Program will exit with exit code 0");
         return 0;
