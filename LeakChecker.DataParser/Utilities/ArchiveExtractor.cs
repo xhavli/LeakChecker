@@ -22,7 +22,8 @@ public static class ArchiveExtractor
                 if (entry.Parent == null)
                 {
                     // Not an archive
-                    outputPaths.Add(path);
+                    if (!outputPaths.Contains(path))
+                        outputPaths.Add(path);
                     continue;
                 }
                 
