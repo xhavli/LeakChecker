@@ -29,9 +29,13 @@ public static class AppConfigParser
     private static void ValidateConfig(AppConfig config)
     {
         ValidateDirectory(config.InputDirectory, nameof(config.InputDirectory));
+        config.InputDirectory = Path.GetFullPath(config.InputDirectory);
         ValidateDirectory(config.LogDirectory, nameof(config.LogDirectory));
+        config.LogDirectory = Path.GetFullPath(config.LogDirectory);
         ValidateDirectory(config.OutputDirectory, nameof(config.OutputDirectory));
+        config.OutputDirectory = Path.GetFullPath(config.OutputDirectory);
         ValidateDirectory(config.TmpDirectory, nameof(config.TmpDirectory));
+        config.TmpDirectory = Path.GetFullPath(config.TmpDirectory);
         
         ValidateRange(config.CsharpPort, nameof(config.CsharpPort));
         ValidateRange(config.PythonPort, nameof(config.PythonPort));

@@ -2,10 +2,10 @@ namespace LeakChecker.DataParser.Utilities.Configuration;
 
 public record AppConfig
 {
-    public required string InputDirectory { get; init; }
-    public required string LogDirectory { get; init; }
-    public required string OutputDirectory { get; init; }
-    public required string TmpDirectory { get; init; }
+    public required string InputDirectory { get; set; }
+    public required string LogDirectory { get; set; }
+    public required string OutputDirectory { get; set; }
+    public required string TmpDirectory { get; set; }
     public required string PythonVenvPath { get; init; }
     public required string PythonScriptName { get; init; }
     public required int CsharpPort { get; init; }
