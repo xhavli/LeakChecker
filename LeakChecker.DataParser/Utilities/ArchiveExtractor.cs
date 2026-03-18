@@ -14,6 +14,10 @@ public static class ArchiveExtractor
     {
         var extractor = new Extractor();
         List<string> outputPaths = new();
+        
+        string extractionRoot = Path.GetFullPath(extractionPath);
+        if (!extractionRoot.EndsWith(Path.DirectorySeparatorChar))
+            extractionRoot += Path.DirectorySeparatorChar;
 
         foreach (var path in inputPaths)
         {
@@ -25,11 +29,17 @@ public static class ArchiveExtractor
                     outputPaths.Add(path);
                     continue;
                 }
-
+                
                 string relativeArchivePath = GetRelativeArchivePath(path, entry.FullPath);
-                string relativePath = NormalizeArchiveRelativePath(relativeArchivePath);
-                string dstPath = Path.Combine(extractionPath, relativePath);
+                string relativePath = NormalizeArchiveRelativePath(relativeArchivePath);    //TODO can overwrite a.zip/b.txt and a.tar/b.txt
+                string dstPath = Path.GetFullPath(Path.Combine(extractionRoot, relativePath));
 
+                if (!dstPath.StartsWith(extractionRoot, StringComparison.Ordinal))
+                {
+                    Console.WriteLine($"Potential Zip Slip. Archive entry resolves outside extraction root: '{entry.FullPath}'");
+                    continue;
+                }
+                
                 string? directory = Path.GetDirectoryName(dstPath);
                 if (!string.IsNullOrEmpty(directory))
                     Directory.CreateDirectory(directory);
