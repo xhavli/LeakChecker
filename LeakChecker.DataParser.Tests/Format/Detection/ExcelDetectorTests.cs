@@ -1,7 +1,6 @@
 using System.Text;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Format.Detection;
-using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
 
 namespace LeakChecker.DataParser.Tests.Format.Detection;
@@ -11,7 +10,7 @@ public class ExcelDetectorTests
     private const int SamplesLimit = 23;
     private const int ThresholdPercent = 50;
     private readonly string _testDataDirectory;
-    private readonly IParseLogger _logger = new NullParseLogger();
+    private readonly NullParseLogger _logger = new();
 
     public ExcelDetectorTests()
     {
