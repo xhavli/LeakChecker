@@ -5,11 +5,7 @@ namespace LeakChecker.DataParser.Utilities;
 public static class ArchiveExtractor
 {
     private static readonly char[] DirectorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
-    private static readonly string[] MultiPartArchiveExtensions =
-    [
-        ".tar.bz2", ".tar.gz", ".tar.lz", ".tar.lzma", ".tar.lzo", ".tar.xz", ".tar.z", ".tar.zst"
-    ];
-    
+
     public static async Task<IEnumerable<string>> ExtractArchives(IEnumerable<string> inputPaths, string extractionPath)
     {
         var extractor = new Extractor();
@@ -31,8 +27,7 @@ public static class ArchiveExtractor
                 }
                 
                 string relativeArchivePath = GetRelativeArchivePath(path, entry.FullPath);
-                string relativePath = NormalizeArchiveRelativePath(relativeArchivePath);    //TODO can overwrite a.zip/b.txt and a.tar/b.txt
-                string dstPath = Path.GetFullPath(Path.Combine(extractionRoot, relativePath));
+                string dstPath = Path.GetFullPath(Path.Combine(extractionRoot, relativeArchivePath));
 
                 if (!dstPath.StartsWith(extractionRoot, StringComparison.Ordinal))
                 {
@@ -66,30 +61,5 @@ public static class ArchiveExtractor
         return startIndex < 0
             ? Path.GetFileName(entryFullPath)
             : Path.Combine(segments[startIndex..]);
-    }
-    
-    private static string NormalizeArchiveRelativePath(string relativePath)
-    {
-        var parts = relativePath.Split(DirectorySeparators);
-
-        for (int i = 0; i < parts.Length - 1; i++) // skip final file
-        {
-            parts[i] = StripArchiveExtension(parts[i]);
-        }
-
-        return Path.Combine(parts);
-    }
-    
-    private static string StripArchiveExtension(string fileName)
-    {
-        string lower = fileName.ToLowerInvariant();
-
-        foreach (var ext in MultiPartArchiveExtensions)
-        {
-            if (lower.EndsWith(ext))
-                return fileName[..^ext.Length];
-        }
-
-        return Path.GetFileNameWithoutExtension(fileName);
     }
 }
