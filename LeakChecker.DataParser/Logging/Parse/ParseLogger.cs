@@ -313,7 +313,7 @@ public class ParseLogger : IParseLogger
         await LogLineAsync();
     }
     
-    public async Task LogFileStats(ParseStats stats)
+    public async Task LogParseStats(ParseStats stats)
     {
         stats.ParseEnd = DateTime.Now;
         

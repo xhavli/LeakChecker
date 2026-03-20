@@ -8,7 +8,7 @@ namespace LeakChecker.DataParser.Encodings.Detection;
 
 public class EncodingDetector(string filePath, IParseLogger logger, IParseStats stats)
 {
-    public async Task<List<EncodingSegment>> DetectFileEncodings()
+    public async Task<List<EncodingSegment>> DetectEncodingSegments()
     {
         await logger.LogEncodingHeader();
         Stopwatch sw = Stopwatch.StartNew();
@@ -137,13 +137,15 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
         {
             var (start, end) = stack.Pop();
             long size = end - start;
-            if (size <= 0) continue;
+            if (size <= 0)
+                continue;
 
             // Read range
             stream.Seek(start, SeekOrigin.Begin);
             int readSize = (int)Math.Min(size, buffer.Length);
             int bytesRead = await stream.ReadAsync(buffer.AsMemory(0, readSize));
-            if (bytesRead <= 0) continue;
+            if (bytesRead <= 0)
+                continue;
 
             var result = CharsetDetector.DetectFromBytes(buffer, 0, bytesRead);
             float confidence = result?.Detected?.Confidence ?? 0f;

@@ -39,7 +39,7 @@ public class EncodingDetectorTests
         Encoding expected = Encoding.GetEncoding(codePage);
 
         // Act
-        List<EncodingSegment> result = await encodingDetector.DetectFileEncodings();
+        List<EncodingSegment> result = await encodingDetector.DetectEncodingSegments();
 
         // Assert
         Assert.Single(result);

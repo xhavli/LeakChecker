@@ -131,7 +131,7 @@ public static class Program
                         await contentParser.ParseFile();
                     }
 
-                    await parseLogger.LogFileStats(parseStats);
+                    await parseLogger.LogParseStats(parseStats);
                     
                     lock (stats)
                     {

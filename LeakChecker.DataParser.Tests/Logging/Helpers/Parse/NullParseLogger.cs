@@ -27,6 +27,6 @@ public sealed class NullParseLogger : IParseLogger
     public Task LogHeuristicData(SchemaHeuristic analyzer) => Task.CompletedTask;
     public Task LogDominantSchema(SchemaHeuristic analyzer, double threshold) => Task.CompletedTask;
     public Task LogFinalSchema(Dictionary<int, ItemEnum> schema) => Task.CompletedTask; 
-    public Task LogFileStats(ParseStats stats) => Task.CompletedTask;
+    public Task LogParseStats(ParseStats stats) => Task.CompletedTask;
     public void Dispose() { }
 }

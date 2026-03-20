@@ -25,5 +25,5 @@ public interface IParseLogger : IDisposable
     Task LogHeuristicData(SchemaHeuristic analyzer);
     Task LogDominantSchema(SchemaHeuristic analyzer, double threshold);
     Task LogFinalSchema(Dictionary<int, ItemEnum> schema);
-    Task LogFileStats(ParseStats stats);
+    Task LogParseStats(ParseStats stats);
 }
