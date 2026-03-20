@@ -151,7 +151,7 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
             float confidence = result?.Detected?.Confidence ?? 0f;
             var encoding = result?.Detected?.Encoding;
 
-            if (confidence >= confidenceThreshold || size == 1)
+            if (confidence >= confidenceThreshold || size <= 4)
             {
                 // Accept this range as one consistent encoding
                 segments.Add(new EncodingSegment
