@@ -39,7 +39,7 @@ public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourc
         {
             { nameof(ParseId), new BsonBinaryData(ParseId, GuidRepresentation.Standard) },
             { nameof(ExecutionId), new BsonBinaryData(ExecutionId, GuidRepresentation.Standard) },
-            { nameof(FilePath), FilePath },
+            { nameof(SourcePath), SourcePath },
             { nameof(FileSize), FileSize },
             { nameof(MalformedRecordsRead), MalformedRecordsRead },
             { nameof(LinesRead), LinesRead },
