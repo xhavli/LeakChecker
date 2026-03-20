@@ -18,7 +18,7 @@ public static class ContentDetector
     public static async Task<List<SchemaHeuristicRecord>> DetectLine(string line, char delimiter, IParseLogger logger)
     {
         line = line.Trim();
-        string originLine = line;
+        string originalLine = line;
         List<SchemaHeuristicRecord> linePatterns = new();
         
         if (WebRecognizer.TryRecognize(line, out List<string> stringUris, out List<Uri> uris))
@@ -27,7 +27,7 @@ public static class ContentDetector
             {
                 foreach (var uri in stringUris.OrderByDescending(s => s.Length))
                 {
-                    int position = CountDelimitersBefore(originLine, uri, delimiter);
+                    int position = CountDelimitersBefore(originalLine, uri, delimiter);
                     // Console.WriteLine($"[{position}] {ItemEnum.Web} = {uri}");
 
                     linePatterns.Add(new SchemaHeuristicRecord
@@ -51,7 +51,7 @@ public static class ContentDetector
             {
                 foreach (var email in stringEmails)
                 {
-                    int position = CountDelimitersBefore(originLine, email, delimiter);
+                    int position = CountDelimitersBefore(originalLine, email, delimiter);
                     // Console.WriteLine($"[{position}] {ItemEnum.Email} = {email}");
 
                     linePatterns.Add(new SchemaHeuristicRecord
@@ -75,7 +75,7 @@ public static class ContentDetector
             {
                 foreach (var timeStamp in stringTimeStamps.OrderByDescending(ts => ts.Length))
                 {
-                    int position = CountDelimitersBefore(originLine, timeStamp, delimiter);
+                    int position = CountDelimitersBefore(originalLine, timeStamp, delimiter);
                     // Console.WriteLine($"[{position}] {ItemEnum.TimeStamp} = {timeStamp}");
 
                     linePatterns.Add(new SchemaHeuristicRecord
@@ -99,7 +99,7 @@ public static class ContentDetector
             foreach (var entity in analyzeResults.OrderBy(e => e.Start))
             {
                 string item = line.Substring(entity.Start, entity.End - entity.Start);
-                int position = CountDelimitersBefore(originLine, item, delimiter);
+                int position = CountDelimitersBefore(originalLine, item, delimiter);
                 string entityType = entity.Type;
                 switch (entityType)
                 {
@@ -151,7 +151,7 @@ public static class ContentDetector
             {
                 foreach (var guid in stringGuids)
                 {
-                    int position = CountDelimitersBefore(originLine, guid, delimiter);
+                    int position = CountDelimitersBefore(originalLine, guid, delimiter);
                     // Console.WriteLine($"[{position}] {ItemEnum.Id} = {guid}");
 
                     linePatterns.Add(new SchemaHeuristicRecord

@@ -325,8 +325,8 @@ public class ParseLogger : IParseLogger
         await LogLineAsync($"File name: {Path.GetFileName(stats.FilePath)}");
         await LogLineAsync($"Parse ID: {stats.ParseId}");
 
-        string originEnc = string.IsNullOrEmpty(stats.Encoding?.WebName) ? "[NULL]" : stats.Encoding.WebName;
-        await LogLineAsync($"Origin encoding: {originEnc}");
+        string originalEnc = string.IsNullOrEmpty(stats.Encoding?.WebName) ? "[NULL]" : stats.Encoding.WebName;
+        await LogLineAsync($"Original encoding: {originalEnc}");
         string? originEncCount = Convert.ToString(stats.EncodingSegments.Count == 0 ? "[NULL]" : stats.EncodingSegments.Count);
         await LogLineAsync($"Encoding segments: {originEncCount}");
 

@@ -45,17 +45,17 @@ public class ContentParser : IDisposable
         await _logger.LogContentHeader();
         Stopwatch sw = Stopwatch.StartNew();
 
-        while (await _reader.ReadLineWithEndingAsync() is { } originLine)
+        while (await _reader.ReadLineWithEndingAsync() is { } originalLine)
         {
             if (_recordsRead >= ParseLimit)
                 break;
             
-            string line = originLine.Trim();
+            string line = originalLine.Trim();
             
             if (line.IsTrashOrEmpty())
             {
                 _linesRead++;
-                _readerPosition += _encoding.GetByteCount(originLine);
+                _readerPosition += _encoding.GetByteCount(originalLine);
                 if (line.IsPossibleAsciiTable()) _possibleAsciiTable = true;
                 continue;
             }
@@ -63,7 +63,7 @@ public class ContentParser : IDisposable
             if (line.IsSqlCreateTable())
             {
                 _linesRead++;
-                _readerPosition += _encoding.GetByteCount(originLine);
+                _readerPosition += _encoding.GetByteCount(originalLine);
                 await SkipSqlCreateTable();
                 _possibleAsciiTable = false;
                 continue;
