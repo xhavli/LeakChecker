@@ -224,6 +224,7 @@ Author: Adam Havlík
 
 ## TODOs
 
+- Merge subset of superset of encodings like ASCII is subset of Windows-125X. 0x00 - 0x7F are the same for ascii and win and 0x80 - 0xFF have Windows-1252. same ascii utf8, ascii iso-8859-X but iso-8859-1 is not subset of iso-8859-2...
 - Add Csv then Sql test
 - Fix byte counting position tracking system
 - Implement proper Appconfig and DI, getting of threshold, parsers samples...
