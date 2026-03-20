@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Utilities;
 using UtfUnknown;
 
 namespace LeakChecker.DataParser.Encodings.Detection;
@@ -83,7 +84,7 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
     
     
     // sampleSize predefined to 4KB
-    private async Task<List<EncodingSegment>> DetectConcatenatedEncoding(int sampleSize = 4 * 1024)
+    private async Task<List<EncodingSegment>> DetectConcatenatedEncoding(int sampleSize = SizeEnum.KiloByte * 4)
     {
         await logger.Log("Detection of concatenated encoding.");
         int bytesRead;
@@ -125,7 +126,7 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
     private async Task<List<EncodingSegment>> DetectEncodingBoundaries(long startOffset, long length, float confidenceThreshold = 0.99f)
     {
         var segments = new List<EncodingSegment>();
-        byte[] buffer = new byte[64 * 1024]; // Reused buffer for efficiency
+        byte[] buffer = new byte[SizeEnum.KiloByte * 64]; // Reused buffer for efficiency
 
         // Use an explicit stack to avoid deep recursion
         var stack = new Stack<(long start, long end)>();

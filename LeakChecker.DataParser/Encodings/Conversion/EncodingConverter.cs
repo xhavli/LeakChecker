@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Utilities;
 
 namespace LeakChecker.DataParser.Encodings.Conversion;
 
@@ -12,7 +13,7 @@ public static class EncodingConverter
     /// If the file is already UTF-8 (single segment), it is just copied.
     /// </summary>
     public static async Task ConvertFileToUtf8(
-        List<EncodingSegment> encodingSegments, IParseLogger logger, IParseStats stats, int bufferSize = 1024 * 1024) // 1 MB per chunk
+        List<EncodingSegment> encodingSegments, IParseLogger logger, IParseStats stats, int bufferSize = SizeEnum.MegaByte)
     {
         string inputFilePath = logger.SubjectFilePath;
         string outputFilePath = logger.SubjectTmpFilePath;
