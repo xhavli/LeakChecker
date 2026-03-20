@@ -6,14 +6,14 @@ using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Logging.Parse;
 
-public class ParseStats(Guid executionId, IParseLogger parseLogger, string filePath) : IParseStats
+public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourcePath) : IParseStats
 {
     public Guid ParseId { get; init; } = parseLogger.ParseId;
     public Guid ExecutionId { get; init; } = executionId;
-    public string FilePath { get; init; } = filePath;
-    public string FileName => Path.GetFileName(FilePath);
-    public string TmpFilePath { get; set; } = string.Empty;
-    public long FileSize { get; init; } = new FileInfo(filePath).Length;
+    public string SourcePath { get; init; } = sourcePath;
+    public string FileName => Path.GetFileName(SourcePath);
+    public string ParsePath { get; set; } = string.Empty;
+    public long FileSize { get; init; } = new FileInfo(sourcePath).Length;
     public long MalformedRecordsRead { get; set; }
     public long LinesRead { get; set; }
     public long BytesRead { get; set; }

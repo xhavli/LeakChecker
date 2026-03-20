@@ -148,11 +148,11 @@ public static class Program
                 }
                 finally
                 {
-                    if (parseLogger.SubjectFilePath.StartsWith(config.TmpDirectory, StringComparison.OrdinalIgnoreCase))
-                        File.Delete(parseLogger.SubjectFilePath);
-                    
-                    if (parseLogger.SubjectTmpFilePath.StartsWith(config.TmpDirectory, StringComparison.OrdinalIgnoreCase))
-                        File.Delete(parseLogger.SubjectTmpFilePath);
+                    // if (parseLogger.SubjectFilePath.StartsWith(config.TmpDirectory, StringComparison.OrdinalIgnoreCase))
+                    //     File.Delete(parseLogger.SubjectFilePath);
+                    //
+                    // if (parseLogger.SubjectTmpFilePath.StartsWith(config.TmpDirectory, StringComparison.OrdinalIgnoreCase))
+                    //     File.Delete(parseLogger.SubjectTmpFilePath);
                 }
 
                 await executionLogger.Log($"Finished: {parseStats.FileName}", LogLevel.Success, LogContext.Parsing);

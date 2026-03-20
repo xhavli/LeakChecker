@@ -6,11 +6,11 @@ using LeakChecker.DataParser.Logging.Parse;
 
 namespace LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
 
-public sealed class NullParseStats(string filePath = "") : IParseStats
+public sealed class NullParseStats(string sourcePath = "") : IParseStats
 {
     public Guid ParseId { get; init; } = Guid.Empty;
-    public string FilePath { get; init; } = filePath;
-    public long FileSize { get; init; } = 0;
+    public string SourcePath { get; init; } = sourcePath;
+    public string ParsePath { get; set; } = string.Empty;
     public long MalformedRecordsRead { get; set; } = 0;
     public long LinesRead { get; set; } = 0;
     public long BytesRead { get; set; } = 0;

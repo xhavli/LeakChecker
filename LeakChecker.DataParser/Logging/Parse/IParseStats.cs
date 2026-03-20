@@ -8,7 +8,8 @@ namespace LeakChecker.DataParser.Logging.Parse;
 public interface IParseStats
 {
     public Guid ParseId { get; init; }
-    public string FilePath { get; init; }
+    public string SourcePath { get; init; }
+    public string ParsePath { get; set; }
     public long MalformedRecordsRead { get; set; }
     public long LinesRead { get; set; }
     public long BytesRead { get; set; }
