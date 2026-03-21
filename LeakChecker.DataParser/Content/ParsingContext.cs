@@ -1,4 +1,5 @@
 using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Stats.Parse;
 
 namespace LeakChecker.DataParser.Content;
 

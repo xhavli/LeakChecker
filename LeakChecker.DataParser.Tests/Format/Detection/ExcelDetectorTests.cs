@@ -1,7 +1,7 @@
 using System.Text;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Format.Detection;
-using LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
+using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
 
 namespace LeakChecker.DataParser.Tests.Format.Detection;
 

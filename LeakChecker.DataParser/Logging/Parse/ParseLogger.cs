@@ -4,7 +4,7 @@ using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Format.Schema;
 using LeakChecker.DataParser.Utilities;
-using LeakChecker.DataParser.Utilities.Configuration;
+using LeakChecker.DataParser.Utilities.Settings;
 
 namespace LeakChecker.DataParser.Logging.Parse;
 

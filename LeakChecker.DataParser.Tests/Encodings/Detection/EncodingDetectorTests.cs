@@ -1,7 +1,8 @@
 using System.Text;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Encodings.Detection;
-using LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
+using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
+using LeakChecker.DataParser.Tests.Helpers.Stats;
 
 namespace LeakChecker.DataParser.Tests.Encodings.Detection;
 
