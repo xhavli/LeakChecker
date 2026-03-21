@@ -1,4 +1,4 @@
-namespace LeakChecker.DataParser.Utilities.Configuration;
+namespace LeakChecker.DataParser.Utilities.Settings;
 
 public record AppConfig
 {
