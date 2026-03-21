@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Format.Detection;
@@ -12,7 +11,6 @@ namespace LeakChecker.DataParser.Logging.Parse;
 public class ParseLogger : IParseLogger
 {
     public Guid ParseId { get; }
-    public Guid ExecutionId { get; }
     public DateTime ParseStart { get; }
     public string SubjectFilePath { get; }
     public string SubjectTmpFilePath { get; }
@@ -25,7 +23,6 @@ public class ParseLogger : IParseLogger
 
     private ParseLogger(
         Guid parseId,
-        Guid executionId,
         DateTime parseStart,
         string subjectFilePath,
         string tmpFilePath,
@@ -33,7 +30,6 @@ public class ParseLogger : IParseLogger
         bool verbose)
     {
         ParseId = parseId;
-        ExecutionId = executionId;
         ParseStart = parseStart;
         SubjectFilePath = subjectFilePath;
         SubjectTmpFilePath = tmpFilePath;
@@ -58,7 +54,7 @@ public class ParseLogger : IParseLogger
             AutoFlush = isDevelopment
         };
         
-        var logger = new ParseLogger(parseId, executionId, parseStart, subjectFilePath, tmpFilePath, writer, config.Verbose);
+        var logger = new ParseLogger(parseId, parseStart, subjectFilePath, tmpFilePath, writer, config.Verbose);
         
         await logger.CreateLogHeaderAsync();
 
