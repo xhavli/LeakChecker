@@ -1,4 +1,4 @@
-namespace LeakChecker.DataParser.Logging.Execution;
+namespace LeakChecker.DataParser.Stats.Execution;
 
 public class ExecutionStats(Guid executionId, DateTime startTime)
 {

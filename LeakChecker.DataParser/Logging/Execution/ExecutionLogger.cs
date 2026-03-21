@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using LeakChecker.DataParser.Stats.Execution;
 using LeakChecker.DataParser.Utilities;
 using LeakChecker.DataParser.Utilities.Configuration;
 
