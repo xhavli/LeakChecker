@@ -2,6 +2,7 @@ using System.Text;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Format;
+using LeakChecker.DataParser.Stats.Parse;
 using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Logging.Parse;

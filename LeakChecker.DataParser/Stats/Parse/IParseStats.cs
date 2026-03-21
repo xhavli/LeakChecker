@@ -3,7 +3,7 @@ using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Format;
 
-namespace LeakChecker.DataParser.Logging.Parse;
+namespace LeakChecker.DataParser.Stats.Parse;
 
 public interface IParseStats
 {

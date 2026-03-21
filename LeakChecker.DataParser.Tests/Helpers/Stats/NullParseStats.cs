@@ -2,9 +2,9 @@ using System.Text;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Format;
-using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Stats.Parse;
 
-namespace LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
+namespace LeakChecker.DataParser.Tests.Helpers.Stats;
 
 public sealed class NullParseStats(string sourcePath = "") : IParseStats
 {

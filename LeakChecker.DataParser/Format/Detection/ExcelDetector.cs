@@ -1,7 +1,7 @@
 using ExcelDataReader;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Content.Detection;
-using LeakChecker.DataParser.Content.Parsing;
+using LeakChecker.DataParser.Content.Parse;
 using LeakChecker.DataParser.Format.Schema;
 using LeakChecker.DataParser.Logging.Parse;
 

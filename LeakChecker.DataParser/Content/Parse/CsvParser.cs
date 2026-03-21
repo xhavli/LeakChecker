@@ -4,7 +4,7 @@ using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Utilities.Extensions;
 
-namespace LeakChecker.DataParser.Content.Parsing;
+namespace LeakChecker.DataParser.Content.Parse;
 
 public class CsvParser(ParsingContext parsingContext)
 {
