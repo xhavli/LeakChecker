@@ -4,7 +4,7 @@ namespace LeakChecker.DataParser.Logging.Parse;
 
 public class ParseLoggerFactory(ISettings settings) : IParseLoggerFactory
 {
-    public Task<IParseLogger> CreateAsync(Guid executionId, string filePath)
+    public Task<IParseLogger> CreateAsync(string filePath)
     {
         return ParseLogger.CreateAsync(settings, filePath);
     }

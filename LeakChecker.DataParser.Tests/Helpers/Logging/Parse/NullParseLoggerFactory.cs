@@ -1,6 +1,6 @@
 using LeakChecker.DataParser.Logging.Parse;
 
-namespace LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
+namespace LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
 
 /// <summary>
 /// Factory used in test dependency injection to create NullFileLogger instances.
@@ -8,6 +8,6 @@ namespace LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
 /// </summary>
 public sealed class NullParseLoggerFactory : IParseLoggerFactory
 {
-    public Task<IParseLogger> CreateAsync(Guid executionId, string filePath)
+    public Task<IParseLogger> CreateAsync(string filePath)
         => Task.FromResult<IParseLogger>(new NullParseLogger());
 }
