@@ -5,7 +5,7 @@ using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Parse;
 
-namespace LeakChecker.DataParser.Content.Parsing;
+namespace LeakChecker.DataParser.Content.Parse;
 
 public static class ExcelParser
 {

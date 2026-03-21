@@ -7,7 +7,7 @@ using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Parse;
 using LeakChecker.DataParser.Utilities.Extensions;
 
-namespace LeakChecker.DataParser.Content.Parsing;
+namespace LeakChecker.DataParser.Content.Parse;
 
 public class ContentParser : IDisposable
 {
