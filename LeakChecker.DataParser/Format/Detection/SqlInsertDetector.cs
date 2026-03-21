@@ -157,7 +157,7 @@ public static class SqlInsertDetector
         var assigned = HeaderGuesser.BindGuessed(original, guessed);
 
         await logger.LogFinalSchema(assigned);
-        await logger.Log($"SqlInsert schema created in {sw.Elapsed}\n");
+        await logger.Log($"SQL Insert schema created in {sw.Elapsed}\n");
         
         parsingContext.Stats.Schemas.Add(assigned);
         parsingContext.Stats.Context.Add(header.Subject);

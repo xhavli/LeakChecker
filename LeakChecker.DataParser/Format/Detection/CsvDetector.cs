@@ -61,7 +61,7 @@ public static class CsvDetector
         var assigned = CredentialAssigner.Assign(original);
         
         await logger.LogFinalSchema(assigned);
-        await logger.Log($"Csv file schema created in {sw.Elapsed}\n");
+        await logger.Log($"CSV file schema created in {sw.Elapsed}\n");
         
         parsingContext.Stats.Schemas.Add(assigned);
         parsingContext.Stats.Context.Add(Path.GetFileNameWithoutExtension(parsingContext.Stats.SourcePath));
