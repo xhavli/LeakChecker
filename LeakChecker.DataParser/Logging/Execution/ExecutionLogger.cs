@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text;
 using LeakChecker.DataParser.Stats.Execution;
 using LeakChecker.DataParser.Utilities;
-using LeakChecker.DataParser.Utilities.Configuration;
+using LeakChecker.DataParser.Utilities.Settings;
 
 namespace LeakChecker.DataParser.Logging.Execution;
 
@@ -16,20 +16,20 @@ public class ExecutionLogger : IDisposable
     private const ConsoleColor SuccessColor = ConsoleColor.Green;
     private const ConsoleColor ExceptionColor = ConsoleColor.Red;
 
-    public ExecutionLogger(AppConfig config)
+    public ExecutionLogger(ISettings settings)
     {
         ExecutionStart = DateTime.Now;
         
         string fileTimeStamp = $"{ExecutionStart:yyyy-M-dTHH-mm-ss}";
         string reportFileName = $"{fileTimeStamp}.txt";
-        string reportFilePath = Path.Combine(config.LogDirectory, reportFileName);
+        string reportFilePath = Path.Combine(settings.LogDirectory, reportFileName);
 
         _writer = new StreamWriter(reportFilePath, append: true, encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
         {
             AutoFlush = true
         };
         
-        CreateReportHeader(config);
+        CreateReportHeader(settings);
     }
     
     private async Task LogLineAsync(string message = "")
@@ -77,29 +77,29 @@ public class ExecutionLogger : IDisposable
         Console.ResetColor();
     }
 
-    private void CreateReportHeader(AppConfig config)
+    private void CreateReportHeader(ISettings settings)
     {
         _writer.WriteLine($"Execution start: {ExecutionStart.ToString("F", CultureInfo.InvariantCulture)}");
         _writer.WriteLine("-----------------------------------------------------------");
-        _writer.WriteLine($"Log folder path: {config.LogDirectory}");
-        _writer.WriteLine($"Tmp folder path: {config.TmpDirectory}");
-        _writer.WriteLine($"Input folder path: {config.InputDirectory}");
-        _writer.WriteLine($"Output folder path: {config.OutputDirectory}");
+        _writer.WriteLine($"Log folder path: {settings.LogDirectory}");
+        _writer.WriteLine($"Tmp folder path: {settings.TmpDirectory}");
+        _writer.WriteLine($"Input folder path: {settings.InputDirectory}");
+        _writer.WriteLine($"Output folder path: {settings.OutputDirectory}");
         _writer.WriteLine();
-        _writer.WriteLine($"Csharp port: {config.CsharpPort}");
-        _writer.WriteLine($"Python port: {config.PythonPort}");
+        _writer.WriteLine($"Csharp port: {settings.CsharpPort}");
+        _writer.WriteLine($"Python port: {settings.PythonPort}");
         _writer.WriteLine();
-        _writer.WriteLine($"Connection timeout: {config.StartupTimeoutSeconds}");
+        _writer.WriteLine($"Connection timeout: {settings.StartupTimeoutSeconds}");
         _writer.WriteLine();
-        _writer.WriteLine($"Threads capacity: {config.ThreadsCapacity}");
-        _writer.WriteLine($"Channel capacity: {config.ChannelCapacity}");
+        _writer.WriteLine($"Threads capacity: {settings.ThreadsCapacity}");
+        _writer.WriteLine($"Channel capacity: {settings.ChannelCapacity}");
         _writer.WriteLine();
-        _writer.WriteLine($"Schema accuracy: {config.SchemaThreshold}");
+        _writer.WriteLine($"Schema accuracy: {settings.SchemaThreshold}");
         _writer.WriteLine();
-        _writer.WriteLine(string.Equals(config.Environment.Trim(), "Development", StringComparison.OrdinalIgnoreCase)
-                          ? $"Environment: {config.Environment} - AutoFlush = ON"
-                          : $"Environment: {config.Environment} - AutoFlush = OFF");
-        _writer.WriteLine($"Verbose: {config.Verbose}");
+        _writer.WriteLine(string.Equals(settings.Environment.Trim(), "Development", StringComparison.OrdinalIgnoreCase)
+                          ? $"Environment: {settings.Environment} - AutoFlush = ON"
+                          : $"Environment: {settings.Environment} - AutoFlush = OFF");
+        _writer.WriteLine($"Verbose: {settings.Verbose}");
         _writer.WriteLine("-----------------------------------------------------------");
     }
     

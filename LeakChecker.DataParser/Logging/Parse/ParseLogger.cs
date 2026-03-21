@@ -37,7 +37,7 @@ public class ParseLogger : IParseLogger
         _verbose = verbose;
     }
 
-    public static async Task<IParseLogger> CreateAsync(AppConfig config, Guid executionId, string subjectFilePath)
+    public static async Task<IParseLogger> CreateAsync(ISettings settings, string subjectFilePath)
     {
         Guid parseId = Guid.NewGuid();
         DateTime parseStart = DateTime.Now;
@@ -45,16 +45,16 @@ public class ParseLogger : IParseLogger
         string subjectFileName = Path.GetFileName(subjectFilePath);
         string fileTimeStamp = $"{parseStart:yyyy-M-dTHH-mm-ss}";
         string logFileName = $"{fileTimeStamp}_{subjectFileName}_{parseId}.txt";
-        string logFilePath = Path.Combine(config.LogDirectory, logFileName);
-        string tmpFilePath = Path.Combine(config.TmpDirectory, logFileName);
+        string logFilePath = Path.Combine(settings.LogDirectory, logFileName);
+        string tmpFilePath = Path.Combine(settings.TmpDirectory, logFileName);
 
-        bool isDevelopment = string.Equals(config.Environment.Trim(), "Development", StringComparison.OrdinalIgnoreCase);
-        var writer = new StreamWriter(logFilePath, append: true, encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
+        bool isDevelopment = string.Equals(settings.Environment.Trim(), "Development", StringComparison.OrdinalIgnoreCase);
+        var writer = new StreamWriter(logFilePath, append: true, encoding: settings.DefaultUtf8)
         {
             AutoFlush = isDevelopment
         };
         
-        var logger = new ParseLogger(parseId, parseStart, subjectFilePath, tmpFilePath, writer, config.Verbose);
+        var logger = new ParseLogger(parseId, parseStart, subjectFilePath, tmpFilePath, writer, settings.Verbose);
         
         await logger.CreateLogHeaderAsync();
 

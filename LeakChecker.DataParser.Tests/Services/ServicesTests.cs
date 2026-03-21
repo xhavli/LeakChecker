@@ -1,4 +1,4 @@
-using LeakChecker.DataParser.Utilities.Configuration;
+using LeakChecker.DataParser.Utilities.Settings;
 
 namespace LeakChecker.DataParser.Tests.Services;
 

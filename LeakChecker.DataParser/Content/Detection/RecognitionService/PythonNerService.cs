@@ -2,11 +2,11 @@ using System.Diagnostics;
 using System.Net;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
-using LeakChecker.DataParser.Utilities.Configuration;
+using LeakChecker.DataParser.Utilities.Settings;
 
 namespace LeakChecker.DataParser.Content.Detection.RecognitionService;
 
-public class PythonNerService(AppConfig config, ExecutionLogger logger)
+public class PythonNerService(ISettings settings, ExecutionLogger logger)
 {
     private Process? _process;
 
@@ -21,8 +21,8 @@ public class PythonNerService(AppConfig config, ExecutionLogger logger)
             string projectDir = Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.Parent?.Parent?.FullName!;
             string pythonDir = Path.Combine(projectDir, "LeakChecker.DataParser/Content/Detection/RecognitionService/Python");
             
-            string pythonExe = Path.Combine(pythonDir, config.PythonVenvPath);
-            string scriptPath = Path.Combine(pythonDir, config.PythonScriptName);
+            string pythonExe = Path.Combine(pythonDir, settings.PythonVenvPath);
+            string scriptPath = Path.Combine(pythonDir, settings.PythonScriptName);
 
             if (!File.Exists(pythonExe))
                 throw new FileNotFoundException($"Python .venv not found: {pythonExe}");
@@ -33,7 +33,7 @@ public class PythonNerService(AppConfig config, ExecutionLogger logger)
             var psi = new ProcessStartInfo
             {
                 FileName = pythonExe,
-                Arguments = $"\"{scriptPath}\" --python-port {config.PythonPort} --csharp-port {config.CsharpPort}",
+                Arguments = $"\"{scriptPath}\" --python-port {settings.PythonPort} --csharp-port {settings.CsharpPort}",
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
@@ -92,13 +92,13 @@ public class PythonNerService(AppConfig config, ExecutionLogger logger)
 
     private async Task<bool> ServiceIsRunning()
     {
-        await logger.Log($"CsharpPort {config.CsharpPort} sending status check to PythonPort {config.PythonPort}",
+        await logger.Log($"CsharpPort {settings.CsharpPort} sending status check to PythonPort {settings.PythonPort}",
             LogLevel.Info, LogContext.PythonNerService);
         
         try
         {
             using HttpClient client = new();
-            string statusUrl = $"http://localhost:{config.PythonPort}/status";
+            string statusUrl = $"http://localhost:{settings.PythonPort}/status";
             string status = await client.GetStringAsync(statusUrl);
 
             if (status.Trim().Equals("ready", StringComparison.OrdinalIgnoreCase))
@@ -117,12 +117,12 @@ public class PythonNerService(AppConfig config, ExecutionLogger logger)
 
     private async Task WaitForReady()
     {
-        await logger.Log($"Waiting for READY notification with timeout {config.StartupTimeoutSeconds} seconds.",
+        await logger.Log($"Waiting for READY notification with timeout {settings.StartupTimeoutSeconds} seconds.",
             LogLevel.Warning, LogContext.PythonNerService);
         
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(config.StartupTimeoutSeconds));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(settings.StartupTimeoutSeconds));
         using var listener = new HttpListener();
-        listener.Prefixes.Add($"http://localhost:{config.CsharpPort}/");
+        listener.Prefixes.Add($"http://localhost:{settings.CsharpPort}/");
         listener.Start();
 
         try
