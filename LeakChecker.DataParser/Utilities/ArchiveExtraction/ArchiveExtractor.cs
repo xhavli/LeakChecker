@@ -1,17 +1,16 @@
 using Microsoft.CST.RecursiveExtractor;
 
-namespace LeakChecker.DataParser.Utilities;
+namespace LeakChecker.DataParser.Utilities.ArchiveExtraction;
 
 public static class ArchiveExtractor
 {
     private static readonly char[] DirectorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
 
-    public static async Task<IEnumerable<string>> ExtractArchives(IEnumerable<string> inputPaths, string extractionPath)
+    public static async Task<IEnumerable<string>> ExtractArchives(IEnumerable<string> inputPaths, string extractionRoot)
     {
         var extractor = new Extractor();
         List<string> outputPaths = new();
         
-        string extractionRoot = Path.GetFullPath(extractionPath);
         if (!extractionRoot.EndsWith(Path.DirectorySeparatorChar))
             extractionRoot += Path.DirectorySeparatorChar;
 
