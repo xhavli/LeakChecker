@@ -1,173 +1,54 @@
-﻿using System.Globalization;
-using System.Text;
-using System.Threading.Channels;
-using LeakChecker.DataParser.Content.Detection.RecognitionService;
-using LeakChecker.DataParser.Content.Parsing;
-using LeakChecker.DataParser.Data;
-using LeakChecker.DataParser.Encodings;
-using LeakChecker.DataParser.Encodings.Conversion;
-using LeakChecker.DataParser.Encodings.Detection;
-using LeakChecker.DataParser.Logging;
+﻿using LeakChecker.DataParser.Content.Detection.RecognitionService;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Utilities;
-using LeakChecker.DataParser.Utilities.Configuration;
+using LeakChecker.DataParser.Utilities.Settings;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace LeakChecker.DataParser;
 
 public static class Program
 {
-    public static async Task<int> Main()
+    public static IHostBuilder CreateHostBuilder(string[]? args = null, IConfiguration? overrideConfig = null)
     {
-        const string configJson = "appsettings.json";
-        AppConfig config;
+        return Host.CreateDefaultBuilder(args ?? []).ConfigureServices((context, services) =>
+            {
+                JsonSettings jsonSettings = new();
+
+                IConfiguration configSource = overrideConfig ?? context.Configuration;
+                configSource.GetSection("DataParser").Bind(jsonSettings);
+
+                ISettings settings = Settings.FromJson(jsonSettings);
+                settings.ApplyGlobalSettings();
+
+                services.AddSingleton(settings);
+
+                services.AddSingleton<IParseLoggerFactory, ParseLoggerFactory>();
+                services.AddSingleton<ExecutionLogger>();
+                services.AddSingleton<FileHelper>();
+                services.AddSingleton<PythonNerService>();
+                services.AddSingleton<ParserRunner>();
+            });
+    }
+
+    public static async Task<int> Main(string[] args)
+    {
         try
         {
-            config = AppConfigParser.LoadFromFile(configJson);
+            using var host = CreateHostBuilder(args).Build();
+            var runner = host.Services.GetRequiredService<ParserRunner>();
+            return await runner.RunAsync();
         }
         catch (Exception e)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            await Console.Error.WriteLineAsync($"[EXCEPTION] [CONFIG] {e.Message}");
-            await Console.Error.WriteLineAsync(e.ToString());
-            Console.WriteLine("Program will exit with exit code 1.");
+            await Console.Error.WriteLineAsync($"[EXCEPTION] [MAIN] {e.Message}");
+            await Console.Error.WriteLineAsync($"[WHOLE EXCEPTION] {e}");
+            Console.WriteLine("[WARNING] Program will terminate with exit code 1.");
             Console.ResetColor();
             return 1;
         }
-        
-        var services = new ServiceCollection();
-        services.AddSingleton(config);
-        
-        services.AddSingleton<IParseLoggerFactory, ParseLoggerFactory>();
-        services.AddSingleton<ExecutionLogger>();
-        
-        var provider = services.BuildServiceProvider();
-        var executionLogger = provider.GetRequiredService<ExecutionLogger>();
-        var loggerFactory = provider.GetRequiredService<IParseLoggerFactory>();
-        Guid executionId = Guid.NewGuid();
-        var stats = new ExecutionStats(executionId, executionLogger.ExecutionStart);
-        var fileHelper = new FileHelper(executionLogger);
-        
-        PythonNerService pythonNerService = new PythonNerService(config, executionLogger);
-        try
-        {
-            await pythonNerService.Start();
-            await pythonNerService.WaitStart();
-        }
-        catch (Exception e)
-        {
-            await executionLogger.Log(e.Message, LogLevel.Failure, LogContext.PythonNerService);
-            return 1;
-        }
-
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        Encoding utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false); // false = no BOM
-        Console.InputEncoding = utf8;   // Enforce UTF8 encoding which can handle cyrilic characters 
-        Console.OutputEncoding = utf8;
-        
-        var inputPaths = FileHelper.GetAllFiles(config.InputDirectory);
-        var paths = await ArchiveExtractor.ExtractArchives(inputPaths, config.TmpDirectory);
-        
-        // Bounded channel = backpressure + stable memory
-        var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(config.ChannelCapacity)
-        {
-            FullMode = BoundedChannelFullMode.Wait,
-            SingleWriter = true,
-            SingleReader = false
-        });
-
-        // Producer: enqueue file paths
-        var producer = Task.Run(async () =>
-        {
-            try
-            {
-                foreach (var path in paths)
-                {
-                    await channel.Writer.WriteAsync(path);
-                }
-
-                channel.Writer.TryComplete();
-            }
-            catch (Exception ex)
-            {
-                channel.Writer.TryComplete(ex);
-                throw;
-            }
-        });
-
-        // Consumers: process files with bounded concurrency (threads)
-        var consumers = Enumerable.Range(0, config.ThreadsCapacity).Select(_ => Task.Run(async () =>
-        {
-            await foreach (var filePath in channel.Reader.ReadAllAsync())
-            {
-                await executionLogger.Log("Started: " + Path.GetFileName(filePath), LogLevel.Info, LogContext.Parsing);
-                
-                if (!await fileHelper.IsAccessible(filePath) || !await fileHelper.IsSupported(filePath))
-                    continue;
-
-                using var parseLogger = await loggerFactory.CreateAsync(executionId, filePath);
-                ParseStats parseStats = new ParseStats(executionId, parseLogger, filePath);
-
-                try
-                {
-                    if (FileHelper.IsExcel(filePath))
-                    {
-                        // Avoid encoding conversion of zipped XML which Excel is
-                        await ExcelParser.ParseFile(filePath, parseLogger, parseStats, config.SchemaThreshold);
-                    }
-                    else
-                    {
-                        // EncodingDetector encodingDetector = new(filePath, parseLogger, parseStats);
-                        // List<EncodingSegment> encodingSegments = await encodingDetector.DetectFileEncodings();
-                        //
-                        // await EncodingConverter.ConvertFileToUtf8(parseLogger, encodingSegments);
-
-                        await fileHelper.IsReadable(filePath);
-                        
-                        string parseFile = parseLogger.SubjectFilePath;   //TODO remove this only for test purposes
-                        // string parseFile = parseLogger.SubjectTmpFilePath;    //TODO use this in deployment
-                        using ContentParser contentParser = new(parseFile, parseLogger, parseStats, config.SchemaThreshold);
-                        await contentParser.ParseFile();
-                    }
-
-                    await parseLogger.LogParseStats(parseStats);
-                    
-                    lock (stats)
-                    {
-                        stats.FilesParsed.Add(parseStats.ParseId);
-                        stats.LinesParsed += parseStats.LinesRead;
-                        stats.BytesParsed += parseStats.BytesRead;
-                        stats.RecordsParsed += parseStats.RecordsRead;
-                        stats.MalformedRecordsRead += parseStats.MalformedRecordsRead;
-                    }
-                }
-                catch (Exception e)
-                {
-                    await executionLogger.Log($"{parseStats.ParseId} : {parseStats.FileName}: {e}", LogLevel.Failure, LogContext.Main);
-                }
-                finally
-                {
-                    // if (parseLogger.SubjectFilePath.StartsWith(config.TmpDirectory, StringComparison.OrdinalIgnoreCase))
-                    //     File.Delete(parseLogger.SubjectFilePath);
-                    //
-                    // if (parseLogger.SubjectTmpFilePath.StartsWith(config.TmpDirectory, StringComparison.OrdinalIgnoreCase))
-                    //     File.Delete(parseLogger.SubjectTmpFilePath);
-                }
-
-                await executionLogger.Log($"Finished: {parseStats.FileName}", LogLevel.Success, LogContext.Parsing);
-            }
-        })).ToArray();
-
-        await Task.WhenAll(consumers.Append(producer));
-        await pythonNerService.Stop();
-        
-        stats.ExecutionEnd = DateTime.Now;
-        await executionLogger.LogExecutionStats(stats);
-        
-        await executionLogger.Log($"Execution finished successfully. Parsed {paths.Count()} files. Current DateTime is " +
-                         $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Main);
-        await executionLogger.Log("Program will exit with exit code 0");
-        return 0;
     }
 }

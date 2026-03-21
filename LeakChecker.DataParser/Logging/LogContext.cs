@@ -2,7 +2,7 @@ namespace LeakChecker.DataParser.Logging;
 
 public enum LogContext
 {
-    Main,
+    ParseRunner,
     Encoding,
     Delimiter,
     Content,
@@ -15,13 +15,13 @@ public static class LogContextStrings
 {
     private static readonly Dictionary<LogContext, string> Map = new()
     {
-        { LogContext.Main, "[MAIN]" },
+        { LogContext.ParseRunner, "[PARSE_RUNNER]" },
         { LogContext.Encoding, "[ENCODING]" },
         { LogContext.Delimiter, "[DELIMITER]" },
         { LogContext.Content, "[CONTENT]" },
         { LogContext.Parsing, "[PARSING]" },
-        { LogContext.PythonNerService, "[PYTHON-NER-SERVICE]" },
-        { LogContext.ExternalService, "[EXTERNAL-SERVICE]" },
+        { LogContext.PythonNerService, "[PYTHON_NER_SERVICE]" },
+        { LogContext.ExternalService, "[EXTERNAL_SERVICE]" },
     };
 
     public static string GetString(this LogContext context) => Map[context];
