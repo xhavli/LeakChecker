@@ -1,7 +1,11 @@
 using System.Text;
-using LeakChecker.DataParser.Content.Parsing;
+using LeakChecker.DataParser.Content.Parse;
 using LeakChecker.DataParser.Format;
-using LeakChecker.DataParser.Tests.Logging.Helpers.Parse;
+using LeakChecker.DataParser.Tests.Helpers.AppBuilder;
+using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
+using LeakChecker.DataParser.Tests.Helpers.Stats;
+using LeakChecker.DataParser.Utilities.Settings;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LeakChecker.DataParser.Tests.Content.Parsing.ContentParserTests.FormatDetectionTests;
 
@@ -36,7 +40,9 @@ public class SingleFormatDetectionTests
         // Arrange
         string filePath = Path.Combine(_testDataDirectory, fileName);
         NullParseStats stats = new NullParseStats();
-        using var parser = new ContentParser(filePath, _logger, stats, schemaThreshold: 50);
+        using var host = LeakCheckerApplicationFactory.CreateHost();
+        var config = host.Services.GetRequiredService<ISettings>();
+        using var parser = new ContentParser(filePath, _logger, stats, config);
 
         // Act
         await parser.ParseFile();
@@ -59,7 +65,9 @@ public class SingleFormatDetectionTests
         // Arrange
         string filePath = Path.Combine(_testDataDirectory, fileName);
         NullParseStats stats = new NullParseStats();
-        using var parser = new ContentParser(filePath, _logger, stats, schemaThreshold: 50);
+        using var host = LeakCheckerApplicationFactory.CreateHost();
+        var config = host.Services.GetRequiredService<ISettings>();
+        using var parser = new ContentParser(filePath, _logger, stats, config);
 
         // Act
         await parser.ParseFile();
@@ -93,7 +101,9 @@ public class SingleFormatDetectionTests
         // Arrange
         string filePath = Path.Combine(_testDataDirectory, fileName);
         NullParseStats stats = new NullParseStats();
-        using var parser = new ContentParser(filePath, _logger, stats, schemaThreshold: 50);
+        using var host = LeakCheckerApplicationFactory.CreateHost();
+        var config = host.Services.GetRequiredService<ISettings>();
+        using var parser = new ContentParser(filePath, _logger, stats, config);
 
         // Act
         await parser.ParseFile();
