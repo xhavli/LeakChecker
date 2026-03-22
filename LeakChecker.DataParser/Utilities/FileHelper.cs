@@ -115,4 +115,28 @@ public class FileHelper(ExecutionLogger logger)
     {
         return Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories);
     }
+    
+    public async Task RemoveEmptyDirectories(string root)
+    {
+        // Get all directories, deepest first
+        var directories = Directory.GetDirectories(root, "*", SearchOption.AllDirectories)
+            .OrderByDescending(d => d.Length);
+
+        foreach (var dir in directories)
+        {
+            try
+            {
+                // Check if directory is empty
+                if (!Directory.EnumerateFileSystemEntries(dir).Any())
+                {
+                    Directory.Delete(dir);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Access issues, locked folders, etc.
+                await logger.Log($"Could not delete directory '{dir}': {ex.Message}", LogLevel.Warning);
+            }
+        }
+    }
 }
