@@ -145,7 +145,7 @@ public class ContentParser : IDisposable
         if (delimiterResult.BestDelimiter.HasValue)
         { 
             delimiter = delimiterResult.BestDelimiter.Value;
-            await _logger.LogDelimiterHeuristic(delimiterResult, count: 5);
+            await _logger.LogDelimiterHeuristic(delimiterResult);
         }
         else
         {

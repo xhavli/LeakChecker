@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Text;
-using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Utilities;
 
@@ -12,12 +11,13 @@ public static class EncodingConverter
     /// Converts a file with mixed encodings into a single UTF-8 encoded output file.
     /// If the file is already UTF-8 (single segment), it is just copied.
     /// </summary>
-    public static async Task<string> ConvertFileToUtf8(List<EncodingSegment> encodingSegments, IParseLogger logger, int bufferSize = SizeEnum.MegaByte)
+    public static async Task<string> ConvertFileToUtf8(List<EncodingSegment> encodingSegments, IParseLogger logger, int bufferSize = SizeEnum.MegaByte * 2)
     {
         // If file is already in UTF-8 as a single UTF-8 segment
         if (encodingSegments is [{ Encoding: not null }] && Equals(encodingSegments[0].Encoding?.WebName, Encoding.UTF8.WebName))
             return logger.SubjectFilePath;
-        
+
+        await logger.LogEncodingConversion();
         Stopwatch sw = Stopwatch.StartNew();
         Encoding utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false); // no BOM
 
@@ -28,7 +28,7 @@ public static class EncodingConverter
         {
             if (segment.Encoding == null)
             {
-                await logger.LogEncodingConversion($"Encoding missing for encoding segment [{segment.ToByteString()}]. Set UTF-8 as default.");
+                await logger.Log($"Encoding missing for encoding segment [{segment.ToByteString()}]. Set UTF-8 as default.");
                 segment.Encoding = utf8;
             }
 
@@ -54,7 +54,7 @@ public static class EncodingConverter
 
         await outStream.FlushAsync();
         
-        await logger.LogEncodingConversion($"{encodingSegments.Count} encoding segments conversion takes {sw.Elapsed}");
+        await logger.Log($"Encoding conversion of {encodingSegments.Count}. Time taken: {sw.Elapsed}");
         
         return logger.SubjectTmpFilePath;
     }

@@ -17,11 +17,11 @@ public sealed class NullParseLogger : IParseLogger
 
     public Task Log(string? message, LogLevel level = LogLevel.Info, LogContext? context = null) => Task.CompletedTask;
     public Task LogEncodingHeader() => Task.CompletedTask;
-    public Task LogEncodingStats(List<EncodingSegment> segments) => Task.CompletedTask;
+    public Task LogEncodingStats(List<EncodingSegment> segments, int take = 10) => Task.CompletedTask;
     public Task LogEncodingDetails(List<EncodingSegment> segments) => Task.CompletedTask;
-    public Task LogEncodingConversion(string message) => Task.CompletedTask;
+    public Task LogEncodingConversion() => Task.CompletedTask;
     public Task LogContentHeader() => Task.CompletedTask;
-    public Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int count) => Task.CompletedTask;
+    public Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int take = 10) => Task.CompletedTask;
     public Task LogSchemaDetectionHeader() => Task.CompletedTask;
     public Task LogSample(string sample) => Task.CompletedTask;
     public Task LogSqlInsertHeader(SqlInsertHeader insertHeader) => Task.CompletedTask;

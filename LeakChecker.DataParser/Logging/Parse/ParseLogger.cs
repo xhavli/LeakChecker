@@ -130,7 +130,7 @@ public class ParseLogger : IParseLogger
         await Log("Encoding detection started");
     }
     
-    public async Task LogEncodingStats(List<EncodingSegment> segments)
+    public async Task LogEncodingStats(List<EncodingSegment> segments, int take = 10)
     {
         await WriteLineAsync();
         await WriteLineAsync("---------------------------------------------");
@@ -168,12 +168,15 @@ public class ParseLogger : IParseLogger
         }
         
         await WriteLineAsync();
-        int count = 5;
-        await WriteLineAsync($"Top {count} largest encoding segments:");
         var largestSegments = segments
             .OrderByDescending(s => s.Length)
-            .Take(count)
+            .Take(take)
             .ToList();
+
+        int actualCount = largestSegments.Count;
+        string messagePrefix = segments.Count <= take ? "All" : $"Top {actualCount}";
+
+        await WriteLineAsync($"{messagePrefix} largest encoding segments:");
         foreach (var seg in largestSegments)
             await WriteLineAsync($"   {seg.ToByteString()}");
     }
@@ -191,13 +194,13 @@ public class ParseLogger : IParseLogger
         }
     }
 
-    public async Task LogEncodingConversion(string message)
+    public async Task LogEncodingConversion()
     {
         await WriteLineAsync();
         await WriteLineAsync("---------------------------------------------");
         await WriteLineAsync("         [X] ENCODING CONVERSION [X]");
         await WriteLineAsync("---------------------------------------------");
-        await Log(message);
+        await Log("Encoding conversion started");
     }
     public async Task LogContentHeader()
     {
@@ -208,16 +211,22 @@ public class ParseLogger : IParseLogger
         await Log("Content parsing started");
     }
     
-    public async Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int count = 5)
+    public async Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int take = 5)
     {
+        
         await WriteLineAsync();
         await WriteLineAsync("---------------------------------------------");
         await WriteLineAsync("         [X] DELIMITER DETECTION [X]");
         await WriteLineAsync("---------------------------------------------");
+        
         await Log($"Best delimiter: [{result.BestDelimiter}]");
         await WriteLineAsync($"Sampled {result.SampledLines:N0} lines (~{result.SampledBytes} chars) in {result.Duration} seconds");
-        await WriteLineAsync($"Top {count} delimiter candidates detail:");
-        foreach (var candidate in result.Candidates.Take(count))
+        
+        var actualCount = Math.Min(take, result.Candidates.Count);
+        string messagePrefix = actualCount == take ? "All" : $"Top {actualCount}";
+        
+        await WriteLineAsync($"{messagePrefix} delimiter candidates detail:");
+        foreach (var candidate in result.Candidates.Take(actualCount))
             await WriteLineAsync($"    {candidate}");
 
         await WriteLineAsync();

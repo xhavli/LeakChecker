@@ -15,11 +15,11 @@ public interface IParseLogger : IDisposable
 
     Task Log(string? message, LogLevel level = LogLevel.Info, LogContext? context = null);
     Task LogEncodingHeader();
-    Task LogEncodingStats(List<EncodingSegment> segments);
+    Task LogEncodingStats(List<EncodingSegment> segments, int take = 10);
     Task LogEncodingDetails(List<EncodingSegment> segments);
-    Task LogEncodingConversion(string message);
+    Task LogEncodingConversion();
     Task LogContentHeader();
-    Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int count);
+    Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int take = 10);
     Task LogSchemaDetectionHeader();
     Task LogSample(string sample);
     Task LogSqlInsertHeader(SqlInsertHeader insertHeader);
