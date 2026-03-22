@@ -4,7 +4,6 @@ public class JsonSettings
 {
     public string? InputDirectory { get; set; }
     public string? LogDirectory { get; set; }
-    public string? OutputDirectory { get; set; }
     public string? TmpDirectory { get; set; }
     public string? PythonVenvPath { get; set; }
     public string? PythonScriptName { get; set; }
@@ -25,6 +24,8 @@ public class JsonSettings
         ValidateDirectory(InputDirectory, nameof(InputDirectory));
         ValidateDirectory(LogDirectory, nameof(LogDirectory));
         ValidateDirectory(TmpDirectory, nameof(TmpDirectory));
+        
+        ValidateCollision(InputDirectory!,TmpDirectory!);
         
         ValidateRange(CsharpPort, nameof(CsharpPort));
         ValidateRange(PythonPort, nameof(PythonPort));
@@ -53,5 +54,20 @@ public class JsonSettings
         {
             throw new ArgumentOutOfRangeException(nameof(value), $"Value of {name} must be in ushort range 0-65535. {e.Message}");
         }
+    }
+
+    private static void ValidateCollision(string inputDir, string tempDir)
+    {
+        // Normalize to full paths
+        string fullInputPath = Path.GetFullPath(inputDir);
+        string fullTempPath = Path.GetFullPath(tempDir);
+
+        // Ensure temp path ends with separator for proper prefix matching
+        if (!fullTempPath.EndsWith(Path.DirectorySeparatorChar))
+            fullTempPath += Path.DirectorySeparatorChar;
+
+        // Compare (case-insensitive on Windows)
+        if (fullInputPath.StartsWith(fullTempPath, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("InputDirectory cannot be inside the TemporaryDirectory because all data will be deleted.");
     }
 }
