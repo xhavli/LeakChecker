@@ -34,7 +34,7 @@ public class ContentParser : IDisposable
     public ContentParser(string filePath, IParseLogger logger, IParseStats stats, ISettings settings)
     {
         _encoding = settings.DefaultUtf8;
-        var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var stream = File.OpenRead(filePath);
         _reader = new StreamReader(stream, _encoding, detectEncodingFromByteOrderMarks: false);
         _logger = logger;
         _stats = stats;
