@@ -19,10 +19,11 @@ namespace LeakChecker.DataParser;
 
 public sealed class ParserRunner(
     ISettings settings,
-    IParseLoggerFactory parseLoggerFactory,
-    ExecutionLogger logger,
     FileHelper fileHelper,
-    PythonNerService pythonNerService)
+    ArchiveExtractor archiveExtractor,
+    PythonNerService pythonNerService,
+    ExecutionLogger logger,
+    IParseLoggerFactory parseLoggerFactory)
 {
     private static readonly Guid ExecutionId = Guid.NewGuid();
     private readonly ExecutionStats _stats = new(ExecutionId, logger.ExecutionStart);
@@ -43,7 +44,7 @@ public sealed class ParserRunner(
         try
         {
             var inputPaths = FilePaths.Original;
-            var paths = await ArchiveExtractor.ExtractArchives(inputPaths, settings.TmpDirectory);
+            var paths = await archiveExtractor.ExtractArchives(inputPaths);
             
             var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(settings.ChannelCapacity)
             {
@@ -83,8 +84,10 @@ public sealed class ParserRunner(
 
             _stats.ExecutionEnd = DateTime.Now;
             await logger.LogExecutionStats(_stats);
+            
             await logger.Log($"Execution finished successfully. Parsed {paths.Count()} files. Current DateTime is " + 
                              $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.ParseRunner);
+            
             await logger.Log("Program will exit with exit code 0");
             return 0;
         }

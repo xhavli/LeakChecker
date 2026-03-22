@@ -2,6 +2,7 @@
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Utilities;
+using LeakChecker.DataParser.Utilities.ArchiveExtraction;
 using LeakChecker.DataParser.Utilities.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,12 +24,19 @@ public static class Program
                 ISettings settings = Settings.FromJson(jsonSettings);
                 settings.ApplyGlobalSettings();
 
+                // Settings
                 services.AddSingleton(settings);
 
-                services.AddSingleton<IParseLoggerFactory, ParseLoggerFactory>();
+                // Loggers
                 services.AddSingleton<ExecutionLogger>();
+                services.AddSingleton<IParseLoggerFactory, ParseLoggerFactory>();
+                
+                // Utilities
                 services.AddSingleton<FileHelper>();
+                services.AddSingleton<ArchiveExtractor>();
                 services.AddSingleton<PythonNerService>();
+                
+                // Orchestration
                 services.AddSingleton<ParserRunner>();
             });
     }

@@ -1,16 +1,19 @@
+using LeakChecker.DataParser.Logging;
+using LeakChecker.DataParser.Logging.Execution;
+using LeakChecker.DataParser.Utilities.Settings;
 using Microsoft.CST.RecursiveExtractor;
 
 namespace LeakChecker.DataParser.Utilities.ArchiveExtraction;
 
-public static class ArchiveExtractor
+public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
 {
     private static readonly char[] DirectorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
 
-    public static async Task<IEnumerable<string>> ExtractArchives(IEnumerable<string> inputPaths, string tmpPath)
+    public async Task<IEnumerable<string>> ExtractArchives(IEnumerable<string> inputPaths)
     {
         var extractor = new Extractor();
         HashSet<string> parsePaths = new();
-        string extractionRoot = Path.GetFullPath(Path.Combine(tmpPath, "Extracted") + Path.DirectorySeparatorChar);
+        string extractionRoot = Path.GetFullPath(Path.Combine(settings.TmpDirectory, "Extracted") + Path.DirectorySeparatorChar);
         
         foreach (var path in inputPaths)
         {
@@ -28,7 +31,7 @@ public static class ArchiveExtractor
 
                 if (!dstPath.StartsWith(extractionRoot, StringComparison.Ordinal))
                 {
-                    Console.WriteLine($"Potential Zip Slip. Archive entry resolves outside extraction root: '{entry.FullPath}'");
+                    await logger.Log($"Potential Zip Slip. Archive entry tries resolve outside extraction root: '{entry.FullPath}'", LogLevel.Warning);
                     continue;
                 }
                 
