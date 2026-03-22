@@ -2,6 +2,7 @@ using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Format.Schema;
+using LeakChecker.DataParser.Stats.Parse;
 
 namespace LeakChecker.DataParser.Logging.Parse;
 

@@ -6,7 +6,6 @@ public interface ISettings
 {
     public string InputDirectory { get; init; }
     public string LogDirectory { get; init; }
-    public string OutputDirectory { get; init; }
     public string TmpDirectory { get; init; }
     public string ProjectDirectory { get; init; }
     public string PythonVenvPath { get; init; }

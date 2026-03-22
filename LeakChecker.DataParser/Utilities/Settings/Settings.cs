@@ -6,7 +6,6 @@ public class Settings : ISettings
 {
     public required string InputDirectory { get; init; }
     public required string LogDirectory { get; init; }
-    public required string OutputDirectory { get; init; }
     public required string TmpDirectory { get; init; }
     public required string ProjectDirectory { get; init; }
     public required string PythonVenvPath { get; init; }
@@ -34,7 +33,6 @@ public class Settings : ISettings
         {
             InputDirectory = Path.GetFullPath(jsonSettings.InputDirectory!),
             LogDirectory = Path.GetFullPath(jsonSettings.LogDirectory!),
-            OutputDirectory = Path.GetFullPath(jsonSettings.OutputDirectory!),
             TmpDirectory = Path.GetFullPath(jsonSettings.TmpDirectory!),
             ProjectDirectory = Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.Parent?.Parent?.FullName!,
             PythonVenvPath = jsonSettings.PythonVenvPath!,

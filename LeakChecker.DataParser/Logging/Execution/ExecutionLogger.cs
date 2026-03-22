@@ -32,7 +32,7 @@ public class ExecutionLogger : IDisposable
         CreateReportHeader(settings);
     }
     
-    private async Task LogLineAsync(string message = "")
+    private async Task WriteLineAsync(string message = "")
     {
         Console.WriteLine(message);
 
@@ -72,7 +72,7 @@ public class ExecutionLogger : IDisposable
 
         
         Console.ForegroundColor = consoleColor;
-        await LogLineAsync(context is null ? $"[{DateTime.Now:T}] {level.GetString()} {message}"
+        await WriteLineAsync(context is null ? $"[{DateTime.Now:T}] {level.GetString()} {message}"
                                            : $"[{DateTime.Now:T}] {level.GetString()} {context.Value.GetString()} {message}");
         Console.ResetColor();
     }
@@ -84,7 +84,6 @@ public class ExecutionLogger : IDisposable
         _writer.WriteLine($"Log folder path: {settings.LogDirectory}");
         _writer.WriteLine($"Tmp folder path: {settings.TmpDirectory}");
         _writer.WriteLine($"Input folder path: {settings.InputDirectory}");
-        _writer.WriteLine($"Output folder path: {settings.OutputDirectory}");
         _writer.WriteLine();
         _writer.WriteLine($"Csharp port: {settings.CsharpPort}");
         _writer.WriteLine($"Python port: {settings.PythonPort}");
@@ -105,30 +104,30 @@ public class ExecutionLogger : IDisposable
     
     public async Task LogExecutionStats(ExecutionStats stats)
     {
-        await LogLineAsync();
+        await WriteLineAsync();
 
-        await LogLineAsync($"Execution ID: {stats.ExecutionId}");
-        await LogLineAsync($"Files parsed: {stats.FilesParsed.Count}");
+        await WriteLineAsync($"Execution ID: {stats.ExecutionId}");
+        await WriteLineAsync($"Files parsed: {stats.FilesParsed.Count}");
         foreach (var id in stats.FilesParsed)
         {
-            await LogLineAsync($"    Parsing ID: {id}");
+            await WriteLineAsync($"    Parsing ID: {id}");
         }
 
-        await LogLineAsync($"Correct records parsed: {stats.RecordsParsed:N0}");
-        await LogLineAsync($"Malformed records parsed: {stats.MalformedRecordsRead:N0}");
-        await LogLineAsync($"Parse accuracy (correct vs malformed): {stats.Accuracy:N2} %");
+        await WriteLineAsync($"Correct records parsed: {stats.RecordsParsed:N0}");
+        await WriteLineAsync($"Malformed records parsed: {stats.MalformedRecordsRead:N0}");
+        await WriteLineAsync($"Parse accuracy (correct vs malformed): {stats.Accuracy:N2} %");
 
-        await LogLineAsync($"Lines parsed: {stats.LinesParsed:N0}");
-        await LogLineAsync($"Line speed: {stats.LineSpeed:N2} lines/second");
+        await WriteLineAsync($"Lines parsed: {stats.LinesParsed:N0}");
+        await WriteLineAsync($"Line speed: {stats.LineSpeed:N2} lines/second");
         
         double parsedMb = (double) stats.BytesParsed / SizeEnum.MegaByte;
         double parsedGb = (double) stats.BytesParsed / SizeEnum.GigaByte;
-        await LogLineAsync($"Bytes parsed: {stats.BytesParsed:N0} B / {parsedMb:F2} MiB / {parsedGb:F2} GiB");
-        await LogLineAsync($"Byte speed: {stats.ByteSpeed:N2} bytes/second");
+        await WriteLineAsync($"Bytes parsed: {stats.BytesParsed:N0} B / {parsedMb:F2} MiB / {parsedGb:F2} GiB");
+        await WriteLineAsync($"Byte speed: {stats.ByteSpeed:N2} bytes/second");
 
-        await LogLineAsync($"Execution start: {ExecutionStart.ToString("F", CultureInfo.InvariantCulture)}");
-        await LogLineAsync($"Execution ended: {stats.ExecutionEnd.ToString("F", CultureInfo.InvariantCulture)}");
-        await LogLineAsync($"Execution time: {stats.Duration}");
+        await WriteLineAsync($"Execution start: {ExecutionStart.ToString("F", CultureInfo.InvariantCulture)}");
+        await WriteLineAsync($"Execution ended: {stats.ExecutionEnd.ToString("F", CultureInfo.InvariantCulture)}");
+        await WriteLineAsync($"Execution time: {stats.Duration}");
     }
 
     public void Dispose()

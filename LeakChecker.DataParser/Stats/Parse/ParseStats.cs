@@ -2,10 +2,10 @@ using System.Text;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Format;
-using LeakChecker.DataParser.Stats.Parse;
+using LeakChecker.DataParser.Logging.Parse;
 using MongoDB.Bson;
 
-namespace LeakChecker.DataParser.Logging.Parse;
+namespace LeakChecker.DataParser.Stats.Parse;
 
 public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourcePath) : IParseStats
 {

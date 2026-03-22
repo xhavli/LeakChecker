@@ -24,7 +24,6 @@ public class JsonSettings
     {
         ValidateDirectory(InputDirectory, nameof(InputDirectory));
         ValidateDirectory(LogDirectory, nameof(LogDirectory));
-        ValidateDirectory(OutputDirectory, nameof(OutputDirectory));
         ValidateDirectory(TmpDirectory, nameof(TmpDirectory));
         
         ValidateRange(CsharpPort, nameof(CsharpPort));

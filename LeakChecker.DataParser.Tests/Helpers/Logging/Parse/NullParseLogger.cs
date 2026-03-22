@@ -4,6 +4,7 @@ using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Format.Schema;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Stats.Parse;
 
 namespace LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
 

@@ -7,7 +7,6 @@ public class NullSettings : ISettings
 {
     public string InputDirectory { get; init; } = string.Empty;
     public string LogDirectory { get; init; } = string.Empty;
-    public string OutputDirectory { get; init; } = string.Empty;
     public string TmpDirectory { get; init; } = string.Empty;
     public string ProjectDirectory { get; init; } =
         Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.Parent?.Parent?.FullName!;
