@@ -120,7 +120,7 @@ public sealed class ParserRunner(
                 EncodingDetector encodingDetector = new(filePath, parseLogger, parseStats);
                 List<EncodingSegment> encodingSegments = await encodingDetector.DetectEncodingSegments();
 
-                string parsePath = await EncodingConverter.ConvertFileToUtf8(filePath, encodingSegments, parseLogger, parseStats);
+                string parsePath = await EncodingConverter.ConvertFileToUtf8(encodingSegments, parseLogger);
                 
                 await fileHelper.IsReadable(parsePath);
 
