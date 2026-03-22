@@ -44,7 +44,7 @@ public sealed class ParserRunner(
         {
             var inputPaths = FilePaths.Original;
             var paths = await ArchiveExtractor.ExtractArchives(inputPaths, settings.TmpDirectory);
-
+            
             var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(settings.ChannelCapacity)
             {
                 FullMode = BoundedChannelFullMode.Wait,
@@ -96,6 +96,7 @@ public sealed class ParserRunner(
         finally
         {
             await pythonNerService.Stop();
+            await fileHelper.RemoveEmptyDirectories(settings.TmpDirectory);
         }
     }
 
@@ -147,14 +148,14 @@ public sealed class ParserRunner(
         {
             // Comment this if you want to keep extracted files
             if (File.Exists(parseLogger.SubjectFilePath) &&
-                parseLogger.SubjectFilePath.StartsWith(settings.TmpDirectory, StringComparison.OrdinalIgnoreCase))
+                parseLogger.SubjectFilePath.StartsWith(settings.TmpDirectory, StringComparison.Ordinal))
             {
                  File.Delete(parseLogger.SubjectFilePath);
             }
             
             // Comment this if you want to keep encoding normalized files
             if (File.Exists(parseLogger.SubjectTmpFilePath) &&
-                parseLogger.SubjectTmpFilePath.StartsWith(settings.TmpDirectory, StringComparison.OrdinalIgnoreCase))
+                parseLogger.SubjectTmpFilePath.StartsWith(settings.TmpDirectory, StringComparison.Ordinal))
             {
                 File.Delete(parseLogger.SubjectTmpFilePath);
             }
