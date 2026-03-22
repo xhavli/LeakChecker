@@ -4,11 +4,12 @@ using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Parse;
 using LeakChecker.DataParser.Utilities;
+using LeakChecker.DataParser.Utilities.Extensions;
 using UtfUnknown;
 
 namespace LeakChecker.DataParser.Encodings.Detection;
 
-public class EncodingDetector(string filePath, IParseLogger logger, IParseStats stats)
+public class EncodingDetector(string filePath, IParseLogger logger, IParseStats stats, float threshold = 0.99f)
 {
     public async Task<List<EncodingSegment>> DetectEncodingSegments()
     {
@@ -24,6 +25,7 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
 
         if (encSegments.Count == 1)
         {
+            stats.Encoding = encSegments[0].Encoding;
             await logger.Log($"Encoding detection finished successfully. Detected consistent [{encSegments[0].Encoding?.WebName}] with " +
                              $"[{encSegments[0].Confidence:F2}] confidence. Time taken: {sw.Elapsed}.", LogLevel.Success, LogContext.Encoding);
         }
@@ -57,11 +59,11 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
         var segments = new List<EncodingSegment>();
         await using var stream = File.OpenRead(filePath);
 
-        // Ensure detector will read all logger
+        // Ensure detector will read all stream
         var result = CharsetDetector.DetectFromStream(stream, stream.Length);
         
         stats.Encoding = result?.Detected?.Encoding;
-        if (result is { Detected.Confidence: > 0.99f })
+        if (result?.Detected?.Confidence >= threshold )
         {
             segments.Add(new EncodingSegment
             {
@@ -83,8 +85,6 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
         return segments;
     }
     
-    
-    // sampleSize predefined to 4KB
     private async Task<List<EncodingSegment>> DetectConcatenatedEncoding(int sampleSize = SizeEnum.KiloByte * 4)
     {
         await logger.Log("Detection of concatenated encoding.");
@@ -101,7 +101,7 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
             float confidence = result?.Detected?.Confidence ?? 0f;
             Encoding? encoding = result?.Detected?.Encoding;
 
-            if (confidence >= 0.99f)
+            if (confidence >= threshold)
             {
                 segments.Add(new EncodingSegment
                 {
@@ -124,7 +124,7 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
         return segments;
     }
     
-    private async Task<List<EncodingSegment>> DetectEncodingBoundaries(long startOffset, long length, float confidenceThreshold = 0.99f)
+    private async Task<List<EncodingSegment>> DetectEncodingBoundaries(long startOffset, long length)
     {
         var segments = new List<EncodingSegment>();
         byte[] buffer = new byte[SizeEnum.KiloByte * 64]; // Reused buffer for efficiency
@@ -153,7 +153,7 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
             float confidence = result?.Detected?.Confidence ?? 0f;
             var encoding = result?.Detected?.Encoding;
 
-            if (confidence >= confidenceThreshold || size <= 4)
+            if (confidence >= threshold || size <= 4)
             {
                 // Accept this range as one consistent encoding
                 segments.Add(new EncodingSegment
@@ -178,9 +178,11 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
     
     private static List<EncodingSegment> MergeSameEncodingSegments(List<EncodingSegment> segments)
     {
-        if (segments.Count <= 1) return segments;
+        if (segments.Count <= 1)
+            return segments;
+
         segments.Sort(static (a, b) => a.StartOffset.CompareTo(b.StartOffset));
-        
+
         var merged = new List<EncodingSegment>(segments.Count);
         var current = segments[0];
 
@@ -188,11 +190,24 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
         {
             var next = segments[i];
 
-            if (Equals(current.Encoding, next.Encoding) &&
-                current.StartOffset + current.Length == next.StartOffset)
+            bool contiguous = current.StartOffset + current.Length == next.StartOffset;
+            if (!contiguous)
             {
-                // Extend current
-                current.Length += next.Length;
+                merged.Add(current);
+                current = next;
+                continue;
+            }
+
+            if (TryGetMergedEncoding(current.Encoding, next.Encoding, out var mergedEncoding))
+            {
+                current = new EncodingSegment
+                {
+                    StartOffset = current.StartOffset,
+                    Length = current.Length + next.Length,
+                    Encoding = mergedEncoding,
+                    Confidence = (current.Confidence * current.Length + next.Confidence * next.Length) /
+                                 (current.Length + next.Length)
+                };
             }
             else
             {
@@ -200,8 +215,59 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
                 current = next;
             }
         }
-        
-        merged.Add(current); // Add last segment
+
+        merged.Add(current);
         return merged;
+    }
+
+    private static bool TryGetMergedEncoding(Encoding? a, Encoding? b, out Encoding? merged)
+    {
+        // Both unknown - merge
+        if (a is null && b is null)
+        {
+            merged = null;
+            return true;
+        }
+
+        // One known, one unknown - do not merge
+        if (a is null || b is null)
+        {
+            merged = null;
+            return false;
+        }
+
+        // Both known - merge
+        if (a.CodePage == b.CodePage)
+        {
+            merged = a;
+            return true;
+        }
+
+        if (IsExactSubsetEncoding(a, b))
+        {
+            merged = b;
+            return true;
+        }
+
+        if (IsExactSubsetEncoding(b, a))
+        {
+            merged = a;
+            return true;
+        }
+
+        merged = null;
+        return false;
+    }
+
+    private static bool IsExactSubsetEncoding(Encoding subset, Encoding superset)
+    {
+        if (subset.CodePage == superset.CodePage)
+            return true;
+
+        // Only prove relations we can prove exactly.
+        if (subset.CodePage == 20127) // US-ASCII
+            return superset.IsAsciiSuperset();
+
+        return false;
     }
 }

@@ -145,12 +145,14 @@ public sealed class ParserRunner(
         }
         finally
         {
+            // Comment this if you want to keep extracted files
             if (File.Exists(parseLogger.SubjectFilePath) &&
                 parseLogger.SubjectFilePath.StartsWith(settings.TmpDirectory, StringComparison.OrdinalIgnoreCase))
             {
                  File.Delete(parseLogger.SubjectFilePath);
             }
-
+            
+            // Comment this if you want to keep encoding normalized files
             if (File.Exists(parseLogger.SubjectTmpFilePath) &&
                 parseLogger.SubjectTmpFilePath.StartsWith(settings.TmpDirectory, StringComparison.OrdinalIgnoreCase))
             {
