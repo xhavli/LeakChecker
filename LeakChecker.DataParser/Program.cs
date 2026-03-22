@@ -44,9 +44,9 @@ public static class Program
         catch (Exception e)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            await Console.Error.WriteLineAsync($"[EXCEPTION] [MAIN] {e.Message}");
+            await Console.Error.WriteLineAsync($"[EXCEPTION] [MAIN] {e.Message}\n");
             await Console.Error.WriteLineAsync($"[WHOLE EXCEPTION] {e}");
-            Console.WriteLine("[WARNING] Program will terminate with exit code 1.");
+            Console.WriteLine("\n[WARNING] Program will terminate with exit code 1.");
             Console.ResetColor();
             return 1;
         }
