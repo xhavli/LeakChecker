@@ -10,6 +10,7 @@ using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Execution;
+using LeakChecker.DataParser.Stats.Parse;
 using LeakChecker.DataParser.Utilities;
 using LeakChecker.DataParser.Utilities.ArchiveExtraction;
 using LeakChecker.DataParser.Utilities.Settings;
@@ -19,15 +20,15 @@ namespace LeakChecker.DataParser;
 public sealed class ParserRunner(
     ISettings settings,
     IParseLoggerFactory parseLoggerFactory,
-    ExecutionLogger executionLogger,
+    ExecutionLogger logger,
     FileHelper fileHelper,
     PythonNerService pythonNerService)
 {
+    private static readonly Guid ExecutionId = Guid.NewGuid();
+    private readonly ExecutionStats _stats = new(ExecutionId, logger.ExecutionStart);
+    
     public async Task<int> RunAsync()
     {
-        Guid executionId = Guid.NewGuid();
-        var stats = new ExecutionStats(executionId, executionLogger.ExecutionStart);
-
         try
         {
             await pythonNerService.Start();
@@ -35,7 +36,7 @@ public sealed class ParserRunner(
         }
         catch (Exception e)
         {
-            await executionLogger.Log(e.Message, LogLevel.Failure, LogContext.PythonNerService);
+            await logger.Log(e.Message, LogLevel.Failure, LogContext.PythonNerService);
             return 1;
         }
 
@@ -73,23 +74,23 @@ public sealed class ParserRunner(
                 {
                     await foreach (var filePath in channel.Reader.ReadAllAsync())
                     {
-                        await ParseFileAsync(executionId, stats, filePath);
+                        await ParseFileAsync(filePath);
                     }
                 }))
                 .ToArray();
 
             await Task.WhenAll(consumers.Append(producer));
 
-            stats.ExecutionEnd = DateTime.Now;
-            await executionLogger.LogExecutionStats(stats);
-            await executionLogger.Log($"Execution finished successfully. Parsed {paths.Count()} files. Current DateTime is " +
-                                       $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.ParseRunner);
-            await executionLogger.Log("Program will exit with exit code 0");
+            _stats.ExecutionEnd = DateTime.Now;
+            await logger.LogExecutionStats(_stats);
+            await logger.Log($"Execution finished successfully. Parsed {paths.Count()} files. Current DateTime is " + 
+                             $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.ParseRunner);
+            await logger.Log("Program will exit with exit code 0");
             return 0;
         }
         catch (Exception e)
         {
-            await executionLogger.Log(e.ToString(), LogLevel.Failure, LogContext.ParseRunner);
+            await logger.Log(e.ToString(), LogLevel.Failure, LogContext.ParseRunner);
             return 1;
         }
         finally
@@ -98,15 +99,15 @@ public sealed class ParserRunner(
         }
     }
 
-    private async Task ParseFileAsync(Guid executionId, ExecutionStats stats, string filePath)
+    private async Task ParseFileAsync(string filePath)
     {
-        await executionLogger.Log("Started: " + Path.GetFileName(filePath), LogLevel.Info, LogContext.Parsing);
+        await logger.Log("Started: " + Path.GetFileName(filePath), LogLevel.Info, LogContext.Parsing);
 
         if (!await fileHelper.IsAccessible(filePath) || !await fileHelper.IsSupported(filePath))
             return;
 
         using var parseLogger = await parseLoggerFactory.CreateAsync(filePath);
-        ParseStats parseStats = new ParseStats(executionId, parseLogger, filePath);
+        ParseStats parseStats = new ParseStats(ExecutionId, parseLogger, filePath);
 
         try
         {
@@ -118,42 +119,45 @@ public sealed class ParserRunner(
             {
                 EncodingDetector encodingDetector = new(filePath, parseLogger, parseStats);
                 List<EncodingSegment> encodingSegments = await encodingDetector.DetectEncodingSegments();
+
+                string parsePath = await EncodingConverter.ConvertFileToUtf8(filePath, encodingSegments, parseLogger, parseStats);
                 
+                await fileHelper.IsReadable(parsePath);
 
-                await EncodingConverter.ConvertFileToUtf8(encodingSegments, parseLogger, parseStats);
-
-
-                await fileHelper.IsReadable(filePath);
-
-                string parseFile = parseLogger.SubjectFilePath;
-                using ContentParser contentParser = new (parseFile, parseLogger, parseStats, settings);
+                using ContentParser contentParser = new(parsePath, parseLogger, parseStats, settings);
                 await contentParser.ParseFile();
             }
 
             await parseLogger.LogParseStats(parseStats);
 
-            lock (stats)
+            lock (_stats)
             {
-                stats.FilesParsed.Add(parseStats.ParseId);
-                stats.LinesParsed += parseStats.LinesRead;
-                stats.BytesParsed += parseStats.BytesRead;
-                stats.RecordsParsed += parseStats.RecordsRead;
-                stats.MalformedRecordsRead += parseStats.MalformedRecordsRead;
+                _stats.FilesParsed.Add(parseStats.ParseId);
+                _stats.LinesParsed += parseStats.LinesRead;
+                _stats.BytesParsed += parseStats.BytesRead;
+                _stats.RecordsParsed += parseStats.RecordsRead;
+                _stats.MalformedRecordsRead += parseStats.MalformedRecordsRead;
             }
         }
         catch (Exception e)
         {
-            await executionLogger.Log($"{parseStats.ParseId} : {parseStats.FileName}: {e}", LogLevel.Failure, LogContext.ParseRunner);
+            await logger.Log($"{parseStats.ParseId} : {parseStats.FileName}: {e}", LogLevel.Failure, LogContext.ParseRunner);
         }
         finally
         {
-            // if (parseLogger.SubjectFilePath.StartsWith(_config.TmpDirectory, StringComparison.OrdinalIgnoreCase))
-            //     File.Delete(parseLogger.SubjectFilePath);
-            //
-            // if (parseLogger.SubjectTmpFilePath.StartsWith(_config.TmpDirectory, StringComparison.OrdinalIgnoreCase))
-            //     File.Delete(parseLogger.SubjectTmpFilePath);
+            if (File.Exists(parseLogger.SubjectFilePath) &&
+                parseLogger.SubjectFilePath.StartsWith(settings.TmpDirectory, StringComparison.OrdinalIgnoreCase))
+            {
+                 File.Delete(parseLogger.SubjectFilePath);
+            }
+
+            if (File.Exists(parseLogger.SubjectTmpFilePath) &&
+                parseLogger.SubjectTmpFilePath.StartsWith(settings.TmpDirectory, StringComparison.OrdinalIgnoreCase))
+            {
+                File.Delete(parseLogger.SubjectTmpFilePath);
+            }
         }
 
-        await executionLogger.Log($"Finished: {parseStats.FileName}", LogLevel.Success, LogContext.Parsing);
+        await logger.Log($"Finished: {parseStats.FileName}", LogLevel.Success, LogContext.Parsing);
     }
 }
