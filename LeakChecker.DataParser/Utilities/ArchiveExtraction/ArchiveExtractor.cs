@@ -6,14 +6,12 @@ public static class ArchiveExtractor
 {
     private static readonly char[] DirectorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
 
-    public static async Task<IEnumerable<string>> ExtractArchives(IEnumerable<string> inputPaths, string extractionRoot)
+    public static async Task<IEnumerable<string>> ExtractArchives(IEnumerable<string> inputPaths, string tmpPath)
     {
         var extractor = new Extractor();
-        List<string> outputPaths = new();
+        HashSet<string> parsePaths = new();
+        string extractionRoot = Path.GetFullPath(Path.Combine(tmpPath, "Extracted") + Path.DirectorySeparatorChar);
         
-        if (!extractionRoot.EndsWith(Path.DirectorySeparatorChar))
-            extractionRoot += Path.DirectorySeparatorChar;
-
         foreach (var path in inputPaths)
         {
             foreach (var entry in extractor.Extract(path))
@@ -21,8 +19,7 @@ public static class ArchiveExtractor
                 if (entry.Parent == null)
                 {
                     // Not an archive
-                    if (!outputPaths.Contains(path))
-                        outputPaths.Add(path);
+                    parsePaths.Add(path);
                     continue;
                 }
                 
@@ -39,14 +36,14 @@ public static class ArchiveExtractor
                 if (!string.IsNullOrEmpty(directory))
                     Directory.CreateDirectory(directory);
 
-                await using var outStream = File.Create(dstPath);
+                await using var outStream = new FileStream(dstPath, FileMode.Append, FileAccess.Write);
                 await entry.Content.CopyToAsync(outStream);
                 
-                outputPaths.Add(dstPath);
+                parsePaths.Add(dstPath);
             }
         }
         
-        return outputPaths;
+        return parsePaths;
     }
     
     private static string GetRelativeArchivePath(string sourcePath, string entryFullPath)
