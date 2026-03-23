@@ -195,6 +195,9 @@ Author: Adam Havlík
   Is done with Directory.EnumeratingFiles from specified directory path by tree traversal.
 - `2.3.2026` - ArchiveExtractor  
   Used microsoft [RecursiveExtractor](https://github.com/microsoft/RecursiveExtractor) which is simple to use, based on popular SharpCompress, LTRData/DiscUtils and protecting against zip bombs and zip slips.
+- `21.1.2026` - Use Host builder pattern and DI widely but still need tune
+- `22.3.2026` - EncodingExtension
+- `23.3.2026` - ArchiveDetector based on [Mime-Detective](https://github.com/MediatedCommunications/Mime-Detective) and file extensions
 
 ## Tests
 
@@ -205,12 +208,13 @@ Author: Adam Havlík
 - `3.11.2025` - Format.HeaderGuesser initial tests
 - `1.12.2025` - HashParser initial tests
 - `2.12.2025` - HashParser added tests
-- `7.2.2026` - HashParser tests have now 116 tests at summary
+- `7.2.2026` - HashParser added tests
 - `10.2.2026` - Format.CredentialAssigner tests
 - `12.2.2026` - ContentParser format detection initial tests
 - `13.2.2026` - Format.DelimiterDetection initial tests
 - `21.2.2026` - Encodings.Detection tests
 - `23.2.2026` - ServicesTests of availability of PythonNerService and [hashes.com](https://hashes.com/en/tools/hash_identifier)
+- `23.2.2026` - ContentParser add mixed format tests
 
 ### Module tests
 
@@ -224,14 +228,16 @@ Author: Adam Havlík
 
 ## TODOs
 
-- Merge subset of superset of encodings like ASCII is subset of Windows-125X. 0x00 - 0x7F are the same for ascii and win and 0x80 - 0xFF have Windows-1252. same ascii utf8, ascii iso-8859-X but iso-8859-1 is not subset of iso-8859-2...
-- Add Csv then Sql test
-- Fix byte counting position tracking system
-- Implement proper Appconfig and DI, getting of threshold, parsers samples...
-- When row mismatch, parse it separately.
 - When hash detected at `[i]` and `[i+1]` is other try to concatenate with delimiter for salted hash detection.
+- When row mismatch, parse it separately.
+- Use DI to PythonNerServiceRecognizer
+- Refactor tests, use DI and load proper config from DataParser.csproj
+- Use DI in ContentParser. create factories for almost everything with interfaces to override the normal behavior
+- Remove async from Execution logging chain
+- Fix byte counting position tracking system
 - Parse also `JSON`, `HTML` and `XML`
 - Make something like TestBase class where will be registered EncProvider, created logger or set env variable.
+- Make proper parallel ArchiveExtraction using batching technique.
 - Replace StringExtension IsSqlInsert with ReaderExtension IsSqlInsert which will read predefined lines returns true/false and discard buffers
 - When all is number then not bind `ItemEnum.Other`, else try to recompute without other as an `ItemEnum.Empty`, when full numbers, bind `ItemEnum.Id`
 - Wait properly for python start. READY signal is sent earlier than running python API 
