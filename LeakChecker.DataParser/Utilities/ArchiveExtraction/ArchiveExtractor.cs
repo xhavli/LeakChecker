@@ -8,50 +8,112 @@ namespace LeakChecker.DataParser.Utilities.ArchiveExtraction;
 
 public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
 {
-    private static readonly char[] DirectorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
+    private static readonly char[] DirectorySeparators = 
+        [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
+    
+    private readonly string _extractionRoot = Path.GetFullPath(
+        Path.Combine(settings.TmpDirectory, "Extracted") + Path.DirectorySeparatorChar);
+    
+    private static readonly StringComparer StringComparer = OperatingSystem.IsWindows()
+        ? StringComparer.OrdinalIgnoreCase
+        : StringComparer.Ordinal;
+    
+    private static readonly StringComparison StringComparison = OperatingSystem.IsWindows()
+        ? StringComparison.OrdinalIgnoreCase
+        : StringComparison.Ordinal;
 
     public async Task<IEnumerable<string>> ExtractArchives(IEnumerable<string> inputPaths)
     {
-        var parsePaths = new ConcurrentDictionary<string, byte>();
-        string extractionRoot = Path.GetFullPath(Path.Combine(settings.TmpDirectory, "Extracted") + Path.DirectorySeparatorChar);
+        var parsePaths = new ConcurrentDictionary<string, byte>(StringComparer);
+        var writtenPaths = new ConcurrentDictionary<string, SemaphoreSlim>(StringComparer);
+        int archivesCount = 0;
         
-        await Parallel.ForEachAsync(
-            inputPaths,
-            new ParallelOptions { MaxDegreeOfParallelism = settings.ThreadsCapacity },
-            async (path, ct) =>
-            {
-                Extractor extractor = new();
-                
-                foreach (var entry in extractor.Extract(path))
+        try
+        {
+            await Parallel.ForEachAsync(
+                inputPaths,
+                new ParallelOptions { MaxDegreeOfParallelism = settings.ThreadsCapacity },
+                async (path, ct) =>
                 {
-                    if (entry.Parent == null)
+                    if (!ArchiveDetector.IsPossibleArchive(path))
                     {
-                        // Not an archive
                         parsePaths.TryAdd(path, 0);
-                        continue;
+                        return;
                     }
-                    
-                    string relativeArchivePath = GetRelativeArchivePath(path, entry.FullPath);
-                    string dstPath = Path.GetFullPath(Path.Combine(extractionRoot, relativeArchivePath));
 
-                    if (!dstPath.StartsWith(extractionRoot, StringComparison.Ordinal))
+                    archivesCount++;
+                    Extractor extractor = new();
+
+                    foreach (var entry in extractor.Extract(path))
                     {
-                        await logger.Log($"Potential Zip Slip. Archive entry tries resolve outside extraction root: '{entry.FullPath}'", LogLevel.Warning);
-                        continue;
+                        if (entry.Parent == null)
+                        {
+                            // Not in archive - basic file
+                            parsePaths.TryAdd(path, 0);
+                            continue;
+                        }
+                        
+                        string? extractedPath = await ExtractFile(path, entry, writtenPaths, ct);
+                        
+                        if (extractedPath != null)
+                            parsePaths.TryAdd(extractedPath, 0);
                     }
-                    
-                    string? directory = Path.GetDirectoryName(dstPath);
-                    if (!string.IsNullOrEmpty(directory))
-                        Directory.CreateDirectory(directory);
-
-                    await using var outStream = new FileStream(dstPath, FileMode.Append, FileAccess.Write);
-                    await entry.Content.CopyToAsync(outStream, ct);
-                    
-                    parsePaths.TryAdd(dstPath, 0);
-                }
-            });
+                });
+        }
+        finally
+        {
+            if (!writtenPaths.IsEmpty)
+                await logger.Log($"Extracted {archivesCount} into {writtenPaths.Count} files.");
+            
+            foreach (var gate in writtenPaths.Values)
+                gate.Dispose();
+        }
         
         return parsePaths.Keys;
+    }
+    
+    private async Task<string?> ExtractFile(
+        string sourcePath,
+        FileEntry entry,
+        ConcurrentDictionary<string, SemaphoreSlim> writtenPaths,
+        CancellationToken ct)
+    {
+        string relativeFilePath = GetRelativeArchivePath(sourcePath, entry.FullPath);
+        string extractionPath = Path.GetFullPath(Path.Combine(_extractionRoot, relativeFilePath));
+
+        if (!extractionPath.StartsWith(_extractionRoot, StringComparison))
+        {
+            await logger.Log($"Potential Zip Slip. Archive entry tries resolve outside " +
+                             $"extraction root: '{entry.FullPath}'", LogLevel.Warning);
+            return null;
+        }
+
+        string? directory = Path.GetDirectoryName(extractionPath);
+        if (!string.IsNullOrWhiteSpace(directory))
+            Directory.CreateDirectory(directory);
+
+        var gate = writtenPaths.GetOrAdd(extractionPath, _ => new SemaphoreSlim(1, 1));
+        await gate.WaitAsync(ct);
+
+        try
+        {
+            await using var outStream = new FileStream(
+                extractionPath,
+                FileMode.Append,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: SizeEnum.MegaByte * 4,
+                options: FileOptions.Asynchronous | FileOptions.SequentialScan);
+
+            await using var inStream = entry.Content;
+            await inStream.CopyToAsync(outStream, ct);
+        }
+        finally
+        {
+            gate.Release();
+        }
+
+        return extractionPath;
     }
     
     private static string GetRelativeArchivePath(string sourcePath, string entryFullPath)
@@ -61,7 +123,7 @@ public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
         var segments = entryFullPath.Split(DirectorySeparators, StringSplitOptions.RemoveEmptyEntries);
 
         var startIndex = Array.FindIndex(
-            segments, s => string.Equals(s, rootName, StringComparison.OrdinalIgnoreCase));
+            segments, s => string.Equals(s, rootName, StringComparison));
 
         return startIndex < 0
             ? Path.GetFileName(entryFullPath)
