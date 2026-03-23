@@ -43,7 +43,7 @@ public sealed class ParserRunner(
 
         try
         {
-            var inputPaths = FilePaths.Original;
+            var inputPaths = fileHelper.GetInputFiles();
             var paths = await archiveExtractor.ExtractArchives(inputPaths);
             
             var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(settings.ChannelCapacity)
@@ -99,7 +99,7 @@ public sealed class ParserRunner(
         finally
         {
             await pythonNerService.Stop();
-            await fileHelper.RemoveEmptyDirectories(settings.TmpDirectory);
+            await fileHelper.RemoveEmptyDirectories();
         }
     }
 
@@ -107,7 +107,9 @@ public sealed class ParserRunner(
     {
         await logger.Log("Started: " + Path.GetFileName(filePath), LogLevel.Info, LogContext.Parsing);
 
-        if (!await fileHelper.IsAccessible(filePath) || !await fileHelper.IsSupported(filePath))
+        if (!await fileHelper.IsAccessible(filePath) ||
+            !await fileHelper.IsTextual(filePath) ||
+            !FileHelper.IsExcel(filePath))
             return;
 
         using var parseLogger = await parseLoggerFactory.CreateAsync(filePath);
