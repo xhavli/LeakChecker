@@ -19,8 +19,10 @@ public class FileHelper(ISettings settings, ExecutionLogger logger)
     
     private static readonly HashSet<string> TextualMimes = new(StringComparer.InvariantCultureIgnoreCase)
     {
+        "application/sql",
         "application/xml", 
         "application/json",
+        "application/x-yaml",
     };
     
     public async Task<bool> IsAccessible(string filePath)
