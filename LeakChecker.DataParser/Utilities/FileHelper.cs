@@ -1,13 +1,14 @@
 using ExcelDataReader;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
+using LeakChecker.DataParser.Utilities.Settings;
 using MimeDetective;
 using MimeDetective.Definitions;
 using MimeDetective.Definitions.Licensing;
 
 namespace LeakChecker.DataParser.Utilities;
 
-public class FileHelper(ExecutionLogger logger)
+public class FileHelper(ISettings settings, ExecutionLogger logger)
 {
     private static string? ApplicationName { get; } = AppDomain.CurrentDomain.FriendlyName;
 
@@ -16,12 +17,10 @@ public class FileHelper(ExecutionLogger logger)
         Definitions = new ExhaustiveBuilder { UsageType = UsageType.PersonalNonCommercial }.Build()
     }.Build();
     
-    private static readonly HashSet<string> SupportedMime = new(StringComparer.InvariantCultureIgnoreCase)
+    private static readonly HashSet<string> TextualMimes = new(StringComparer.InvariantCultureIgnoreCase)
     {
         "application/xml", 
-        "application/json", 
-        "application/vnd.ms-excel", 
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        "application/json",
     };
     
     public async Task<bool> IsAccessible(string filePath)
@@ -49,16 +48,16 @@ public class FileHelper(ExecutionLogger logger)
         }
     }
     
-    public async Task<bool> IsSupported(string filePath, int reliableThreshold = 4000)
+    public async Task<bool> IsTextual(string filePath, int reliableThreshold = 4000)
     {
-        await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
+        await using var stream = File.OpenRead(filePath);
         
         var results = MimeInspector.Inspect(stream);
         var best = results.ByMimeType().FirstOrDefault();
         
         if (best is not null && best.Points > reliableThreshold)
         {
-            if (!(SupportedMime.Contains(best.MimeType) || 
+            if (!(TextualMimes.Contains(best.MimeType) || 
                   best.MimeType.StartsWith("text/", StringComparison.OrdinalIgnoreCase)))
             {
                 await logger.Log($"File in path: '{filePath}' have MIME Extension [{best.MimeType.ToLower()}] with [{best.Points}] " +
@@ -74,7 +73,7 @@ public class FileHelper(ExecutionLogger logger)
     {
         try
         {
-            using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
+            using var stream = File.OpenRead(filePath);
             using var reader = ExcelReaderFactory.CreateReader(stream);
             return true;
         }
@@ -84,9 +83,9 @@ public class FileHelper(ExecutionLogger logger)
         }
     }
     
-    public async Task<bool> IsReadable(string filePath, int sampleLimit = 1000)
+    public async Task<bool> IsReadable(string filePath, int sampleLimit = 1000, int threshold = 75)
     {
-            await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
+            await using var stream = File.OpenRead(filePath);
             using var reader = new StreamReader(stream);
 
             int malformed = 0;
@@ -95,13 +94,14 @@ public class FileHelper(ExecutionLogger logger)
             while (!reader.EndOfStream && sampled < sampleLimit)
             {
                 string? line = await reader.ReadLineAsync();
-                if (line == null || line.Contains('�')) { malformed++; }
+                if (line == null || line.Contains('�'))
+                    malformed++;
 
                 sampled++;
             }
             
             double successRate = sampled == 0 ? 0 : Math.Max(0, (double)(sampled - malformed) / sampled  * 100);
-            if (successRate < 75)
+            if (successRate < threshold)
             {
                 await logger.Log($"File in path: '{filePath}' readability success rate is {successRate:N2} which " +
                                  $"can't be analysed via {ApplicationName}.", LogLevel.Warning);
@@ -111,15 +111,16 @@ public class FileHelper(ExecutionLogger logger)
             return true;
     }
     
-    public static IEnumerable<string> GetAllFiles(string path)
+    public IEnumerable<string> GetInputFiles()
     {
-        return Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories);
+        return Directory.EnumerateFiles(settings.InputDirectory, "*", SearchOption.AllDirectories);
     }
     
-    public async Task RemoveEmptyDirectories(string root)
+    public async Task RemoveEmptyDirectories()
     {
         // Get all directories, deepest first
-        var directories = Directory.GetDirectories(root, "*", SearchOption.AllDirectories)
+        var directories = Directory
+            .GetDirectories(settings.TmpDirectory, "*", SearchOption.AllDirectories)
             .OrderByDescending(d => d.Length);
 
         foreach (var dir in directories)
@@ -128,9 +129,7 @@ public class FileHelper(ExecutionLogger logger)
             {
                 // Check if directory is empty
                 if (!Directory.EnumerateFileSystemEntries(dir).Any())
-                {
                     Directory.Delete(dir);
-                }
             }
             catch (Exception ex)
             {
