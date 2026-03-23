@@ -49,10 +49,12 @@ public class JsonSettings
         try
         {
             _ = Convert.ToUInt16(value);
+            if (value < 1)
+                throw new Exception();
         }
         catch (Exception e)
         {
-            throw new ArgumentOutOfRangeException(nameof(value), $"Value of {name} must be in ushort range 0-65535. {e.Message}");
+            throw new ArgumentOutOfRangeException(nameof(value), $"Value of {name} must be in ushort range 1-65535. {e.Message}");
         }
     }
 
