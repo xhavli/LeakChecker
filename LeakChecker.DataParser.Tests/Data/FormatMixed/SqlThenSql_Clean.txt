@@ -1,0 +1,33 @@
+INSERT INTO `user_table` (`Id`, `Name`, `Gender`, `DateOfBirth`, `Address`, `IPv4`, `Email`, `Password`) VALUES
+    ('1', 'Mei Lin ', 'female', '1993/07/12', 'China', '45.77.201.19', 'mei@163.cn', 'lotus93'),
+    ('2', 'Олег Иванов', 'male', '03-05-1980', 'Ukraine', '10.0.0.55', 'oleg@mail.ua', 'qwerty'),
+    ('3', 'Amina Hassan', 'female', '5-7-1986', 'Morocco', '102.67.14.200', 'amina@maroc.ma', 'minttea'),
+    ('4', 'Björn Andersson', 'male', '17.02.1975', 'Sweden', '192.168.1.77', 'bjOrn@sweden.se', 'viking75'),
+    ('5', 'Priya Sharma', 'female', '8/9/2001', 'India', '157.45.88.12', 'priya@inbox.in', 'curry2001'),
+    ('6', 'Carlos Mendoza', 'male', '11/11/1990', 'Brazil', '201.55.33.90', 'carlos@uol.com', 'samba11'),
+    ('7', 'Fatima Al-Sayed', 'female', '9.4.1823', 'Emirates', '172.16.0.2', 'fa_tima@fly.emirates.ae', 'desert88'),
+    ('8', 'Liam O’Connor', 'male', '05/10/2004', 'Ireland', '86.45.120.33', 'liam@eir.ie', 'shamrock4'),
+    ('9', 'Zoë Hartmann', 'female', '24.8.2026', 'Germany', '203.0.113.45', 'zoe@example.net', 'butterfly'),
+    ('10', 'Ahmed El-Masri', 'male', '5-6-1979', 'Egypt', '156.212.44.1', 'ahmed@egypt.eg', '1234'),
+    ('11', 'Svetlana Petrova', 'female', '12.12.1992', 'Russia', '178.124.12.200', 'svetlama@mail.by', 'snow92'),
+    ('12', 'Marco Ricci', 'male', '1995-03-22', 'Italy', '151.100.55.77', 'marco@italia.it', 'roma95'),
+    ('13', '张伟', 'male', '07/07/1987', 'Korea', '61.72.33.144', 'joon@kmail.kr', 'hanguk87'),
+    ('14', 'Isabella Romano', 'female', '5.8.2014', 'Argentina', '181.44.201.9', 'isa.bel@argentina.ar', 'tango2000'),
+    ('15', 'Kofi Mensah ', 'male', '6-8-2001', 'Ghana', '102.176.22.88', 'weight.nolf@ecc.eu', 'akwaaba');
+
+INSERT INTO `user_table` (`Id`, `Name`, `Gender`, `DateOfBirth`, `Address`, `IPv4`, `Email`, `Password`) VALUES
+    ('1', 'Mei Lin ', 'female', '1993/07/12', 'China', '45.77.201.19', 'mei@163.cn', 'lotus93'),
+    ('2', 'Олег Иванов', 'male', '03-05-1980', 'Ukraine', '10.0.0.55', 'oleg@mail.ua', 'qwerty'),
+    ('3', 'Amina Hassan', 'female', '5-7-1986', 'Morocco', '102.67.14.200', 'amina@maroc.ma', 'minttea'),
+    ('4', 'Björn Andersson', 'male', '17.02.1975', 'Sweden', '192.168.1.77', 'bjOrn@sweden.se', 'viking75'),
+    ('5', 'Priya Sharma', 'female', '8/9/2001', 'India', '157.45.88.12', 'priya@inbox.in', 'curry2001'),
+    ('6', 'Carlos Mendoza', 'male', '11/11/1990', 'Brazil', '201.55.33.90', 'carlos@uol.com', 'samba11'),
+    ('7', 'Fatima Al-Sayed', 'female', '9.4.1823', 'Emirates', '172.16.0.2', 'fa_tima@fly.emirates.ae', 'desert88'),
+    ('8', 'Liam O’Connor', 'male', '05/10/2004', 'Ireland', '86.45.120.33', 'liam@eir.ie', 'shamrock4'),
+    ('9', 'Zoë Hartmann', 'female', '24.8.2026', 'Germany', '203.0.113.45', 'zoe@example.net', 'butterfly'),
+    ('10', 'Ahmed El-Masri', 'male', '5-6-1979', 'Egypt', '156.212.44.1', 'ahmed@egypt.eg', '1234'),
+    ('11', 'Svetlana Petrova', 'female', '12.12.1992', 'Russia', '178.124.12.200', 'svetlama@mail.by', 'snow92'),
+    ('12', 'Marco Ricci', 'male', '1995-03-22', 'Italy', '151.100.55.77', 'marco@italia.it', 'roma95'),
+    ('13', '张伟', 'male', '07/07/1987', 'Korea', '61.72.33.144', 'joon@kmail.kr', 'hanguk87'),
+    ('14', 'Isabella Romano', 'female', '5.8.2014', 'Argentina', '181.44.201.9', 'isa.bel@argentina.ar', 'tango2000'),
+    ('15', 'Kofi Mensah ', 'male', '6-8-2001', 'Ghana', '102.176.22.88', 'weight.nolf@ecc.eu', 'akwaaba');
