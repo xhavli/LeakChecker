@@ -40,4 +40,26 @@ public class MixedFormatDetectionTests
         Assert.Equal(FormatEnum.SqlInsert, stats.Formats[0]);
         Assert.Equal(FormatEnum.Csv, stats.Formats[1]);
     }
+    
+    [Theory]
+    [InlineData("CsvThenSql_Clean.txt")]
+    [InlineData("CsvThenSql_Messy.txt")]
+    public async Task ShouldDetect_CsvThenSql(string fileName)
+    {
+        // Arrange
+        string filePath = Path.Combine(_testDataDirectory, fileName);
+        NullParseStats stats = new NullParseStats();
+        using var host = LeakCheckerApplicationFactory.CreateHost();
+        var config = host.Services.GetRequiredService<ISettings>();
+
+        using var parser = new ContentParser(filePath, _logger, stats, config);
+
+        // Act
+        await parser.ParseFile();
+
+        // Assert
+        Assert.Equal(2, stats.Formats.Count);
+        Assert.Equal(FormatEnum.Csv, stats.Formats[0]);
+        Assert.Equal(FormatEnum.SqlInsert, stats.Formats[1]);
+    }
 }
