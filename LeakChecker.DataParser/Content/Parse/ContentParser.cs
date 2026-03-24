@@ -79,10 +79,10 @@ public class ContentParser : IDisposable
                 continue;
             }
             
-            if (line.StartsWith('{') || line.StartsWith('[')) {} // looks like a JSON - test if it really is a json and parse it
+            if (line.StartsWith('{') || line.StartsWith('[')) {} // looks like a JSON - test if it really is a JSON and parse it
             
             if (line.Contains("<html", StringComparison.OrdinalIgnoreCase) ||   // looks like an HTML
-                line.Contains("<body", StringComparison.OrdinalIgnoreCase)) {}  // test if it really is a html and parse it
+                line.Contains("<body", StringComparison.OrdinalIgnoreCase)) {}  // test if it really is an HTML and parse it
 
             // Fallback to CSV format
             await ProcessCsvFile();
