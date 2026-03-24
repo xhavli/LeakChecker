@@ -131,7 +131,7 @@ public static class SqlInsertDetector
                             
                             sb.Clear();
 
-                            // End of Sql INSERT
+                            // End of SQL INSERT
                             if (line.IsSqlInsertEnd())
                                 break;
                         }
@@ -144,7 +144,7 @@ public static class SqlInsertDetector
                     sb.Append(c);
             }
             
-            // End of Sql INSERT
+            // End of SQL INSERT
             if (line.IsSqlInsertEnd())
                 break;
         }

@@ -154,7 +154,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
                     stringBuilder.Append(ch);
             }
 
-            // End of Sql INSERT
+            // End of SQL INSERT
             if (line.IsSqlInsertEnd()) 
                 break;
         }
