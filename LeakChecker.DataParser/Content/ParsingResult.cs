@@ -1,6 +1,6 @@
 namespace LeakChecker.DataParser.Content;
 
-public class ParsingState
+public class ParsingResult
 {
     public long MalformedRecordsRead = 0;
     public long RecordsRead = 0;

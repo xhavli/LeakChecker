@@ -128,7 +128,7 @@ public class ContentParser : IDisposable
             MalformedLimit = _sqlSamplesLimit,
         };
         SqlInsertParser parser = new(parsingContext);
-        ParsingState result = await parser.ParseFile();
+        ParsingResult result = await parser.ParseFile();
         UpdateParsingState(result);
         
         _stats.Formats.Add(FormatEnum.SqlInsert);
@@ -183,7 +183,7 @@ public class ContentParser : IDisposable
             MalformedLimit = _csvSamplesLimit,
         };
         CsvParser parser = new(parsingContext);
-        ParsingState result = await parser.ParseFile();
+        ParsingResult result = await parser.ParseFile();
         UpdateParsingState(result);
         
         if (_possibleAsciiTable && delimiter == '|')
@@ -251,12 +251,12 @@ public class ContentParser : IDisposable
         }
     }
 
-    private void UpdateParsingState(ParsingState state)
+    private void UpdateParsingState(ParsingResult result)
     {
-        _linesRead += state.LinesRead;
-        _recordsRead += state.RecordsRead;
-        _readerPosition += state.BytesRead;
-        _malformedRecordsRead += state.MalformedRecordsRead;
+        _linesRead += result.LinesRead;
+        _recordsRead += result.RecordsRead;
+        _readerPosition += result.BytesRead;
+        _malformedRecordsRead += result.MalformedRecordsRead;
 
         if (_readerPosition <= _reader.BaseStream.Length)
         {

@@ -14,7 +14,7 @@ public class CsvParser(ParsingContext parsingContext)
     private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
     private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new();
     
-    public async Task<ParsingState> ParseFile()
+    public async Task<ParsingResult> ParseFile()
     {
         StreamReader reader = parsingContext.Reader;
         long startLine = parsingContext.StartLine;
@@ -81,7 +81,7 @@ public class CsvParser(ParsingContext parsingContext)
         
         await DatabaseFacade.SaveUserMany(_cachedRecords, _parseId);
         
-        return new ParsingState
+        return new ParsingResult
         {
             LinesRead = linesRead,
             BytesRead = bytesRead,
