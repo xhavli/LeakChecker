@@ -107,11 +107,13 @@ public sealed class ParserRunner(
     {
         await logger.Log("Started: " + Path.GetFileName(filePath), LogLevel.Info, LogContext.Parsing);
 
-        if (!await fileHelper.IsAccessible(filePath) ||
-            !await fileHelper.IsTextual(filePath) ||
-            !FileHelper.IsExcel(filePath))
-            return;
+        var isAccessible = await fileHelper.IsAccessible(filePath);
+        var isTextual = await fileHelper.IsTextual(filePath);
+        var isExcel = FileHelper.IsExcel(filePath);
 
+        if (!isAccessible || !(isTextual || isExcel))
+            return;
+        
         using var parseLogger = await parseLoggerFactory.CreateAsync(filePath);
         ParseStats parseStats = new ParseStats(ExecutionId, parseLogger, filePath);
 
