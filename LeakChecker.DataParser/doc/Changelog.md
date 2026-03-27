@@ -17,6 +17,8 @@ Author: Adam Havlík
   - [Unit Tests](#unit-tests)
   - [Module Tests](#module-tests)
   - [Integration Tests](#integration-tests)
+- [Diagrams](#diagrams)
+  - [Data Flow](#data-flow)
 - [TODOs](#todos)
 - [Notes](#notes)
 
@@ -225,6 +227,19 @@ Author: Adam Havlík
 ### Integration tests
 
 - `XX.10.2025` - Whole system tests
+
+## Diagrams
+
+### Data Flow
+
+![EncodingDetectionConversion](Diagrams/DataFlow/EncodingDetectionConversion.png)
+Picture: Encoding Detector of segments and Encoding Conversion to UTF-8
+
+![ContenParserCsv](Diagrams/DataFlow/ContentParserCsv.png)
+Picture: Csv Detector of format and Csv Parser of content
+
+![ContenParserCsv](Diagrams/DataFlow/ContentParsingSql.png)
+Picture: Sql Detector of format and Sql Parser of content
 
 ## TODOs
 
