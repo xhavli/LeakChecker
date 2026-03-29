@@ -29,7 +29,7 @@ public class FileHelper(ISettings settings, ExecutionLogger logger)
     {
         try
         {
-            await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
+            await using var stream = File.OpenRead(filePath);
             return true;
         }
         catch (FileNotFoundException)
@@ -48,6 +48,19 @@ public class FileHelper(ISettings settings, ExecutionLogger logger)
             await logger.Log($"File in path: '{filePath}' is locked, in use or its not file. Raised IOException.", LogLevel.Warning);
             return false;
         }
+    }
+
+    public async Task<IEnumerable<string>> AreAccessible(IEnumerable<string> filePaths)
+    {
+        List<string> parsePaths = new();
+        
+        foreach (var filePath in filePaths)
+        {
+            if (await IsAccessible(filePath))
+                parsePaths.Add(filePath);
+        }
+
+        return parsePaths;
     }
     
     public async Task<bool> IsTextual(string filePath, int reliableThreshold = 4000)
