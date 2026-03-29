@@ -14,10 +14,10 @@ public static class ArchiveDetector
     private static readonly HashSet<string> ArchiveMimes = new(StringComparer.OrdinalIgnoreCase)
     {
         // --- ZIP family ---
+        "multipart/x-zip",
         "application/zip",
         "application/x-zip",
         "application/x-zip-compressed",
-        "multipart/x-zip",
 
         // --- RAR ---
         "application/vnd.rar",
@@ -28,16 +28,16 @@ public static class ArchiveDetector
         "application/x-7z-compressed",
 
         // --- TAR ---
-        "application/x-tar",
         "application/tar",
+        "application/x-tar",
 
         // --- GZIP ---
         "application/gzip",
         "application/x-gzip",
 
         // --- BZIP2 ---
-        "application/x-bzip2",
         "application/bzip2",
+        "application/x-bzip2",
 
         // --- XZ ---
         "application/x-xz",
@@ -82,9 +82,11 @@ public static class ArchiveDetector
         ".tar.bz2",
         ".txz",
         ".tar.xz",
-        ".tar.z",
+        ".tlz",
         ".tar.lz",
         ".tar.lzma",
+        ".tar.z",
+        ".taz",
 
         // --- Single-file compressors ---
         ".gz",
@@ -94,6 +96,8 @@ public static class ArchiveDetector
         ".lzma",
         ".z",
         ".zst",
+        ".br",
+        ".lz4",
 
         // --- Less common ---
         ".ar",
@@ -112,10 +116,7 @@ public static class ArchiveDetector
         if (string.IsNullOrWhiteSpace(filePath))
             return false;
 
-        if (IsDefinitelyArchive(filePath))
-            return true;
-
-        return HaveArchiveExtension(filePath);
+        return IsDefinitelyArchive(filePath) || HaveArchiveExtension(filePath);
     }
 
     private static bool IsDefinitelyArchive(string filePath, int reliableThreshold = 3500)
@@ -127,8 +128,8 @@ public static class ArchiveDetector
         
         if (best is not null && best.Points > reliableThreshold)
         {
-            if (!ArchiveMimes.Contains(best.MimeType))
-                return false;
+            if (ArchiveMimes.Contains(best.MimeType))
+                return true;
         }
         
         return false;
