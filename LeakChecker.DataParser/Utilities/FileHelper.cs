@@ -19,10 +19,40 @@ public class FileHelper(ISettings settings, ExecutionLogger logger)
     
     private static readonly HashSet<string> TextualMimes = new(StringComparer.InvariantCultureIgnoreCase)
     {
+        // --- CSV ---
+        "application/csv",
+        "application/tab-separated-values",
+
+        // --- SQL ---
         "application/sql",
-        "application/xml", 
+        "application/x-sql",
+        
+        // --- XML ---
+        "application/xml",
+        "application/xhtml+xml",
+        "application/rss+xml",
+        "application/atom+xml",
+        "application/soap+xml",
+        "application/mathml+xml",
+        "application/svg+xml",
+        
+        // --- JSON ---
         "application/json",
+        "application/ld+json",
+        "application/schema+json",
+        "application/vnd.api+json",
+        
+        // --- YAML ---
+        "application/yaml",
         "application/x-yaml",
+        
+        // --- Misc structured text ---
+        "application/graphql",
+        "application/x-ndjson", // newline-delimited JSON
+        "application/json-seq",
+        
+        // --- Log ---
+        "application/x-log",
     };
     
     public async Task<bool> IsAccessible(string filePath)
