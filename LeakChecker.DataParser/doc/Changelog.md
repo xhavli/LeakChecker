@@ -240,6 +240,21 @@ Picture: Csv Detector of format and Csv Parser of content
 
 ![ContenParserCsv](Diagrams/DataFlow/ContentParsingSql.png)
 Picture: Sql Detector of format and Sql Parser of content
+Picture: SQL Detector of format and SQL Parser of content
+
+## Test Dataset
+
+- 12 Files
+- 8,21 Gb size
+- 202 072 485 Lines
+- 26 835 Malformed
+
+- 202 017 719 Records
+- 200 250 065 Emails
+- 155 985 180 Passwords
+- 15 342 865 Usernames
+- 15 137 308 IPv4
+- 1 382 019 Timestamps
 
 ## TODOs
 
