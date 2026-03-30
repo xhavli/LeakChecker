@@ -239,7 +239,6 @@ Picture: Encoding Detector of segments and Encoding Conversion to UTF-8
 Picture: Csv Detector of format and Csv Parser of content
 
 ![ContenParserCsv](Diagrams/DataFlow/ContentParsingSql.png)
-Picture: Sql Detector of format and Sql Parser of content
 Picture: SQL Detector of format and SQL Parser of content
 
 ## Test Dataset
