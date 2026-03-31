@@ -1,5 +1,4 @@
 using LeakChecker.DataParser.Content;
-using LeakChecker.DataParser.Content.Detection.ItemParsing;
 using LeakChecker.DataParser.Helpers.DataNormalization;
 using LeakChecker.DataParser.Stats.Parse;
 using MongoDB.Bson;
@@ -9,7 +8,11 @@ namespace LeakChecker.DataParser.Database;
 
 public static class DatabaseFacade
 {
-    
+    private static readonly MongoClient Client = new("mongodb://localhost:27017");
+    private static readonly IMongoDatabase Database = Client.GetDatabase("Test_Db");
+    private static readonly IMongoCollection<BsonDocument> UserCollection = Database.GetCollection<BsonDocument>("users");
+    private static readonly IMongoCollection<BsonDocument> ParseCollection = Database.GetCollection<BsonDocument>("parses");
+    private static readonly IMongoCollection<BsonDocument> ExecutionCollection = Database.GetCollection<BsonDocument>("executions");
     private static readonly InsertManyOptions UnorderedOptions = new() { IsOrdered = false };
     
     public static async Task SaveUserOne(Dictionary<ItemEnum, List<string>> record, Guid parseId)
@@ -52,6 +55,20 @@ public static class DatabaseFacade
 
                 type = normalized.Type;
                 values.Add(BsonValue.Create(normalized.Value));
+            }
+
+            if (type == ItemEnum.Username)
+            {
+                 var lower = property.Value.ConvertAll(s => s.ToLower());
+            
+                document.Add("Username_Lowercase", new BsonArray(lower));
+            }
+            
+            if (type == ItemEnum.Email)
+            {
+                var lower = property.Value.ConvertAll(s => s.ToLower());
+            
+                document.Add("Email_Lowercase", new BsonArray(lower));
             }
 
             document.Add(type.ToString(), new BsonArray(values));
