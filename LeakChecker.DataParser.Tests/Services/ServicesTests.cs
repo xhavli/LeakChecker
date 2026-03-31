@@ -1,5 +1,3 @@
-using LeakChecker.DataParser.Utilities.Settings;
-
 namespace LeakChecker.DataParser.Tests.Services;
 
 public class ServicesTests

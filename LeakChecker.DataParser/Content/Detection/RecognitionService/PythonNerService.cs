@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Net;
+using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
-using LeakChecker.DataParser.Utilities.Settings;
 
 namespace LeakChecker.DataParser.Content.Detection.RecognitionService;
 

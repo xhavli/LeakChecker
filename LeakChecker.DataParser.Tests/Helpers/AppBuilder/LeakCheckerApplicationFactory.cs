@@ -1,7 +1,7 @@
+using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
 using LeakChecker.DataParser.Tests.Helpers.Settings;
-using LeakChecker.DataParser.Utilities.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

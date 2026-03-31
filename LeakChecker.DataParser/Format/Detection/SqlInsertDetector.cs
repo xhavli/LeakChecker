@@ -3,9 +3,9 @@ using System.Text;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Content.Detection;
 using LeakChecker.DataParser.Format.Schema;
+using LeakChecker.DataParser.Helpers.Extensions;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
-using LeakChecker.DataParser.Utilities.Extensions;
 
 namespace LeakChecker.DataParser.Format.Detection;
 

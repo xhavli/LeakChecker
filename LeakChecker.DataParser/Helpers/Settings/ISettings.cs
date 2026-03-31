@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace LeakChecker.DataParser.Utilities.Settings;
+namespace LeakChecker.DataParser.Helpers.Settings;
 
 public interface ISettings
 {

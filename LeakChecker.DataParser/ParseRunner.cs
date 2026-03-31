@@ -6,14 +6,15 @@ using LeakChecker.DataParser.Data;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Encodings.Conversion;
 using LeakChecker.DataParser.Encodings.Detection;
+using LeakChecker.DataParser.Helpers;
+using LeakChecker.DataParser.Helpers.ArchiveExtraction;
+using LeakChecker.DataParser.Helpers.FileHelp;
+using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Execution;
 using LeakChecker.DataParser.Stats.Parse;
-using LeakChecker.DataParser.Utilities;
-using LeakChecker.DataParser.Utilities.ArchiveExtraction;
-using LeakChecker.DataParser.Utilities.Settings;
 
 namespace LeakChecker.DataParser;
 

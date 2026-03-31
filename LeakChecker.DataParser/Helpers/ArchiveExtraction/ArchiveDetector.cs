@@ -2,7 +2,7 @@ using MimeDetective;
 using MimeDetective.Definitions;
 using MimeDetective.Definitions.Licensing;
 
-namespace LeakChecker.DataParser.Utilities.ArchiveExtraction;
+namespace LeakChecker.DataParser.Helpers.ArchiveExtraction;
 
 public static class ArchiveDetector
 {

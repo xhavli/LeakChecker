@@ -1,5 +1,5 @@
 using System.Text;
-using LeakChecker.DataParser.Utilities;
+using LeakChecker.DataParser.Helpers.Enums;
 
 namespace LeakChecker.DataParser.Encodings;
 

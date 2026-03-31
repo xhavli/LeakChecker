@@ -1,9 +1,9 @@
 ﻿using LeakChecker.DataParser.Content.Detection.RecognitionService;
+using LeakChecker.DataParser.Helpers.ArchiveExtraction;
+using LeakChecker.DataParser.Helpers.FileHelp;
+using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
-using LeakChecker.DataParser.Utilities;
-using LeakChecker.DataParser.Utilities.ArchiveExtraction;
-using LeakChecker.DataParser.Utilities.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

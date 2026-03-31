@@ -1,5 +1,5 @@
 using System.Text;
-using LeakChecker.DataParser.Utilities.Settings;
+using LeakChecker.DataParser.Helpers.Settings;
 
 namespace LeakChecker.DataParser.Tests.Helpers.Settings;
 

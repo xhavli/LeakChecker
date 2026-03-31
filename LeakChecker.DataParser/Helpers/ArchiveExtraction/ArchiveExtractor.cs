@@ -1,10 +1,11 @@
 using System.Collections.Concurrent;
+using LeakChecker.DataParser.Helpers.Enums;
+using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
-using LeakChecker.DataParser.Utilities.Settings;
 using Microsoft.CST.RecursiveExtractor;
 
-namespace LeakChecker.DataParser.Utilities.ArchiveExtraction;
+namespace LeakChecker.DataParser.Helpers.ArchiveExtraction;
 
 public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
 {

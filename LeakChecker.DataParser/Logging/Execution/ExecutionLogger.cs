@@ -1,8 +1,8 @@
 using System.Globalization;
 using System.Text;
+using LeakChecker.DataParser.Helpers.Enums;
+using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Stats.Execution;
-using LeakChecker.DataParser.Utilities;
-using LeakChecker.DataParser.Utilities.Settings;
 
 namespace LeakChecker.DataParser.Logging.Execution;
 

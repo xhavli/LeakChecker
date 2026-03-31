@@ -1,8 +1,8 @@
 using System.Text;
 using LeakChecker.DataParser.Database;
+using LeakChecker.DataParser.Helpers.Extensions;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
-using LeakChecker.DataParser.Utilities.Extensions;
 
 namespace LeakChecker.DataParser.Content.Parse;
 

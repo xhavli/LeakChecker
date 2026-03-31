@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using System.Text;
+using LeakChecker.DataParser.Helpers.Enums;
+using LeakChecker.DataParser.Helpers.Extensions;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Parse;
-using LeakChecker.DataParser.Utilities;
-using LeakChecker.DataParser.Utilities.Extensions;
 using UtfUnknown;
 
 namespace LeakChecker.DataParser.Encodings.Detection;

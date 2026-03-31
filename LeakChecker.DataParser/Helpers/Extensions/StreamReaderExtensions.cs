@@ -1,6 +1,6 @@
 using System.Buffers;
 
-namespace LeakChecker.DataParser.Utilities.Extensions;
+namespace LeakChecker.DataParser.Helpers.Extensions;
 
 public static class StreamReaderExtensions
 {

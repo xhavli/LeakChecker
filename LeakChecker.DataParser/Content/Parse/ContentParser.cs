@@ -2,11 +2,11 @@ using System.Diagnostics;
 using System.Text;
 using LeakChecker.DataParser.Format;
 using LeakChecker.DataParser.Format.Detection;
+using LeakChecker.DataParser.Helpers.Extensions;
+using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Parse;
-using LeakChecker.DataParser.Utilities.Extensions;
-using LeakChecker.DataParser.Utilities.Settings;
 
 namespace LeakChecker.DataParser.Content.Parse;
 

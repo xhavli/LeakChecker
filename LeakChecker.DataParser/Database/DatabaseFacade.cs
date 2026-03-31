@@ -1,6 +1,7 @@
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Content.Detection.ItemParsing;
-using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Helpers.DataNormalization;
+using LeakChecker.DataParser.Stats.Parse;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -43,11 +44,11 @@ public static class DatabaseFacade
         {
             ItemEnum type = property.Key;
             var values = new List<BsonValue>();
-
+            
             foreach (var item in property.Value)
             {
                 //Normalize only timestamp formats, others keep untouched
-                var normalized = TimestampParser.NormalizeValue(property.Key, item);
+                NormalizedData normalized = DataNormalizer.NormalizeData(property.Key, item);
 
                 type = normalized.Type;
                 values.Add(BsonValue.Create(normalized.Value));
@@ -57,6 +58,11 @@ public static class DatabaseFacade
         }
 
         return document;
+    }
+    
+    public static async Task SaveParseOne(ParseStats stats)
+    {
+        await ParseCollection.InsertOneAsync(stats.ToBsonDocument());
     }
 
     public static async Task SaveParseMany(List<ParseStats> stats)

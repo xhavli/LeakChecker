@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace LeakChecker.DataParser.Utilities.Extensions;
+namespace LeakChecker.DataParser.Helpers.Extensions;
 
 public static class StringExtensions
 {

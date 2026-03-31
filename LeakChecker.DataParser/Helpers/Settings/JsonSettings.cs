@@ -1,4 +1,4 @@
-namespace LeakChecker.DataParser.Utilities.Settings;
+namespace LeakChecker.DataParser.Helpers.Settings;
 
 public class JsonSettings
 {

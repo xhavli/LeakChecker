@@ -1,9 +1,9 @@
 using LeakChecker.DataParser.Content.Parse;
 using LeakChecker.DataParser.Format;
+using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Tests.Helpers.AppBuilder;
 using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
 using LeakChecker.DataParser.Tests.Helpers.Stats;
-using LeakChecker.DataParser.Utilities.Settings;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LeakChecker.DataParser.Tests.Content.Parsing.ContentParserTests.FormatDetectionTests;
