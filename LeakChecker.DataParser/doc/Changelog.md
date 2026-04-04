@@ -54,7 +54,7 @@ Author: Adam Havlík
 - `21.9.2025` - HeuristicAnalyzer  
   Heuristic analyzer created with some helper methods. First shot of Pattern or Schema dramatically boost performance by decade or two.
 - `29.9.2025` - SqlInsertDetector  
-  Read and detect predefined number (31) of Sql Insert records, and return back heuristic schema.
+  Read and detect predefined number (31) of SQL Insert records, and return back heuristic schema.
 - `9.10.2025` - CsvFileDetector  
   Read and detect predefined number (103) of lines, and return back heuristic schema.
 - `3.11.2025` - HeaderGuesser  
@@ -95,12 +95,12 @@ Author: Adam Havlík
     [NOTE] It can do also optional localization. It cant process local number formats like 055 234 5678 from the United Arab Emirates.
 - `4.8.2025` - Hash identification
   - Hash Identification applications were manually tested with dataset from [Hashcat Examples](https://hashcat.net/wiki/doku.php?id=example_hashes).
-  - [www.hashes.com](https://hashes.com/en/tools/hash_identifier) - Hash Identifier do proper validation and return most successful results ordered by its popularity, have demo its web application with well documented [api](https://hashes.com/en/docs). Chosen solution.  
+  - [www.hashes.com](https://hashes.com/en/tools/hash_identifier) - Hash Identifier do proper validation and return most successful results ordered by its popularity, have demo of web application with well documented [api](https://hashes.com/en/docs). Chosen solution.  
     [NOTE] It can misinterpret 2), 5)... as Base64 encoded text of plaintext ''. Additional validation:
     ```csharp
     if (Base64.IsValid(hash))
     ```
-  - [HAITI](https://github.com/noraj/haiti) - Wide scale of supported hash types (600+) but it do not validation, match almost everything including mobile numbers, don't have a demo.
+  - [HAITI](https://github.com/noraj/haiti) - Wide scale of supported hash types (600+) but it does not validation, match almost everything including mobile numbers, don't have a demo.
   - [CyberChef](https://github.com/gchq/CyberChef) - Do validation, have demo, but not support hashes with salt.
   - [Name-That-Hash](https://github.com/bee-san/Name-That-Hash) - Wide scale of supported hash types (300+), have demo, do some validation but not 100% correct, most unknown hashes "fallback" to BigCrypt hash type.
   - [hash-identifier](https://github.com/cadesalaberry/hash-identifier) - Deprecated, have demo. Last update is from 2015
@@ -109,7 +109,7 @@ Author: Adam Havlík
   - C# - [Base64.IsValid](https://learn.microsoft.com/en-us/dotnet/api/system.buffers.text.base64.isvalid?view=net-10.0) is good, but it can mismatch some string for example hl251986 as valid Base64.
   - [NOTE] - Other solutions are deprecated, not support salted values or support only few hash types
 - `18.8.2025` - Named Entity Recognition of Name, Location and Organization  
-  - [Microsoft Presidio](https://microsoft.github.io/presidio/) with [flair/ner-english-large](https://huggingface.co/flair/ner-english-large) model integrated after google close issue with sentencepiece used by flair.
+  - [Microsoft Presidio](https://microsoft.github.io/presidio/) with [flair/ner-english-large](https://huggingface.co/flair/ner-english-large) model integrated after Google close issue with sentencepiece used by flair.
 - `11.9.2025` - Automated recognition from text where item may contain delimiter 
   - NuGet - [Microsoft.Recognizers.Text.DateTime](https://github.com/microsoft/Recognizers-Text) integrated for recognition of wide scale of Timestamps in text and conversion to C# DateTime format.  
     [NOTE] It can detect and convert 4/15/2018 12:00:00 AM from Facebook leak and also natural language like first of October 2018 15:32:18. It also detects a time range what we don't want to.
@@ -131,7 +131,7 @@ Author: Adam Havlík
   - Unix seconds since epoch (1970-01-01 UTC) - 1284982477 is 2010-09-20 18:34:37 UTC
   - Unix milliseconds since epoch (1970-01-01 UTC)
   - Windows FileTime - 100-nanosecond intervals since 1601-01-01 00:00:00 UTC
-  - .Net ticks - 100-nanoseconds = 1 tic, tics since 0001-01-01 00:00:00 UTC
+  - .NET ticks - 100-nanoseconds = 1 tic, tics since 0001-01-01 00:00:00 UTC
   - Excel serial date - days since 1899-12-30  
   [NOTE] As it could be almost every bigger number. Additional validation and Excel serials might be removed in future according to possible mismatch with one of IDs. Also, UnixSeconds but that's quite common in logs.
   ```csharp
@@ -171,7 +171,7 @@ Author: Adam Havlík
 ### Content Processing
 
 - `30.9.2025` Sql Insert processor  
-  SqlInsertProcessor added for processing Sql Insert records with given schema.
+  SqlInsertProcessor added for processing SQL Insert records with given schema.
 - `10.10.2025` Csv file processor  
   CsvFileProcessor added for processing Csv file lines with given schema.
 - `19.12.2025` Malformed lines sequence check  
@@ -186,7 +186,7 @@ Author: Adam Havlík
 - `19.8.2025` - Detailed file processing logging added
 - `13.9.2025` - Detailed execution logging added
 - `19.9.2025` - StringExtension  
-  Custom and performance trimming of quoted text `content`` / 'content' / "content" or SQL line (content),.
+  Custom and performance trimming of quoted text `content`` / 'content' / "content" or SQL line (content),
 - `28.9.2025` - StreamReaderExtensions  
   Custom ReadLineWithEndingAsync return line with newline to measure of read bytes.
 - `21.12.2025` Channel threading initial  
@@ -254,12 +254,52 @@ Picture: SQL Detector of format and SQL Parser of content
 - 15 342 865 Usernames
 - 15 137 308 IPv4
 - 1 382 019 Timestamps
+- 200 250 065 `Emails`
+- 155 985 180 `Passwords`
+- 15 342 865 `Usernames`
+- 15 137 308 `IPv4`
+- 1 382 019 `Timestamps`
+
+## Databases
+
+### MongoDB Server Community
+
+- Database size 11.07 Gb
+- With emails and usernames duplicated to lowercase 12.17 Gb
+
+#### Indexes
+
+- Default index `_id` size 2.38 Gb
+- `Username_Lowercase` sparse ascending index 175.1 Mb
+- `Email_Lowercase` sparse ascending index 5.3 Gb
+
+#### Speed
+
+- `Email` exact match 0 ms
+- `Email` starts with 'joh' returned 328 751 records in 1222 ms
+- `Email` starts with 'johane' returned 438 records in 3 ms
+
+#### Notes
+
+MongoDB need normalized data to search in lowercase index.  
+It can't search ignore case using index.  
+Compression of data is good.  
+Index size can be big.  
+Reading is good.  
+Writing speed is good.  
+Schema is can be variable.  
+Full text search can do ends with.  
+Full text search ignores diacritics.  
+C# `MongoDB.Driver` is really simple to use.  
+`MongoDB Compass` is perfect GUI for database overview.  
+Cant search only exact match and starts with, cant ends wth.  
+Need to save  reversed items into database to search ends with.  
 
 ## TODOs
 
 - When hash detected at `[i]` and `[i+1]` is other try to concatenate with delimiter for salted hash detection.
 - When row mismatch, parse it separately.
-- Use DI to PythonNerServiceRecognizer
+- Use DI into PythonNerServiceRecognizer
 - Refactor tests, use DI and load proper config from DataParser.csproj
 - Use DI in ContentParser. create factories for almost everything with interfaces to override the normal behavior
 - Remove async from Execution logging chain
@@ -271,9 +311,9 @@ Picture: SQL Detector of format and SQL Parser of content
 - When all is number then not bind `ItemEnum.Other`, else try to recompute without other as an `ItemEnum.Empty`, when full numbers, bind `ItemEnum.Id`
 - Wait properly for python start. READY signal is sent earlier than running python API 
 - Make `TestBase` with EncProvider(RegisterEnc) and projectDir and testDir paths
-- Proper format detection of `AsciiTable` occur +-+ header -> is AsciiTableCandidate and on first 2 positions of delimiter results is somewhere delimiter "|" with simmillar probability. Or properly identify first 3 lines of the file but this need more attention. Maybe via reader which read first 3 lines and decide if it has `AsciiTable` header.
+- Proper format detection of `AsciiTable` occur +-+ header -> is AsciiTableCandidate and on first 2 positions of delimiter results is somewhere delimiter "|" with similar probability. Or properly identify first 3 lines of the file but this need more attention. Maybe via reader which read first 3 lines and decide if it has `AsciiTable` header.
 - Communication timeout for connection and request reply
-- Parse also Sql REPLACE INTO
+- Parse also SQL REPLACE INTO
 - `EncodingDetector` tests for mixed encodings, cant do properly for legacy encodings.
 - Custom hash identification for truecrypt, veracrypt and other hashes in text form or common prefix 
 - Test `TimestampParser` and parser for valid datetime range. What's the correct range?
