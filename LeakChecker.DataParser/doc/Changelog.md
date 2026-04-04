@@ -249,11 +249,6 @@ Picture: SQL Detector of format and SQL Parser of content
 - 26 835 Malformed
 
 - 202 017 719 Records
-- 200 250 065 Emails
-- 155 985 180 Passwords
-- 15 342 865 Usernames
-- 15 137 308 IPv4
-- 1 382 019 Timestamps
 - 200 250 065 `Emails`
 - 155 985 180 `Passwords`
 - 15 342 865 `Usernames`
