@@ -75,7 +75,13 @@ public class FileHelper(ISettings settings, ExecutionLogger logger)
         }
         catch (IOException)
         {
-            await logger.Log($"File in path: '{filePath}' is locked, in use or its not file. Raised IOException.", LogLevel.Warning);
+            await logger.Log($"File in path: '{filePath}' is locked, in use or its not file. Raised IOException.",
+                LogLevel.Warning);
+            return false;
+        }
+        catch (Exception)
+        {
+            await logger.Log($"File in path: '{filePath}' throw general exception", LogLevel.Warning);
             return false;
         }
     }
