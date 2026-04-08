@@ -47,6 +47,8 @@ public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
 
                     foreach (var entry in extractor.Extract(path))
                     {
+                        
+                        //TODO remove and test for gzip type without nesting
                         if (entry.Parent == null)
                         {
                             // Not in archive - basic file
