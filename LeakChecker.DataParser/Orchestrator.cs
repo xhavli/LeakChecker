@@ -18,7 +18,7 @@ using LeakChecker.DataParser.Stats.Parse;
 
 namespace LeakChecker.DataParser;
 
-public sealed class ParserRunner(
+public sealed class Orchestrator(
     ISettings settings,
     FileHelper fileHelper,
     ArchiveExtractor archiveExtractor,
@@ -44,8 +44,9 @@ public sealed class ParserRunner(
 
         try
         {
-            var inputPaths = fileHelper.GetInputFiles();
-            var paths = await archiveExtractor.ExtractArchives(inputPaths);
+            // var inputPaths = fileHelper.GetInputFiles();
+            // var allPaths = await archiveExtractor.ExtractArchives(inputPaths);
+            var paths = await fileHelper.AreAccessible(FilePaths.Utf8);
             
             var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(settings.ChannelCapacity)
             {

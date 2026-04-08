@@ -31,13 +31,13 @@ public static class Program
                 services.AddSingleton<ExecutionLogger>();
                 services.AddSingleton<IParseLoggerFactory, ParseLoggerFactory>();
                 
-                // Utilities
+                // Helpers
                 services.AddSingleton<FileHelper>();
                 services.AddSingleton<ArchiveExtractor>();
                 services.AddSingleton<PythonNerService>();
                 
                 // Orchestration
-                services.AddSingleton<ParserRunner>();
+                services.AddSingleton<Orchestrator>();
             });
     }
 
@@ -46,8 +46,8 @@ public static class Program
         try
         {
             using var host = CreateHostBuilder(args).Build();
-            var runner = host.Services.GetRequiredService<ParserRunner>();
-            return await runner.RunAsync();
+            var orchestrator = host.Services.GetRequiredService<Orchestrator>();
+            return await orchestrator.RunAsync();
         }
         catch (Exception e)
         {
