@@ -11,14 +11,18 @@ Author: Adam Havlík
   - [Format Detection](#format-detection)
 - [Content](#content)
   - [Content Detection](#content-detection)
-  - [Content Processing](#content-processing)
-- [Utilities](#utilities)
+  - [Content Parisng](#content-parsing)
+- [Helpers](#helpers)
 - [Tests](#tests)
   - [Unit Tests](#unit-tests)
   - [Module Tests](#module-tests)
   - [Integration Tests](#integration-tests)
 - [Diagrams](#diagrams)
   - [Data Flow](#data-flow)
+- [Test Dataset](#test-dataset)
+- [Database](#database)
+  - [MongoDB Community Server](#mongodb-community-server)
+  - [CouchDB](#couchdb)
 - [TODOs](#todos)
 - [Notes](#notes)
 
@@ -168,22 +172,22 @@ Author: Adam Havlík
 - `27.10.2025` [IbanNet](https://github.com/skwasjer/IbanNet) - validation of some common formats
 - `30.11.2025` Hash type recognition implemented with www.hashes.com mentioned `4.8.2025`
 
-### Content Processing
+### Content Parsing
 
-- `30.9.2025` Sql Insert processor  
-  SqlInsertProcessor added for processing SQL Insert records with given schema.
-- `10.10.2025` Csv file processor  
-  CsvFileProcessor added for processing Csv file lines with given schema.
+- `30.9.2025` Sql Insert parser  
+  SqlInsertParser added for parsing SQL Insert records with given schema.
+- `10.10.2025` Csv file parser  
+  CsvFileParser added for parsing Csv file lines with given schema.
 - `19.12.2025` Malformed lines sequence check  
-  Processors count sequence of lines with fields count different from expected. When reached the limit, then return back to recompute the schema.
+  Parsers count sequence of lines with fields count different from expected. When reached the limit, then return back to recompute the schema.
 - `31.1.2026` - ExcelParser  
   Initial of ExcelParser using [ExcelDataParser](https://github.com/ExcelDataReader/ExcelDataReader) which can read direct values of each cell in Excel row by row and column by column.
 
-## Utilities
+## Helpers
 
-- `30.7.2025` - Added some logging tools to log processing details and statistics to log file.
-- `6.8.2025` - Logging utilities improvement.
-- `19.8.2025` - Detailed file processing logging added
+- `30.7.2025` - Added some logging tools to log parsing details and statistics to log file.
+- `6.8.2025` - Logging helpers improvement.
+- `19.8.2025` - Detailed file parsing logging added
 - `13.9.2025` - Detailed execution logging added
 - `19.9.2025` - StringExtension  
   Custom and performance trimming of quoted text `content`` / 'content' / "content" or SQL line (content),
@@ -245,22 +249,23 @@ Picture: SQL Detector of format and SQL Parser of content
 
 - 12 Files
 - 8,21 Gb size
+- 2x SQL, 10x CSV
 - 202 072 485 Lines
 - 26 835 Malformed
 
 - 202 017 719 Records
 - 200 250 065 `Emails`
-- 155 985 180 `Passwords`
+- 154 609 192 `Passwords`
 - 15 342 865 `Usernames`
 - 15 137 308 `IPv4`
 - 1 382 019 `Timestamps`
 
-## Databases
+## Database
 
-### MongoDB Server Community
+### MongoDB Community Server
 
-- Database size 11.07 Gb
-- With emails and usernames duplicated to lowercase 12.17 Gb
+- Database size with pure data 11.07 Gb
+- Database size with emails and usernames duplicated to lowercase 12.17 Gb
 
 #### Indexes
 
@@ -270,46 +275,68 @@ Picture: SQL Detector of format and SQL Parser of content
 
 #### Speed
 
+- Reading is good
+- Writing speed is good
+- Write done after 1 hour
 - `Email` exact match 0 ms
 - `Email` starts with 'joh' returned 328 751 records in 1222 ms
 - `Email` starts with 'johane' returned 438 records in 3 ms
 
 #### Notes
 
-MongoDB need normalized data to search in lowercase index.  
-It can't search ignore case using index.  
-Compression of data is good.  
-Index size can be big.  
-Reading is good.  
-Writing speed is good.  
-Schema is can be variable.  
-Full text search can do ends with.  
-Full text search ignores diacritics.  
-C# `MongoDB.Driver` is really simple to use.  
-`MongoDB Compass` is perfect GUI for database overview.  
-Cant search only exact match and starts with, cant ends wth.  
-Need to save  reversed items into database to search ends with.  
+MongoDB need normalized data to search in lowercase index  
+It can't search ignore case using index  
+Compression of data is good  
+Index size can be big  
+Schema can be variable  
+Full text search index can do ends with  
+Full text search index can ignore diacritics  
+C# Nuget [MongoDB.Driver](https://www.nuget.org/packages/MongoDB.Driver) is official and really simple to use  
+[MongoDB Compass](https://www.mongodb.com/products/tools/compass) is perfect GUI for database overview  
+Can search only exact match and starts with, cant ends wth  
+Need to save reversed items into database to search ends with  
+
+### CouchDB
+
+- Database size 60.9 Gb
+- Database size with snappy compression 60.9 Gb
+- Database size with deflate_1 compression 58.7 Gb
+
+#### Indexes
+
+- Standard index on `_id` size cant be measured properly
+
+#### Speed
+
+- Write done after 3,5 hours  
+
+#### Notes
+
+- C# Nuget [CouchDB.NET](https://github.com/matteobortolazzo/couchdb-net) which is 3rd party unofficial EF Core like wrapper on HTTP requests
+- CouchDB Fauxton web GUI is not good
+- deflate_N compression levels. N = 1 - 9, 1 lowest compression rate and lowest decompression time, 9 highest compression rate and  highest decompression time
+- Database compaction or replication take so long about 8 hours
+
 
 ## TODOs
 
-- When hash detected at `[i]` and `[i+1]` is other try to concatenate with delimiter for salted hash detection.
-- When row mismatch, parse it separately.
+- When hash detected at `[i]` and `[i+1]` is other try to concatenate with delimiter for salted hash detection
+- When rows count mismatch, append row in file with same rows count from same file and parse it again
 - Use DI into PythonNerServiceRecognizer
-- Refactor tests, use DI and load proper config from DataParser.csproj
 - Use DI in ContentParser. create factories for almost everything with interfaces to override the normal behavior
-- Remove async from Execution logging chain
-- Fix byte counting position tracking system
 - Parse also `JSON`, `HTML` and `XML`
-- Make something like TestBase class where will be registered EncProvider, created logger or set env variable.
-- Make proper parallel ArchiveExtraction using batching technique.
+- Encodings merge subset GB2312 text -> GBK -> GB18030 superset of Chinese encodings
+- Fix byte counting position tracking system
+- Remove async from Execution logging chain
+- Make proper parallel ArchiveExtraction using batching technique
 - Replace StringExtension IsSqlInsert with ReaderExtension IsSqlInsert which will read predefined lines returns true/false and discard buffers
 - When all is number then not bind `ItemEnum.Other`, else try to recompute without other as an `ItemEnum.Empty`, when full numbers, bind `ItemEnum.Id`
-- Wait properly for python start. READY signal is sent earlier than running python API 
-- Make `TestBase` with EncProvider(RegisterEnc) and projectDir and testDir paths
-- Proper format detection of `AsciiTable` occur +-+ header -> is AsciiTableCandidate and on first 2 positions of delimiter results is somewhere delimiter "|" with similar probability. Or properly identify first 3 lines of the file but this need more attention. Maybe via reader which read first 3 lines and decide if it has `AsciiTable` header.
+- Wait properly for python start. READY signal is sent earlier than running python API
+- Make `TestBase` with EncProvider(RegisterEnc) and projectDir and testDir paths, variables and dependencies, use DI
+- Proper format detection of `AsciiTable` occur +-+ header -> is AsciiTableCandidate and on first 2 positions of delimiter results is somewhere delimiter "|" with similar probability. Or properly identify first 3 lines of the file but this need more attention. Maybe via reader which read first 3 lines and decide if it has `AsciiTable` header
 - Communication timeout for connection and request reply
 - Parse also SQL REPLACE INTO
-- `EncodingDetector` tests for mixed encodings, cant do properly for legacy encodings.
+- `EncodingDetector` tests for mixed encodings, cant do properly for legacy encodings, detect too much chunks
 - Custom hash identification for truecrypt, veracrypt and other hashes in text form or common prefix 
 - Test `TimestampParser` and parser for valid datetime range. What's the correct range?
 - Detect Username and plaintext Password. CredentialCandidate???
@@ -363,8 +390,7 @@ Need to save  reversed items into database to search ends with.
     ``` 
   - MongoDB
     - [MongoDB Shell](https://www.mongodb.com/try/download/shell)
-    - [MongoDB Server](https://www.mongodb.com/try/download/community)
-    - Run MongoDB locally
+    - Run MongoDB Community Server locally
       ```bash
       .\mongod.exe --dbpath "..\..\data"
       ```
