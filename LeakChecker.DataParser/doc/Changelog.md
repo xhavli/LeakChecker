@@ -248,10 +248,11 @@ Picture: SQL Detector of format and SQL Parser of content
 ## Test Dataset
 
 - 12 Files
-- 8,21 Gb size
 - 2x SQL, 10x CSV
+- 8,21 Gb size
 - 202 072 485 Lines
 - 26 835 Malformed
+
 
 - 202 017 719 Records
 - 200 250 065 `Emails`
