@@ -59,7 +59,9 @@ public class ContentParser : IDisposable
             {
                 _linesRead++;
                 _readerPosition += _encoding.GetByteCount(originalLine);
-                if (line.IsPossibleAsciiTable()) _possibleAsciiTable = true;
+                if (line.IsPossibleAsciiTable())
+                    _possibleAsciiTable = true;
+                
                 continue;
             }
 
@@ -258,6 +260,7 @@ public class ContentParser : IDisposable
         _readerPosition += result.BytesRead;
         _malformedRecordsRead += result.MalformedRecordsRead;
 
+        // Obfuscation fix caused by mojibake and encoding errors
         if (_readerPosition <= _reader.BaseStream.Length)
         {
             _reader.AdjustPosition(_readerPosition);
