@@ -148,6 +148,8 @@ public sealed class Orchestrator(
                 _stats.RecordsParsed += parseStats.RecordsRead;
                 _stats.MalformedRecordsRead += parseStats.MalformedRecordsRead;
             }
+        
+            await logger.Log($"Finished: {parseStats.FileName}", LogLevel.Success, LogContext.Parsing);
         }
         catch (Exception e)
         {
@@ -169,7 +171,5 @@ public sealed class Orchestrator(
                 File.Delete(parseLogger.SubjectTmpFilePath);
             }
         }
-
-        await logger.Log($"Finished: {parseStats.FileName}", LogLevel.Success, LogContext.Parsing);
     }
 }
