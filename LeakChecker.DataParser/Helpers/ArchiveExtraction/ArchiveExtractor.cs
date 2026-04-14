@@ -47,15 +47,6 @@ public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
 
                     foreach (var entry in extractor.Extract(path))
                     {
-                        
-                        //TODO remove and test for gzip type without nesting
-                        if (entry.Parent == null)
-                        {
-                            // Not in archive - basic file
-                            parsePaths.TryAdd(path, 0);
-                            continue;
-                        }
-                        
                         string? extractedPath = await ExtractFile(path, entry, writtenPaths, ct);
                         
                         if (extractedPath != null)
