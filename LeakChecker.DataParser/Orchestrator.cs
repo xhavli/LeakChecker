@@ -88,14 +88,14 @@ public sealed class Orchestrator(
             await logger.LogExecutionStats(_stats);
             
             await logger.Log($"Execution finished successfully. Parsed {paths.Count()} files. Current DateTime is " + 
-                             $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.ParseRunner);
+                             $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Orchestrator);
             
             await logger.Log("Program will exit with exit code 0");
             return 0;
         }
         catch (Exception e)
         {
-            await logger.Log(e.ToString(), LogLevel.Failure, LogContext.ParseRunner);
+            await logger.Log(e.ToString(), LogLevel.Failure, LogContext.Orchestrator);
             return 1;
         }
         finally
@@ -153,7 +153,7 @@ public sealed class Orchestrator(
         }
         catch (Exception e)
         {
-            await logger.Log($"{parseStats.ParseId} : {parseStats.FileName}: {e}", LogLevel.Failure, LogContext.ParseRunner);
+            await logger.Log($"{parseStats.ParseId} : {parseStats.FileName}: {e}", LogLevel.Failure, LogContext.Orchestrator);
         }
         finally
         {

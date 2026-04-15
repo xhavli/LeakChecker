@@ -95,7 +95,7 @@ public class ContentParser : IDisposable
         _stats.LinesRead = _linesRead;
         _stats.BytesRead = _readerPosition;
 
-        await _logger.Log($"Content processing finished successfully. Time taken: {sw.Elapsed}", LogLevel.Success, LogContext.Content);
+        await _logger.Log($"Content parsing finished successfully. Time taken: {sw.Elapsed}", LogLevel.Success, LogContext.Parsing);
     }
 
     private async Task ProcessSqlInsert()

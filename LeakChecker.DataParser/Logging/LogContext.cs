@@ -2,7 +2,8 @@ namespace LeakChecker.DataParser.Logging;
 
 public enum LogContext
 {
-    ParseRunner,
+    Program,
+    Orchestrator,
     Encoding,
     Delimiter,
     Content,
@@ -15,7 +16,8 @@ public static class LogContextStrings
 {
     private static readonly Dictionary<LogContext, string> Map = new()
     {
-        { LogContext.ParseRunner, "[PARSE_RUNNER]" },
+        { LogContext.Program, "[PROGRAM]" },
+        { LogContext.Orchestrator, "[ORCHESTRATOR]" },
         { LogContext.Encoding, "[ENCODING]" },
         { LogContext.Delimiter, "[DELIMITER]" },
         { LogContext.Content, "[CONTENT]" },

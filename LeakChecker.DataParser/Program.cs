@@ -2,6 +2,7 @@
 using LeakChecker.DataParser.Helpers.ArchiveExtraction;
 using LeakChecker.DataParser.Helpers.FileHelp;
 using LeakChecker.DataParser.Helpers.Settings;
+using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
 using Microsoft.Extensions.Configuration;
@@ -52,8 +53,8 @@ public static class Program
         catch (Exception e)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            await Console.Error.WriteLineAsync($"[EXCEPTION] [MAIN] {e.Message}\n");
-            await Console.Error.WriteLineAsync($"[WHOLE EXCEPTION] {e}");
+            await Console.Error.WriteLineAsync($"[{DateTime.Now:T}] [{LogLevel.Failure}] [{LogContext.Program}] {e.Message}\n");
+            await Console.Error.WriteLineAsync($"[{DateTime.Now:T}] [WHOLE_EXCEPTION] {e}");
             Console.WriteLine("\n[WARNING] Program will terminate with exit code 1.");
             Console.ResetColor();
             return 1;
