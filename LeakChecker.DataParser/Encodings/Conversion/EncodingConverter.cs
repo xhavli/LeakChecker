@@ -9,11 +9,10 @@ public static class EncodingConverter
 {
     /// <summary>
     /// Converts a file with mixed encodings into a single UTF-8 encoded output file.
-    /// If the file is already UTF-8 (single segment), it is just copied.
     /// </summary>
     public static async Task<string> ConvertFileToUtf8(List<EncodingSegment> encodingSegments, IParseLogger logger, int bufferSize = SizeEnum.MegaByte * 2)
     {
-        // If file is already in UTF-8 or US-ASCII as a single segment
+        // File is already in UTF-8 or US-ASCII as a single segment
         if (encodingSegments is [{ Encoding: not null }] &&
             (
                 Equals(encodingSegments[0].Encoding?.WebName, Encoding.UTF8.WebName) ||

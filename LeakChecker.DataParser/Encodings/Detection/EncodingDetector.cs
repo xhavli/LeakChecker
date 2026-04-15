@@ -243,31 +243,19 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
             return true;
         }
 
-        if (IsExactSubsetEncoding(a, b))
+        if (a.IsSubsetOf(b))
         {
             merged = b;
             return true;
         }
 
-        if (IsExactSubsetEncoding(b, a))
+        if (b.IsSubsetOf(a))
         {
             merged = a;
             return true;
         }
 
         merged = null;
-        return false;
-    }
-
-    private static bool IsExactSubsetEncoding(Encoding subset, Encoding superset)
-    {
-        if (subset.CodePage == superset.CodePage)
-            return true;
-
-        // Only prove relations we can prove exactly.
-        if (subset.CodePage == 20127) // US-ASCII
-            return superset.IsAsciiSuperset();
-
         return false;
     }
 }
