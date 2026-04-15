@@ -8,6 +8,7 @@ Author: Adam Havlík
   - [Encoding Detection](#encoding-detection)
   - [Encoding Conversion](#encoding-conversion)
 - [Format](#format)
+  - [Delimiter Detection](#delimiter-detection)
   - [Format Detection](#format-detection)
 - [Content](#content)
   - [Content Detection](#content-detection)
@@ -37,11 +38,16 @@ Author: Adam Havlík
   [NOTE] UtfUnknown can read stream and is pure C# tool based on Mozilla’s Universal Charset Detector used in Firefox. According to some officials charset-normalizer is more accurate, but I find it slower and have big performance issue in my use-case because it loads all file to a memory.
 - `30.7.2025` - Encoding detection done precisely  
   Detection of concatenated files with various encodings and its segments.
+- `23.3.2026` - Handle ASCII fallback  
+  Concatenate ASCII with nearest compatible encoding as UTF-8, Windows-1252...
+- `15.4.2026` - Merge Chinese subset chain  
+  x-cp20936 subset of superset gb2312 subset of superset GB18030
 
 ### Encoding Conversion
 
 - `3.10.2025` - Encoding Conversion  
-  EncodingConverter converting file to UTF-8 in stream according to given EncodingSegments
+  EncodingConverter converting file to UTF-8 in stream according to given EncodingSegments.
+- `15.4.2026` - Encoding Converter do not convert file if is UTF-8 or ASCII encoded which is fully compatible subset.
 
 ## Format
 
@@ -213,8 +219,8 @@ Author: Adam Havlík
 - `15.10.2025` - Content.Detection.ItemRecognition add initial tests
 - `3.11.2025` - Format.HeaderGuesser initial tests
 - `1.12.2025` - HashParser initial tests
-- `2.12.2025` - HashParser added tests
-- `7.2.2026` - HashParser added tests
+- `2.12.2025` - HashParser additional tests
+- `7.2.2026` - HashParser additional tests
 - `10.2.2026` - Format.CredentialAssigner tests
 - `12.2.2026` - ContentParser format detection initial tests
 - `13.2.2026` - Format.DelimiterDetection initial tests
@@ -237,12 +243,15 @@ Author: Adam Havlík
 ### Data Flow
 
 ![EncodingDetectionConversion](Diagrams/DataFlow/EncodingDetectionConversion.png)
+
 Picture: Encoding Detector of segments and Encoding Conversion to UTF-8
 
 ![ContenParserCsv](Diagrams/DataFlow/ContentParserCsv.png)
+
 Picture: Csv Detector of format and Csv Parser of content
 
 ![ContenParserCsv](Diagrams/DataFlow/ContentParsingSql.png)
+
 Picture: SQL Detector of format and SQL Parser of content
 
 ## Test Dataset
@@ -265,6 +274,8 @@ Picture: SQL Detector of format and SQL Parser of content
 
 ### MongoDB Community Server
 
+- Self-managed
+- Document
 - Database size with pure data 11.07 Gb
 - Database size with emails and usernames duplicated to lowercase 12.17 Gb
 
@@ -299,6 +310,8 @@ Need to save reversed items into database to search ends with
 
 ### CouchDB
 
+- Self-managed
+- Document
 - Database size 60.9 Gb
 - Database size with snappy compression 60.9 Gb
 - Database size with deflate_1 compression 58.7 Gb
@@ -313,28 +326,55 @@ Need to save reversed items into database to search ends with
 
 #### Notes
 
-- C# Nuget [CouchDB.NET](https://github.com/matteobortolazzo/couchdb-net) which is 3rd party unofficial EF Core like wrapper on HTTP requests
-- CouchDB Fauxton web GUI is not good
-- deflate_N compression levels. N = 1 - 9, 1 lowest compression rate and lowest decompression time, 9 highest compression rate and  highest decompression time
-- Database compaction or replication take so long about 8 hours
+C# Nuget [CouchDB.NET](https://github.com/matteobortolazzo/couchdb-net) which is 3rd party unofficial EF Core like wrapper on HTTP requests  
+CouchDB Fauxton web GUI is not good  
+deflate_N compression levels. N = 1 - 9, 1 lowest compression rate and lowest decompression time, 9 highest compression rate and  highest decompression time  
+Database compaction take around 8 hours  
+Database replication take around 8 hours
+
+### Couchbase
+
+- Self-managed
+- Wide-column
+
+### Cassandra
+
+- Self-managed
+- Wide-column
+
+#### Notes
+- Missing native prefix search support
+  - Deprecated 5+ [SASI](https://cassandra.apache.org/doc/4.0/cassandra/cql/SASI.html)
+  - New 5+ [SAI](https://cassandra.apache.org/doc/latest/cassandra/getting-started/sai-quickstart.html)
+
+### RocksDB
+
+- Self-managed
+- Key-value
+
+### OpenSearch
+
+- Search engine
 
 
 ## TODOs
 
+- What to do with `VatParser` <PackageReference Include="CountryValidator" Version="1.1.3" />
 - When hash detected at `[i]` and `[i+1]` is other try to concatenate with delimiter for salted hash detection
 - When rows count mismatch, append row in file with same rows count from same file and parse it again
-- Use DI into PythonNerServiceRecognizer
-- Use DI in ContentParser. create factories for almost everything with interfaces to override the normal behavior
+- Use DI into `PythonNerServiceRecognizer`
+- Use DI in `ContentParser`, create factories for almost everything with interfaces to override the normal behavior
+- Remove async await chains or ConfigureAwait(false) to increase performance due to marshaling 
+- Tune `DelimiterDetector` to work with same occurence of delimiter on each line of differs much then lower probability
 - Parse also `JSON`, `HTML` and `XML`
-- Encodings merge subset GB2312 text -> GBK -> GB18030 superset of Chinese encodings
 - Fix byte counting position tracking system
 - Remove async from Execution logging chain
-- Make proper parallel ArchiveExtraction using batching technique
-- Replace StringExtension IsSqlInsert with ReaderExtension IsSqlInsert which will read predefined lines returns true/false and discard buffers
+- Make proper parallel `ArchiveExtractor` using batching technique
+- Replace `StringExtension` `IsSqlInsert` with `ReaderExtension` `IsSqlInsert` which will read predefined lines returns true/false and discard buffers
 - When all is number then not bind `ItemEnum.Other`, else try to recompute without other as an `ItemEnum.Empty`, when full numbers, bind `ItemEnum.Id`
 - Wait properly for python start. READY signal is sent earlier than running python API
 - Make `TestBase` with EncProvider(RegisterEnc) and projectDir and testDir paths, variables and dependencies, use DI
-- Proper format detection of `AsciiTable` occur +-+ header -> is AsciiTableCandidate and on first 2 positions of delimiter results is somewhere delimiter "|" with similar probability. Or properly identify first 3 lines of the file but this need more attention. Maybe via reader which read first 3 lines and decide if it has `AsciiTable` header
+- Proper format detection of `AsciiTable` occur +-+ header -> is AsciiTableCandidate and on first 2 positions of delimiter results is somewhere delimiter "|" with similar probability. Or properly identify first 3 lines of the file but this need more attention. Maybe via reader which read first 3 lines and decide if it has `AsciiTable` header based on better delimiter guessing
 - Communication timeout for connection and request reply
 - Parse also SQL REPLACE INTO
 - `EncodingDetector` tests for mixed encodings, cant do properly for legacy encodings, detect too much chunks
@@ -345,7 +385,7 @@ Need to save reversed items into database to search ends with
 - Decide how to process a IpAddress ports
 - Decide if IpAddress parsing of cross mapped addresses are feature or limitation. Can be done by [Microsoft.Recognizers.Text.Sequence](https://github.com/microsoft/Recognizers-Text) automated recognition as Email, Guid and Urls are.
 - Location GPS coordinates [parser](https://github.com/Tronald/CoordinateSharp)
-- NationalID and VAT [parsers](https://github.com/anghelvalentin/CountryValidator)
+- NationalID [parser](https://github.com/anghelvalentin/CountryValidator)
 - Bank cards ???
 - Detect other content.
 - Do IPv6 validation which may be done by regex from [Vladimir Veselý - IPK2024-06-IPv6](https://moodle.vut.cz/pluginfile.php/823898/mod_folder/content/0/IPK2023-24L-09-IPv6.pdf)
@@ -374,8 +414,6 @@ Need to save reversed items into database to search ends with
   - [haveibeenpwned.com](https://haveibeenpwned.com/PwnedWebsites)
 - Data sample creation  
   - [tableconvert.com](https://tableconvert.com/)
-- Tests  
-  - More data = better accuracy
 - Python hints
   - Create new virtual environment (.venv)
     ```shell
@@ -399,3 +437,7 @@ Need to save reversed items into database to search ends with
       ```bash
       db.users.find({ Username: { $regex: "^MyUsername234$", $options: "i" } })
       ```
+- Relevant encoding information
+  - Learn.Microsoft.System.Text.Encoding class [Encodings and Frameworks compatibility](https://learn.microsoft.com/en-us/dotnet/fundamentals/runtime-libraries/system-text-encoding)
+  - Learn.Microsoft.System.Text.Encoding.GetEncodings Method [Encoding details](https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.getencodings?view=net-10.0)
+  - Learn.Microsoft.System.Text.Encoding.RegisterProvider(CodePagesEncodingProvider.Instance) Code Pages Identifiers [Encoding additional namings](https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers)
