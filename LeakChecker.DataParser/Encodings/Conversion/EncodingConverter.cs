@@ -13,9 +13,15 @@ public static class EncodingConverter
     /// </summary>
     public static async Task<string> ConvertFileToUtf8(List<EncodingSegment> encodingSegments, IParseLogger logger, int bufferSize = SizeEnum.MegaByte * 2)
     {
-        // If file is already in UTF-8 as a single UTF-8 segment
-        if (encodingSegments is [{ Encoding: not null }] && Equals(encodingSegments[0].Encoding?.WebName, Encoding.UTF8.WebName))
+        // If file is already in UTF-8 or US-ASCII as a single segment
+        if (encodingSegments is [{ Encoding: not null }] &&
+            (
+                Equals(encodingSegments[0].Encoding?.WebName, Encoding.UTF8.WebName) ||
+                Equals(encodingSegments[0].Encoding?.WebName, Encoding.ASCII.WebName)
+            ))
+        {
             return logger.SubjectFilePath;
+        }
 
         await logger.LogEncodingConversion();
         Stopwatch sw = Stopwatch.StartNew();
