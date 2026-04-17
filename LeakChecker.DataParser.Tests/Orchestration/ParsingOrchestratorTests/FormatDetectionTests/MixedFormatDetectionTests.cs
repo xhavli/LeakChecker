@@ -6,7 +6,7 @@ using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
 using LeakChecker.DataParser.Tests.Helpers.Stats;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LeakChecker.DataParser.Tests.Content.Parsing.ContentParserTests.FormatDetectionTests;
+namespace LeakChecker.DataParser.Tests.Orchestration.ParsingOrchestratorTests.FormatDetectionTests;
 
 public class MixedFormatDetectionTests
 {
