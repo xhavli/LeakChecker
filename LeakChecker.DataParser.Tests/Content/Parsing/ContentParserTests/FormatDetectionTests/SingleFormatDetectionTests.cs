@@ -2,6 +2,7 @@ using System.Text;
 using LeakChecker.DataParser.Content.Parse;
 using LeakChecker.DataParser.Format;
 using LeakChecker.DataParser.Helpers.Settings;
+using LeakChecker.DataParser.Orchestration;
 using LeakChecker.DataParser.Tests.Helpers.AppBuilder;
 using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
 using LeakChecker.DataParser.Tests.Helpers.Stats;
@@ -42,10 +43,10 @@ public class SingleFormatDetectionTests
         NullParseStats stats = new NullParseStats();
         using var host = LeakCheckerApplicationFactory.CreateHost();
         var config = host.Services.GetRequiredService<ISettings>();
-        using var parser = new ContentParser(filePath, _logger, stats, config);
+        using var parser = new ParsingOrchestrator(filePath, _logger, stats, config);
 
         // Act
-        await parser.ParseFile();
+        await parser.ParseAsync();
 
         // Assert
         Assert.Single(stats.Formats);
@@ -67,10 +68,10 @@ public class SingleFormatDetectionTests
         NullParseStats stats = new NullParseStats();
         using var host = LeakCheckerApplicationFactory.CreateHost();
         var config = host.Services.GetRequiredService<ISettings>();
-        using var parser = new ContentParser(filePath, _logger, stats, config);
+        using var parser = new ParsingOrchestrator(filePath, _logger, stats, config);
 
         // Act
-        await parser.ParseFile();
+        await parser.ParseAsync();
 
         // Assert
         Assert.Single(stats.Formats);
@@ -85,9 +86,11 @@ public class SingleFormatDetectionTests
         // Arrange
         string filePath = Path.Combine(_testDataDirectory, fileName);
         NullParseStats stats = new NullParseStats();
-
+        using var host = LeakCheckerApplicationFactory.CreateHost();
+        var config = host.Services.GetRequiredService<ISettings>();
+        
         // Act
-        await ExcelParser.ParseFile(filePath, _logger, stats, thresholdPercent: 50);
+        await ExcelParser.ParseFile(filePath, _logger, stats, config);
 
         // Assert
         Assert.Single(stats.Formats);
@@ -103,10 +106,10 @@ public class SingleFormatDetectionTests
         NullParseStats stats = new NullParseStats();
         using var host = LeakCheckerApplicationFactory.CreateHost();
         var config = host.Services.GetRequiredService<ISettings>();
-        using var parser = new ContentParser(filePath, _logger, stats, config);
+        using var parser = new ParsingOrchestrator(filePath, _logger, stats, config);
 
         // Act
-        await parser.ParseFile();
+        await parser.ParseAsync();
 
         // Assert
         Assert.Single(stats.Formats);
