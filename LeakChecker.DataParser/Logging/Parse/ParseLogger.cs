@@ -21,7 +21,7 @@ public class ParseLogger : IParseLogger
     private const ConsoleColor InfoColor = ConsoleColor.DarkBlue;
     private const ConsoleColor WarningColor = ConsoleColor.DarkYellow;
     private const ConsoleColor SuccessColor = ConsoleColor.Green;
-    private const ConsoleColor ExceptionColor = ConsoleColor.Red;
+    private const ConsoleColor FailureColor = ConsoleColor.Red;
 
     private ParseLogger(
         Guid parseId,
@@ -45,7 +45,7 @@ public class ParseLogger : IParseLogger
         DateTime parseStart = DateTime.Now;
         
         string fileName = Path.GetFileName(subjectFilePath);
-        string parseTimeStamp = $"{parseStart:yyyy-M-dTHH-mm-ss}";
+        string parseTimeStamp = $"{parseStart:yyyy-MM-ddTHH-mm-ss}";
         string logFileName = $"{parseTimeStamp}_[{parseId}]_{fileName}.txt";
         string logFilePath = Path.Combine(settings.LogDirectory, logFileName);
         string tmpFileName = $"TMP_{logFileName}";
@@ -83,27 +83,16 @@ public class ParseLogger : IParseLogger
             return;
         }
         
-        ConsoleColor consoleColor = Console.ForegroundColor;
-        switch (level)
+        ConsoleColor logColor = level switch
         {
-            case LogLevel.Info:
-                consoleColor = InfoColor;
-                break;
-            case LogLevel.Warning:
-                consoleColor = WarningColor;
-                break;
-            case LogLevel.Success:
-                consoleColor = SuccessColor;
-                break;
-            case LogLevel.Failure:
-                consoleColor = ExceptionColor;
-                break;
-            default:
-                Console.ResetColor();
-                break;
-        }
+            LogLevel.Info => InfoColor,
+            LogLevel.Warning => WarningColor,
+            LogLevel.Success => SuccessColor,
+            LogLevel.Failure => FailureColor,
+            _ => Console.ForegroundColor
+        };
 
-        Console.ForegroundColor = consoleColor;
+        Console.ForegroundColor = logColor;
         await WriteLineAsync(log);
         Console.ResetColor();
     }
