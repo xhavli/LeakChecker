@@ -1,6 +1,7 @@
 using ExcelDataReader;
 using LeakChecker.DataParser.Format;
 using LeakChecker.DataParser.Format.Detection;
+using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Parse;
@@ -9,13 +10,12 @@ namespace LeakChecker.DataParser.Content.Parse;
 
 public static class ExcelParser
 {
-    private const int SamplesLimit = 23;
     private const long ParseLimit = long.MaxValue;
 
-    public static async Task ParseFile(string filePath, IParseLogger logger, IParseStats stats, int thresholdPercent)
+    public static async Task ParseAsync(string filePath, IParseLogger logger, IParseStats stats, ISettings settings)
     {
         Dictionary<int, Dictionary<int, ItemEnum>> schemas = 
-            await ExcelDetector.DetectFormat(filePath, logger, SamplesLimit, thresholdPercent);
+            await ExcelDetector.DetectFormat(filePath, logger, settings.ExcelSamples, settings.SchemaThreshold);
 
         await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
         using var reader = ExcelReaderFactory.CreateReader(stream);

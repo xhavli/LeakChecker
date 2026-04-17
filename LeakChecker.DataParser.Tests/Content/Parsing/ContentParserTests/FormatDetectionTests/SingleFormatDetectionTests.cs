@@ -90,7 +90,7 @@ public class SingleFormatDetectionTests
         var config = host.Services.GetRequiredService<ISettings>();
         
         // Act
-        await ExcelParser.ParseFile(filePath, _logger, stats, config);
+        await ExcelParser.ParseAsync(filePath, _logger, stats, config);
 
         // Assert
         Assert.Single(stats.Formats);

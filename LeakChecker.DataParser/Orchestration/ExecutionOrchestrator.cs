@@ -123,7 +123,7 @@ public sealed class ExecutionOrchestrator(
         {
             if (FileHelper.IsExcel(filePath))
             {
-                await ExcelParser.ParseFile(filePath, parseLogger, parseStats, settings.SchemaThreshold);
+                await ExcelParser.ParseAsync(filePath, parseLogger, parseStats, settings);
             }
             else
             {
