@@ -3,7 +3,6 @@ using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Format.Schema;
-using LeakChecker.DataParser.Helpers;
 using LeakChecker.DataParser.Helpers.Enums;
 using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Stats.Parse;
@@ -64,7 +63,7 @@ public class ParseLogger : IParseLogger
         return logger;
     }
     
-    private async Task WriteLineAsync(string message = "")
+    private async Task LogInternal(string message = "")
     {
         if (_verbose)
             Console.WriteLine(message);
@@ -79,7 +78,7 @@ public class ParseLogger : IParseLogger
         
         if (!_verbose)   // Log without colored console print
         {
-            await WriteLineAsync(log);
+            await LogInternal(log);
             return;
         }
         
@@ -93,7 +92,7 @@ public class ParseLogger : IParseLogger
         };
 
         Console.ForegroundColor = logColor;
-        await WriteLineAsync(log);
+        await LogInternal(log);
         Console.ResetColor();
     }
 
@@ -105,48 +104,48 @@ public class ParseLogger : IParseLogger
         double sizeMb = (double) fileSize / SizeEnum.MegaByte;
         double sizeGb = (double) fileSize / SizeEnum.GigaByte;
 
-        await WriteLineAsync($"Parse start: {timeStamp}");
-        await WriteLineAsync($"File path: {fileInfo.FullName}");
-        await WriteLineAsync($"File name: {fileInfo.Name}");
-        await WriteLineAsync($"File size: {sizeGb:F2} GiB / {sizeMb:F2} MiB / {fileSize:N0} Bytes");
+        await LogInternal($"Parse start: {timeStamp}");
+        await LogInternal($"File path: {fileInfo.FullName}");
+        await LogInternal($"File name: {fileInfo.Name}");
+        await LogInternal($"File size: {sizeGb:F2} GiB / {sizeMb:F2} MiB / {fileSize:N0} Bytes");
     }
     
     public async Task LogEncodingHeader()
     {
-        await WriteLineAsync();
-        await WriteLineAsync("---------------------------------------------");
-        await WriteLineAsync("          [X] ENCODING DETECTION [X]");
-        await WriteLineAsync("---------------------------------------------");
+        await LogInternal();
+        await LogInternal("---------------------------------------------");
+        await LogInternal("          [X] ENCODING DETECTION [X]");
+        await LogInternal("---------------------------------------------");
         await Log("Encoding detection started");
     }
     
     public async Task LogEncodingStats(List<EncodingSegment> segments, int take = 10)
     {
-        await WriteLineAsync();
-        await WriteLineAsync("---------------------------------------------");
-        await WriteLineAsync("    [X] ENCODING DETECTION STATISTICS [X]");
-        await WriteLineAsync("---------------------------------------------");
+        await LogInternal();
+        await LogInternal("---------------------------------------------");
+        await LogInternal("    [X] ENCODING DETECTION STATISTICS [X]");
+        await LogInternal("---------------------------------------------");
         
-        await WriteLineAsync($"Encoding segments count: {segments.Count}");
+        await LogInternal($"Encoding segments count: {segments.Count}");
         int distinctEncodingCount = segments
             .Select(s => s.Encoding?.WebName)
             .Distinct()
             .Count();
-        await WriteLineAsync($"Different encodings count: {distinctEncodingCount}");
+        await LogInternal($"Different encodings count: {distinctEncodingCount}");
         
-        await WriteLineAsync();
-        await WriteLineAsync("Encodings by segment count:");
+        await LogInternal();
+        await LogInternal("Encodings by segment count:");
         var encodingCounts = segments
             .GroupBy(s => s.Encoding?.WebName)
             .OrderByDescending(g => g.Count());
         foreach (var group in encodingCounts)
         {
             string encName = string.IsNullOrWhiteSpace(group.Key) ? "[NULL]" : group.Key;
-            await WriteLineAsync($"   {encName,-15} : {group.Count()} segments");
+            await LogInternal($"   {encName,-15} : {group.Count()} segments");
         }
         
-        await WriteLineAsync();
-        await WriteLineAsync("Encodings by total size:");
+        await LogInternal();
+        await LogInternal("Encodings by total size:");
         var encodingSizes = segments
             .GroupBy(s => s.Encoding?.WebName)
             .OrderByDescending(g => g.Sum(s => s.Length));
@@ -154,10 +153,10 @@ public class ParseLogger : IParseLogger
         {
             string encName = string.IsNullOrWhiteSpace(group.Key) ? "[NULL]" : group.Key;
             long totalBytes = group.Sum(s => s.Length);
-            await WriteLineAsync($"   {encName,-15} : {totalBytes:N0} bytes");
+            await LogInternal($"   {encName,-15} : {totalBytes:N0} bytes");
         }
         
-        await WriteLineAsync();
+        await LogInternal();
         var largestSegments = segments
             .OrderByDescending(s => s.Length)
             .Take(take)
@@ -166,90 +165,90 @@ public class ParseLogger : IParseLogger
         int actualCount = largestSegments.Count;
         string messagePrefix = segments.Count <= take ? "All" : $"Top {actualCount}";
 
-        await WriteLineAsync($"{messagePrefix} largest encoding segments:");
+        await LogInternal($"{messagePrefix} largest encoding segments:");
         foreach (var seg in largestSegments)
-            await WriteLineAsync($"   {seg.ToByteString()}");
+            await LogInternal($"   {seg.ToByteString()}");
     }
 
     public async Task LogEncodingDetails(List<EncodingSegment> segments)
     {
-        await WriteLineAsync();
-        await WriteLineAsync("----------------------------------------------------------");
-        await WriteLineAsync("           [X] ENCODING DETECTION DETAILS [X]");
-        await WriteLineAsync("----------------------------------------------------------");
+        await LogInternal();
+        await LogInternal("----------------------------------------------------------");
+        await LogInternal("           [X] ENCODING DETECTION DETAILS [X]");
+        await LogInternal("----------------------------------------------------------");
         
         foreach (var segment in segments)
         {
-            await WriteLineAsync(segment.ToByteString());
+            await LogInternal(segment.ToByteString());
         }
     }
 
     public async Task LogEncodingConversion()
     {
-        await WriteLineAsync();
-        await WriteLineAsync("---------------------------------------------");
-        await WriteLineAsync("         [X] ENCODING CONVERSION [X]");
-        await WriteLineAsync("---------------------------------------------");
+        await LogInternal();
+        await LogInternal("---------------------------------------------");
+        await LogInternal("         [X] ENCODING CONVERSION [X]");
+        await LogInternal("---------------------------------------------");
         await Log("Encoding conversion started");
     }
     public async Task LogContentHeader()
     {
-        await WriteLineAsync();
-        await WriteLineAsync("---------------------------------------------");
-        await WriteLineAsync("            [X] CONTENT PARSE [X]");
-        await WriteLineAsync("---------------------------------------------");
+        await LogInternal();
+        await LogInternal("---------------------------------------------");
+        await LogInternal("            [X] CONTENT PARSE [X]");
+        await LogInternal("---------------------------------------------");
         await Log("Content parsing started");
     }
     
     public async Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int take = 5)
     {
         
-        await WriteLineAsync();
-        await WriteLineAsync("---------------------------------------------");
-        await WriteLineAsync("         [X] DELIMITER DETECTION [X]");
-        await WriteLineAsync("---------------------------------------------");
+        await LogInternal();
+        await LogInternal("---------------------------------------------");
+        await LogInternal("         [X] DELIMITER DETECTION [X]");
+        await LogInternal("---------------------------------------------");
         
         await Log($"Best delimiter: [{result.BestDelimiter}]");
-        await WriteLineAsync($"Sampled {result.SampledLines:N0} lines (~{result.SampledBytes} chars) in {result.Duration} seconds");
+        await LogInternal($"Sampled {result.SampledLines:N0} lines (~{result.SampledBytes} chars) in {result.Duration} seconds");
         
         var actualCount = Math.Min(take, result.Candidates.Count);
         string messagePrefix = actualCount == take ? "All" : $"Top {actualCount}";
         
-        await WriteLineAsync($"{messagePrefix} delimiter candidates detail:");
+        await LogInternal($"{messagePrefix} delimiter candidates detail:");
         foreach (var candidate in result.Candidates.Take(actualCount))
-            await WriteLineAsync($"    {candidate}");
+            await LogInternal($"    {candidate}");
 
-        await WriteLineAsync();
+        await LogInternal();
     }
 
     public async Task LogSqlInsertHeader(SqlInsertHeader insertHeader)
     {
         await Log($"SQL insert header: {insertHeader.FullHeader}");
-        await WriteLineAsync($"SQL insert subject: {insertHeader.Subject}");
+        await LogInternal($"SQL insert subject: {insertHeader.Subject}");
         
         for (int i = 0; i < insertHeader.Headers.Count; i++)
-            await WriteLineAsync($"   [{i}] {insertHeader.Headers[i]}");
+            await LogInternal($"   [{i}] {insertHeader.Headers[i]}");
         
-        await WriteLineAsync();
+        await LogInternal();
     }
 
     public async Task LogSchemaDetectionHeader()
     {
-        await WriteLineAsync();
-        await WriteLineAsync("---------------------------------------------");
-        await WriteLineAsync("           [X] SCHEMA DETECTION [X]");
-        await WriteLineAsync("---------------------------------------------");
+        await LogInternal();
+        await LogInternal("---------------------------------------------");
+        await LogInternal("           [X] SCHEMA DETECTION [X]");
+        await LogInternal("---------------------------------------------");
     }
 
     public async Task LogSample(string sample)
     {
-        await WriteLineAsync(sample);
+        await LogInternal(sample);
     }
     
     public async Task LogHeuristicData(SchemaHeuristic analyzer)
     {
-        await WriteLineAsync();
-        await WriteLineAsync("Heuristic data:");
+        await LogInternal();
+        await LogInternal("Heuristic data:");
 
         foreach (var kvp in analyzer.AttributeCountsPerPosition.OrderBy(x => x.Key))
         {
@@ -257,7 +256,7 @@ public class ParseLogger : IParseLogger
             int[] counts = kvp.Value;
             int total = counts.Sum();
 
-            await WriteLineAsync($"   Position {position}: total {total}");
+            await LogInternal($"   Position {position}: total {total}");
 
             var stats =
                 counts.Select((count, index) => new { Attribute = (ItemEnum)index, Count = count })
@@ -267,15 +266,15 @@ public class ParseLogger : IParseLogger
             foreach (var rec in stats)
             {
                 double pct = total == 0 ? 0 : (double)rec.Count / total * 100.0;
-                await WriteLineAsync($"      {rec.Attribute} = {rec.Count} ({pct:0.##}%)");
+                await LogInternal($"      {rec.Attribute} = {rec.Count} ({pct:0.##}%)");
             }
         }
-        await WriteLineAsync();
+        await LogInternal();
     }
     
     public async Task LogDominantSchema(SchemaHeuristic analyzer, double threshold)
     {
-        await WriteLineAsync($"Dominant schema (SuccessRate >= {threshold}%):");
+        await LogInternal($"Dominant schema (SuccessRate >= {threshold}%):");
 
         // Expanded schema contains Previous entries
         var dominantSchema = analyzer.GetDominantSchema(threshold);
@@ -290,74 +289,74 @@ public class ParseLogger : IParseLogger
 
             if (attribute == ItemEnum.Previous)
             {
-                await WriteLineAsync($"   Position {position} = ({attribute})");
+                await LogInternal($"   Position {position} = ({attribute})");
                 continue;
             }
 
             // Use cached percentage if available
             double percent = dominantStats.TryGetValue(position, out var tuple) ? tuple.percent : 0.0;
 
-            await WriteLineAsync($"   Position {position} = {attribute} - {percent:0.##}%");
+            await LogInternal($"   Position {position} = {attribute} - {percent:0.##}%");
         }
-        await WriteLineAsync();
+        await LogInternal();
     }
     
     public async Task LogFinalSchema(Dictionary<int, ItemEnum> schema)
     {
-        await WriteLineAsync("Final schema = Dominant + (Assigned or Guessed):");
+        await LogInternal("Final schema = Dominant + (Assigned or Guessed):");
 
         foreach (var kvp in schema.OrderBy(k => k.Key))
-            await WriteLineAsync($"   Position {kvp.Key} = {kvp.Value}");
+            await LogInternal($"   Position {kvp.Key} = {kvp.Value}");
 
-        await WriteLineAsync();
+        await LogInternal();
     }
     
     public async Task LogParseStats(ParseStats stats)
     {
         stats.ParseEnd = DateTime.Now;
         
-        await WriteLineAsync();
-        await WriteLineAsync("------------------------------------------------");
-        await WriteLineAsync("             [X] FILE PARSE STATS [X]");
-        await WriteLineAsync("------------------------------------------------");
+        await LogInternal();
+        await LogInternal("------------------------------------------------");
+        await LogInternal("             [X] FILE PARSE STATS [X]");
+        await LogInternal("------------------------------------------------");
 
-        await WriteLineAsync($"File name: {stats.FileName}");
-        await WriteLineAsync($"Parse ID: {stats.ParseId}");
+        await LogInternal($"File name: {stats.FileName}");
+        await LogInternal($"Parse ID: {stats.ParseId}");
 
         string originalEnc = string.IsNullOrEmpty(stats.Encoding?.WebName) ? "[NULL]" : stats.Encoding.WebName;
-        await WriteLineAsync($"Original encoding: {originalEnc}");
+        await LogInternal($"Original encoding: {originalEnc}");
         string? originEncCount = Convert.ToString(stats.EncodingSegments.Count == 0 ? "[NULL]" : stats.EncodingSegments.Count);
-        await WriteLineAsync($"Encoding segments: {originEncCount}");
+        await LogInternal($"Encoding segments: {originEncCount}");
 
-        await WriteLineAsync("Delimiters:");
+        await LogInternal("Delimiters:");
         foreach (var delimiter in stats.Delimiters)
         {
             var display = delimiter == '\t' ? "\\t" : delimiter.ToString();
-            await WriteLineAsync($"   '{display}'");
+            await LogInternal($"   '{display}'");
         }
 
-        await WriteLineAsync("Formats:");
+        await LogInternal("Formats:");
         foreach (var format in stats.Formats)
-            await WriteLineAsync($"   {format}");
+            await LogInternal($"   {format}");
         
-        await WriteLineAsync("Subjects:");
+        await LogInternal("Subjects:");
         foreach (var subject in stats.Context)
-            await WriteLineAsync($"   {subject}");
+            await LogInternal($"   {subject}");
 
-        await WriteLineAsync($"Correct records parsed: {stats.RecordsRead:N0}");
-        await WriteLineAsync($"Malformed records read: {stats.MalformedRead:N0}");
-        await WriteLineAsync($"Parse accuracy (correct vs malformed): {stats.Accuracy:F2} %");
+        await LogInternal($"Correct records parsed: {stats.RecordsRead:N0}");
+        await LogInternal($"Malformed records read: {stats.MalformedRead:N0}");
+        await LogInternal($"Parse accuracy (correct vs malformed): {stats.Accuracy:F2} %");
         
-        await WriteLineAsync($"Lines parsed: {stats.LinesRead:N0}");
-        await WriteLineAsync($"Line speed: {stats.LineSpeed:F2} lines/sec");
+        await LogInternal($"Lines parsed: {stats.LinesRead:N0}");
+        await LogInternal($"Line speed: {stats.LineSpeed:F2} lines/sec");
         
-        await WriteLineAsync($"Bytes parsed: {stats.BytesRead:N0}");
-        await WriteLineAsync($"Byte speed: {stats.ByteSpeed:F2} bytes/sec");
+        await LogInternal($"Bytes parsed: {stats.BytesRead:N0}");
+        await LogInternal($"Byte speed: {stats.ByteSpeed:F2} bytes/sec");
 
-        await WriteLineAsync($"Parse start: {stats.ParseStart.ToString("F", CultureInfo.InvariantCulture)}");
-        await WriteLineAsync($"Parse ended: {stats.ParseEnd.ToString("F", CultureInfo.InvariantCulture)}");
-        await WriteLineAsync($"Parse time: {stats.Duration}");
-        await WriteLineAsync();
+        await LogInternal($"Parse start: {stats.ParseStart.ToString("F", CultureInfo.InvariantCulture)}");
+        await LogInternal($"Parse ended: {stats.ParseEnd.ToString("F", CultureInfo.InvariantCulture)}");
+        await LogInternal($"Parse time: {stats.Duration}");
+        await LogInternal();
     }
 
     public void Dispose()
