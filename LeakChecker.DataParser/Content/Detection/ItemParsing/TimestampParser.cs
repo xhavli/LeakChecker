@@ -1,4 +1,5 @@
 using System.Globalization;
+using LeakChecker.DataParser.Helpers.DataNormalization;
 
 namespace LeakChecker.DataParser.Content.Detection.ItemParsing;
 
@@ -73,31 +74,26 @@ public static class TimestampParser
     /// <param name="type">ItemEnum</param>
     /// <param name="value">String</param>
     /// <returns>Normalized or original type and value</returns>
-    public static (ItemEnum Type, object Value) NormalizeValue(ItemEnum type, string value)
+    public static NormalizedData NormalizeTimestamp(ItemEnum type, string value)
     {
         return type switch
         {
             ItemEnum.UnixSeconds when long.TryParse(value, out var us) =>
-                (ItemEnum.Timestamp, DateTimeOffset.FromUnixTimeSeconds(us).UtcDateTime),
+                new NormalizedData(ItemEnum.Timestamp, DateTimeOffset.FromUnixTimeSeconds(us).UtcDateTime),
 
             ItemEnum.UnixMilliseconds when long.TryParse(value, out var ums) =>
-                (ItemEnum.Timestamp, DateTimeOffset.FromUnixTimeMilliseconds(ums).UtcDateTime),
+                new NormalizedData(ItemEnum.Timestamp, DateTimeOffset.FromUnixTimeMilliseconds(ums).UtcDateTime),
 
             ItemEnum.FileTime when long.TryParse(value, out var ft) =>
-                (ItemEnum.Timestamp, DateTime.FromFileTimeUtc(ft)),
+                new NormalizedData(ItemEnum.Timestamp, DateTime.FromFileTimeUtc(ft)),
 
             ItemEnum.NetTicks when long.TryParse(value, out var nt) =>
-                (ItemEnum.Timestamp, new DateTime(nt, DateTimeKind.Utc)),
+                new NormalizedData(ItemEnum.Timestamp, new DateTime(nt, DateTimeKind.Utc)),
 
-            //TODO special case may need more flexibility
-            ItemEnum.Timestamp when DateTime.TryParse(
-                    value,
-                    CultureInfo.InvariantCulture,
-                    Styles,
-                    out var ts) =>
-                (ItemEnum.Timestamp, ts),
+            ItemEnum.Timestamp when DateTime.TryParse(value, CultureInfo.InvariantCulture, Styles, out var ts) =>
+                new NormalizedData(ItemEnum.Timestamp, ts),
 
-            _ => (type, value)
+            _ => new NormalizedData(type, value)
         };
     }
 }

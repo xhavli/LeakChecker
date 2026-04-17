@@ -14,8 +14,7 @@ public static class DataNormalizer
             case ItemEnum.Timestamp:
             case ItemEnum.UnixSeconds:
             case ItemEnum.UnixMilliseconds:
-                var normalized = TimestampParser.NormalizeValue(type, value);
-                return new NormalizedData(normalized.Type, normalized.Value);
+                return TimestampParser.NormalizeTimestamp(type, value);
             
             default:
                 return new NormalizedData(type, value);
