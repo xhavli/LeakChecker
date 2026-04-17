@@ -5,6 +5,7 @@ using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Orchestration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -38,7 +39,7 @@ public static class Program
                 services.AddSingleton<PythonNerService>();
                 
                 // Orchestration
-                services.AddSingleton<Orchestrator>();
+                services.AddSingleton<ExecutionOrchestrator>();
             });
     }
 
@@ -47,7 +48,7 @@ public static class Program
         try
         {
             using var host = CreateHostBuilder(args).Build();
-            var orchestrator = host.Services.GetRequiredService<Orchestrator>();
+            var orchestrator = host.Services.GetRequiredService<ExecutionOrchestrator>();
             return await orchestrator.RunAsync();
         }
         catch (Exception e)
