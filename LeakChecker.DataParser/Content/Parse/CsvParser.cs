@@ -27,8 +27,8 @@ public class CsvParser(ParsingContext parsingContext)
         long linesRead = 0;
         long bytesRead = 0;
         long recordsRead = 0;
-        int malformedRecordsRead = 0;
-        int malformedRecordsSequence = 0;
+        int malformedRead = 0;
+        int malformedReadSequence = 0;
         
         while (await reader.ReadLineWithEndingAsync() is { } line)
         {
@@ -52,10 +52,11 @@ public class CsvParser(ParsingContext parsingContext)
             {
                 await _logger.Log($"Bad row length at line {startLine + linesRead}: expected {expectedFields}, " +
                                   $"got {row.Length} content: {line}", LogLevel.Warning);
-                
-                malformedRecordsRead++;
-                malformedRecordsSequence++;
-                if (malformedRecordsSequence >= malformedLimit)
+
+                malformedRead++;
+                malformedReadSequence++;
+
+                if (malformedReadSequence >= malformedLimit)
                 {
                     await _logger.Log($"Parsing reach malformed limit {malformedLimit}. " +
                                       $"Returning back to recompute schema.", LogLevel.Warning, LogContext.Parsing);
@@ -73,7 +74,7 @@ public class CsvParser(ParsingContext parsingContext)
             }
             
             recordsRead++;
-            malformedRecordsSequence = 0;
+            malformedReadSequence = 0;
 
             if (recordsRead == parseLimit)
                 break;
@@ -86,7 +87,7 @@ public class CsvParser(ParsingContext parsingContext)
             LinesRead = linesRead,
             BytesRead = bytesRead,
             RecordsRead = recordsRead,
-            MalformedRecordsRead = malformedRecordsRead,
+            MalformedRead = malformedRead,
         };
     }
 

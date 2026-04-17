@@ -15,10 +15,10 @@ public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourc
     public string FileName => Path.GetFileName(SourcePath);
     public string ParsePath { get; set; } = string.Empty;
     public long FileSize { get; init; } = new FileInfo(sourcePath).Length;
-    public long MalformedRecordsRead { get; set; }
     public long LinesRead { get; set; }
     public long BytesRead { get; set; }
     public long RecordsRead { get; set; }
+    public long MalformedRead { get; set; }
     public Encoding? Encoding { get; set; }
     public List<EncodingSegment> EncodingSegments { get; set; } = new();
     public List<char> Delimiters { get; init; } = new();
@@ -32,7 +32,7 @@ public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourc
     public double ByteSpeed => Duration.TotalSeconds > 0 ? BytesRead / Duration.TotalSeconds : 0;
     public double LineSpeed => Duration.TotalSeconds > 0 ? LinesRead / Duration.TotalSeconds : 0;
     public double Accuracy =>
-        RecordsRead <= 0 ? 0 : Math.Max(0, (double)(RecordsRead - MalformedRecordsRead) / RecordsRead * 100);
+        RecordsRead <= 0 ? 0 : Math.Max(0, (double)(RecordsRead - MalformedRead) / RecordsRead * 100);
 
     public BsonDocument ToBsonDocument()
     {
@@ -42,7 +42,7 @@ public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourc
             { nameof(ExecutionId), new BsonBinaryData(ExecutionId, GuidRepresentation.Standard) },
             { nameof(SourcePath), SourcePath },
             { nameof(FileSize), FileSize },
-            { nameof(MalformedRecordsRead), MalformedRecordsRead },
+            { nameof(MalformedRead), MalformedRead },
             { nameof(LinesRead), LinesRead },
             { nameof(BytesRead), BytesRead },
             { nameof(RecordsRead), RecordsRead },

@@ -63,6 +63,7 @@ public static class ExcelParser
                     if (type == ItemEnum.Empty)
                         type = ItemEnum.Other;
 
+                    //TODO forward to storage
                     // Console.WriteLine($"Row [{row}] Column [{column}], {type}: {value}");
                 }
                 
@@ -75,7 +76,7 @@ public static class ExcelParser
         }
         while (reader.NextResult());
         
-        stats.MalformedRecordsRead = 0; // Cant properly detect
+        stats.MalformedRead = 0; // Cant properly detect
         stats.RecordsRead = recordsRead;
         stats.LinesRead = rowsRead;
         stats.BytesRead = new FileInfo(filePath).Length;

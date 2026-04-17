@@ -356,7 +356,7 @@ public class ParseLogger : IParseLogger
             await WriteLineAsync($"   {subject}");
 
         await WriteLineAsync($"Correct records parsed: {stats.RecordsRead:N0}");
-        await WriteLineAsync($"Malformed records parsed: {stats.MalformedRecordsRead:N0}");
+        await WriteLineAsync($"Malformed records read: {stats.MalformedRead:N0}");
         await WriteLineAsync($"Parse accuracy (correct vs malformed): {stats.Accuracy:F2} %");
         
         await WriteLineAsync($"Lines parsed: {stats.LinesRead:N0}");

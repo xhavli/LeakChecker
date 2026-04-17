@@ -10,10 +10,10 @@ public interface IParseStats
     public Guid ParseId { get; init; }
     public string SourcePath { get; init; }
     public string ParsePath { get; set; }
-    public long MalformedRecordsRead { get; set; }
     public long LinesRead { get; set; }
     public long BytesRead { get; set; }
     public long RecordsRead { get; set; }
+    public long MalformedRead { get; set; }
     public Encoding? Encoding { get; set; }
     public List<EncodingSegment> EncodingSegments { get; set; }
     public List<char> Delimiters { get; init; }

@@ -33,8 +33,8 @@ public class SqlInsertParser(ParsingContext parsingContext)
         long bytesRead = 0;
         long linesRead = 0;
         long recordsRead = 0;
-        int malformedRecordsRead = 0;
-        int malformedRecordsSequence = 0;
+        int malformedRead = 0;
+        int malformedReadSequence = 0;
 
         while (await reader.ReadLineWithEndingAsync() is { } line)
         {
@@ -113,9 +113,10 @@ public class SqlInsertParser(ParsingContext parsingContext)
                                 await _logger.Log($"Bad row length on line {startLine + linesRead}: expected {expectedFields}, " +
                                                   $"got {row.Length} content: {line}", LogLevel.Warning);
                                 
-                                malformedRecordsRead++;
-                                malformedRecordsSequence++;
-                                if (malformedRecordsSequence >= malformedLimit)
+                                malformedRead++;
+                                malformedReadSequence++;
+
+                                if (malformedReadSequence >= malformedLimit)
                                 {
                                     await _logger.Log($"Parsing reach malformed limit {malformedLimit}. " +
                                                       $"Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
@@ -131,7 +132,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
                                 await DatabaseFacade.SaveUserMany(_cachedRecords, _parseId);
                                 _cachedRecords.Clear();
                             }
-                            malformedRecordsSequence = 0;
+                            malformedReadSequence = 0;
                             recordsRead++;
 
                             if (recordsRead == parseLimit)
@@ -141,6 +142,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
                                     RecordsRead = recordsRead,
                                     LinesRead = linesRead,
                                     BytesRead = bytesRead,
+                                    MalformedRead = malformedRead,
                                 };
                             }
                         }
@@ -155,7 +157,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
             }
 
             // End of SQL INSERT
-            if (line.IsSqlInsertEnd()) 
+            if (line.IsSqlInsertEnd())
                 break;
         }
 
@@ -166,7 +168,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
             LinesRead = linesRead,
             BytesRead = bytesRead,
             RecordsRead = recordsRead,
-            MalformedRecordsRead = malformedRecordsRead,
+            MalformedRead = malformedRead,
         };
     }
 
@@ -228,7 +230,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
     {
         raw = raw.Trim();
         
-        if (string.Equals(raw, "NULL", StringComparison.OrdinalIgnoreCase)) 
+        if (string.Equals(raw, "NULL", StringComparison.OrdinalIgnoreCase))
             return string.Empty;
 
         // strip SQL quotes

@@ -146,7 +146,7 @@ public sealed class Orchestrator(
                 _stats.LinesParsed += parseStats.LinesRead;
                 _stats.BytesParsed += parseStats.BytesRead;
                 _stats.RecordsParsed += parseStats.RecordsRead;
-                _stats.MalformedRecordsRead += parseStats.MalformedRecordsRead;
+                _stats.MalformedRecordsRead += parseStats.MalformedRead;
             }
         
             logger.Log($"Finished: {parseStats.FileName}", LogLevel.Success, LogContext.Parsing);

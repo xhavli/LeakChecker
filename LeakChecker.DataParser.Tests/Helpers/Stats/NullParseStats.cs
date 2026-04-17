@@ -11,10 +11,10 @@ public sealed class NullParseStats(string sourcePath = "") : IParseStats
     public Guid ParseId { get; init; } = Guid.Empty;
     public string SourcePath { get; init; } = sourcePath;
     public string ParsePath { get; set; } = string.Empty;
-    public long MalformedRecordsRead { get; set; } = 0;
     public long LinesRead { get; set; } = 0;
     public long BytesRead { get; set; } = 0;
     public long RecordsRead { get; set; } = 0;
+    public long MalformedRead { get; set; } = 0;
     public Encoding? Encoding { get; set; }
     public List<EncodingSegment> EncodingSegments { get; set; } = new();
     public List<char> Delimiters { get; init; } = new();

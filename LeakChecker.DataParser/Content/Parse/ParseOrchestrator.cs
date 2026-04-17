@@ -13,9 +13,9 @@ namespace LeakChecker.DataParser.Content.Parse;
 public class ContentParser : IDisposable
 {
     // Parsing state
-    private long _malformedRecordsRead;
-    private long _recordsRead;
     private long _linesRead;
+    private long _recordsRead;
+    private long _malformedRead;
     private long _readerPosition;
     // Data read
     private readonly Encoding _encoding;
@@ -90,10 +90,10 @@ public class ContentParser : IDisposable
             await ProcessCsvFile();
         }
 
-        _stats.MalformedRecordsRead = _malformedRecordsRead;
-        _stats.RecordsRead = _recordsRead;
         _stats.LinesRead = _linesRead;
+        _stats.RecordsRead = _recordsRead;
         _stats.BytesRead = _readerPosition;
+        _stats.MalformedRead = _malformedRead;
 
         await _logger.Log($"Content parsing finished successfully. Time taken: {sw.Elapsed}", LogLevel.Success, LogContext.Parsing);
     }
@@ -258,7 +258,7 @@ public class ContentParser : IDisposable
         _linesRead += result.LinesRead;
         _recordsRead += result.RecordsRead;
         _readerPosition += result.BytesRead;
-        _malformedRecordsRead += result.MalformedRecordsRead;
+        _malformedRead += result.MalformedRead;
 
         // Obfuscation fix caused by mojibake and encoding errors
         if (_readerPosition <= _reader.BaseStream.Length)
