@@ -287,9 +287,9 @@ Picture: SQL Detector of format and SQL Parser of content
 
 #### Speed
 
-- Reading is good
-- Writing speed is good
 - Write done after 1 hour
+- Writing speed is good
+- Reading is good
 - `Email` exact match 0 ms
 - `Email` starts with 'joh' returned 328 751 records in 1222 ms
 - `Email` starts with 'johane' returned 438 records in 3 ms
@@ -322,7 +322,7 @@ Need to save reversed items into database to search ends with
 
 #### Speed
 
-- Write done after 3,5 hours  
+- Write done after 3.5 hours  
 
 #### Notes
 
@@ -341,6 +341,15 @@ Database replication take around 8 hours
 
 - Self-managed
 - Wide-column
+- Database size with pure data 12.9 Gb
+- Database size of lowercase emails 7.1 Gb
+
+#### Speed
+
+- Write done after 12 hour, with half of the data, missing 2 files with 100 million of records
+- Writing speed is slow, do not support parallel on single node
+- Reading is good
+- `Email` exact match 0.03 ms running in docker
 
 #### Notes
 - Missing native prefix search support
