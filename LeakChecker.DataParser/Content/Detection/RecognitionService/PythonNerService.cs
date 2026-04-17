@@ -12,9 +12,10 @@ public class PythonNerService(ISettings settings, ExecutionLogger logger)
 
     public async Task Start()
     {
-        if (await ServiceIsRunning()) return;
+        if (await ServiceIsRunning())
+            return;
         
-        await logger.Log("Start", LogLevel.Info, LogContext.PythonNerService);
+        logger.Log("Start", LogLevel.Info, LogContext.PythonNerService);
         
         try
         {
@@ -42,17 +43,18 @@ public class PythonNerService(ISettings settings, ExecutionLogger logger)
         }
         catch (Exception e)
         {
-            await logger.Log($"Failure at startup. {e.Message}", LogLevel.Failure, LogContext.PythonNerService);
+            logger.Log($"Failure at startup. {e.Message}", LogLevel.Failure, LogContext.PythonNerService);
             throw;
         }
 
-        await logger.Log("Started", LogLevel.Info, LogContext.PythonNerService);
+        logger.Log("Started", LogLevel.Info, LogContext.PythonNerService);
     }
     
     public async Task WaitStart()
     {
         // Try to contact Python status endpoint from C#, if its already running
-        if (await ServiceIsRunning()) return;
+        if (await ServiceIsRunning())
+            return;
         
         // Wait for Python start and send ready to C#
         await WaitForReady();
@@ -60,7 +62,7 @@ public class PythonNerService(ISettings settings, ExecutionLogger logger)
         if (!await ServiceIsRunning())
         {
             const int waitSec = 10;
-            await logger.Log($"Python service API still not reachable. Waiting extra {waitSec} seconds.",
+            logger.Log($"Python service API still not reachable. Waiting extra {waitSec} seconds.",
                 LogLevel.Warning, LogContext.PythonNerService);
             await Task.WhenAny(Task.Delay(TimeSpan.FromSeconds(waitSec)));
         }
@@ -68,30 +70,31 @@ public class PythonNerService(ISettings settings, ExecutionLogger logger)
 
     public async Task Stop()
     {
-        if(_process == null) return;
+        if(_process == null)
+            return;
         
-        await logger.Log("Terminate", LogLevel.Info, LogContext.PythonNerService);
+        logger.Log("Terminate", LogLevel.Info, LogContext.PythonNerService);
         
         try
         {
             if (_process is { HasExited: false })
             {
-                await logger.Log("Sending kill", LogLevel.Info, LogContext.PythonNerService);
+                logger.Log("Sending kill", LogLevel.Info, LogContext.PythonNerService);
                 _process.Kill(entireProcessTree: true);
                 await _process.WaitForExitAsync();
                 _process.Dispose();
-                await logger.Log("Terminated", LogLevel.Info, LogContext.PythonNerService);
+                logger.Log("Terminated", LogLevel.Info, LogContext.PythonNerService);
             }
         }
         catch (Exception e)
         {
-            await logger.Log(e.ToString(), LogLevel.Failure, LogContext.PythonNerService);
+            logger.Log(e.ToString(), LogLevel.Failure, LogContext.PythonNerService);
         }
     }
 
     private async Task<bool> ServiceIsRunning()
     {
-        await logger.Log($"CsharpPort {settings.CsharpPort} sending status check to PythonPort {settings.PythonPort}",
+        logger.Log($"CsharpPort {settings.CsharpPort} sending status check to PythonPort {settings.PythonPort}",
             LogLevel.Info, LogContext.PythonNerService);
         
         try
@@ -102,7 +105,7 @@ public class PythonNerService(ISettings settings, ExecutionLogger logger)
 
             if (status.Trim().Equals("ready", StringComparison.OrdinalIgnoreCase))
             {
-                await logger.Log("Received READY via status endpoint.", LogLevel.Success, LogContext.PythonNerService);
+                logger.Log("Received READY via status endpoint.", LogLevel.Success, LogContext.PythonNerService);
                 return true;
             }
         }
@@ -116,7 +119,7 @@ public class PythonNerService(ISettings settings, ExecutionLogger logger)
 
     private async Task WaitForReady()
     {
-        await logger.Log($"Waiting for READY notification with timeout {settings.StartupTimeoutSeconds} seconds.",
+        logger.Log($"Waiting for READY notification with timeout {settings.StartupTimeoutSeconds} seconds.",
             LogLevel.Warning, LogContext.PythonNerService);
         
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(settings.StartupTimeoutSeconds));
@@ -141,7 +144,7 @@ public class PythonNerService(ISettings settings, ExecutionLogger logger)
 
                 if (body.Trim().Equals("ready", StringComparison.OrdinalIgnoreCase))
                 {
-                    await logger.Log("Received READY via startup notification.", LogLevel.Success, LogContext.PythonNerService);
+                    logger.Log("Received READY via startup notification.", LogLevel.Success, LogContext.PythonNerService);
                     return;
                 }
             }

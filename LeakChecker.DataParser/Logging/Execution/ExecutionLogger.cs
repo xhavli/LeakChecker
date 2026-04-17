@@ -9,18 +9,19 @@ namespace LeakChecker.DataParser.Logging.Execution;
 public class ExecutionLogger : IDisposable
 {
     public readonly DateTime ExecutionStart;
+    
     private readonly StreamWriter _writer;
-    private readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly object _logLock = new();
     private const ConsoleColor InfoColor = ConsoleColor.DarkBlue;
     private const ConsoleColor WarningColor = ConsoleColor.DarkYellow;
     private const ConsoleColor SuccessColor = ConsoleColor.Green;
-    private const ConsoleColor ExceptionColor = ConsoleColor.Red;
+    private const ConsoleColor FailureColor = ConsoleColor.Red;
 
     public ExecutionLogger(ISettings settings)
     {
         ExecutionStart = DateTime.Now;
         
-        string fileTimeStamp = $"{ExecutionStart:yyyy-M-dTHH-mm-ss}";
+        string fileTimeStamp = $"{ExecutionStart:yyyy-MM-ddTHH-mm-ss}";
         string reportFileName = $"{fileTimeStamp}.txt";
         string reportFilePath = Path.Combine(settings.LogDirectory, reportFileName);
 
@@ -32,49 +33,43 @@ public class ExecutionLogger : IDisposable
         CreateReportHeader(settings);
     }
     
-    private async Task WriteLineAsync(string message = "")
+    private void LogInternal(string message = "")
     {
-        Console.WriteLine(message);
-
-        await _lock.WaitAsync();
-        try
+        lock (_logLock)
         {
-            await _writer.WriteLineAsync(message);
-        }
-        finally
-        {
-            _lock.Release();
+            Console.WriteLine(message);
+            _writer.WriteLine(message);
         }
     }
 
-    
-    public async Task Log(string message, LogLevel level = LogLevel.Info, LogContext? context = null )
+    private void LogInternal(string message, ConsoleColor color)
     {
-        ConsoleColor consoleColor = Console.ForegroundColor;
-        switch (level)
+        lock (_logLock)
         {
-            case LogLevel.Info:
-                consoleColor = InfoColor;
-                break;
-            case LogLevel.Warning:
-                consoleColor = WarningColor;
-                break;
-            case LogLevel.Success:
-                consoleColor = SuccessColor;
-                break;
-            case LogLevel.Failure:
-                consoleColor = ExceptionColor;
-                break;
-            default:
-                Console.ResetColor();
-                break;
-        }
+            Console.ForegroundColor = color;
+            Console.WriteLine(message);
+            Console.ResetColor();
 
+            _writer.WriteLine(message);
+        }
+    }
+    
+    public void Log(string message, LogLevel level = LogLevel.Info, LogContext? context = null )
+    {
+        ConsoleColor logColor = level switch
+        {
+            LogLevel.Info => InfoColor,
+            LogLevel.Warning => WarningColor,
+            LogLevel.Success => SuccessColor,
+            LogLevel.Failure => FailureColor,
+            _ => Console.ForegroundColor
+        };
         
-        Console.ForegroundColor = consoleColor;
-        await WriteLineAsync(context is null ? $"[{DateTime.Now:T}] {level.GetString()} {message}"
-                                           : $"[{DateTime.Now:T}] {level.GetString()} {context.Value.GetString()} {message}");
-        Console.ResetColor();
+        string formattedMessage = context is null
+            ? $"[{DateTime.Now:T}] {level.GetString()} {message}"
+            : $"[{DateTime.Now:T}] {level.GetString()} {context.Value.GetString()} {message}";
+
+        LogInternal(formattedMessage, logColor);
     }
 
     private void CreateReportHeader(ISettings settings)
@@ -102,32 +97,32 @@ public class ExecutionLogger : IDisposable
         _writer.WriteLine("-----------------------------------------------------------");
     }
     
-    public async Task LogExecutionStats(ExecutionStats stats)
+    public void LogExecutionStats(ExecutionStats stats)
     {
-        await WriteLineAsync();
+        LogInternal();
 
-        await WriteLineAsync($"Execution ID: {stats.ExecutionId}");
-        await WriteLineAsync($"Files parsed: {stats.FilesParsed.Count}");
+        LogInternal($"Execution ID: {stats.ExecutionId}");
+        LogInternal($"Files parsed: {stats.FilesParsed.Count}");
         foreach (var id in stats.FilesParsed)
         {
-            await WriteLineAsync($"    Parsing ID: {id}");
+            LogInternal($"    Parse ID: {id}");
         }
 
-        await WriteLineAsync($"Correct records parsed: {stats.RecordsParsed:N0}");
-        await WriteLineAsync($"Malformed records parsed: {stats.MalformedRecordsRead:N0}");
-        await WriteLineAsync($"Parse accuracy (correct vs malformed): {stats.Accuracy:N2} %");
+        LogInternal($"Correct records parsed: {stats.RecordsParsed:N0}");
+        LogInternal($"Malformed records parsed: {stats.MalformedRecordsRead:N0}");
+        LogInternal($"Parse accuracy (correct vs malformed): {stats.Accuracy:N2} %");
 
-        await WriteLineAsync($"Lines parsed: {stats.LinesParsed:N0}");
-        await WriteLineAsync($"Line speed: {stats.LineSpeed:N2} lines/second");
+        LogInternal($"Lines parsed: {stats.LinesParsed:N0}");
+        LogInternal($"Line speed: {stats.LineSpeed:N2} lines/second");
         
         double parsedMb = (double) stats.BytesParsed / SizeEnum.MegaByte;
         double parsedGb = (double) stats.BytesParsed / SizeEnum.GigaByte;
-        await WriteLineAsync($"Bytes parsed: {stats.BytesParsed:N0} B / {parsedMb:F2} MiB / {parsedGb:F2} GiB");
-        await WriteLineAsync($"Byte speed: {stats.ByteSpeed:N2} bytes/second");
+        LogInternal($"Bytes parsed: {stats.BytesParsed:N0} B / {parsedMb:F2} MiB / {parsedGb:F2} GiB");
+        LogInternal($"Byte speed: {stats.ByteSpeed:N2} bytes/second");
 
-        await WriteLineAsync($"Execution start: {ExecutionStart.ToString("F", CultureInfo.InvariantCulture)}");
-        await WriteLineAsync($"Execution ended: {stats.ExecutionEnd.ToString("F", CultureInfo.InvariantCulture)}");
-        await WriteLineAsync($"Execution time: {stats.Duration}");
+        LogInternal($"Execution start: {ExecutionStart.ToString("F", CultureInfo.InvariantCulture)}");
+        LogInternal($"Execution ended: {stats.ExecutionEnd.ToString("F", CultureInfo.InvariantCulture)}");
+        LogInternal($"Execution time: {stats.Duration}");
     }
 
     public void Dispose()

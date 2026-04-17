@@ -55,53 +55,53 @@ public class FileHelper(ISettings settings, ExecutionLogger logger)
         "application/x-log",
     };
     
-    public async Task<bool> IsAccessible(string filePath)
+    public bool IsAccessible(string filePath)
     {
         try
         {
-            await using var stream = File.OpenRead(filePath);
+            using var stream = File.OpenRead(filePath);
             return true;
         }
         catch (FileNotFoundException)
         {
-            await logger.Log($"File in path: '{filePath}' does not exist.", LogLevel.Warning);
+            logger.Log($"File in path: '{filePath}' does not exist.", LogLevel.Warning);
             return false;
         }
         catch (UnauthorizedAccessException)
         {
-            await logger.Log($"{ApplicationName} or current user does not have permission to read the file " +
-                             $"in path: '{filePath}'. Raised UnauthorizedAccessException.", LogLevel.Warning);
+            logger.Log($"{ApplicationName} or current user does not have permission to read the file " +
+                       $"in path: '{filePath}'. Raised UnauthorizedAccessException.", LogLevel.Warning);
             return false;
         }
         catch (IOException)
         {
-            await logger.Log($"File in path: '{filePath}' is locked, in use or its not file. Raised IOException.",
+            logger.Log($"File in path: '{filePath}' is locked, in use or its not file. Raised IOException.",
                 LogLevel.Warning);
             return false;
         }
         catch (Exception)
         {
-            await logger.Log($"File in path: '{filePath}' throw general exception", LogLevel.Warning);
+            logger.Log($"File in path: '{filePath}' throw general exception", LogLevel.Warning);
             return false;
         }
     }
 
-    public async Task<IEnumerable<string>> AreAccessible(IEnumerable<string> filePaths)
+    public IEnumerable<string> AreAccessible(IEnumerable<string> filePaths)
     {
         List<string> parsePaths = new();
         
         foreach (var filePath in filePaths)
         {
-            if (await IsAccessible(filePath))
+            if (IsAccessible(filePath))
                 parsePaths.Add(filePath);
         }
 
         return parsePaths;
     }
     
-    public async Task<bool> IsTextual(string filePath, int reliableThreshold = 4000)
+    public bool IsTextual(string filePath, int reliableThreshold = 4000)
     {
-        await using var stream = File.OpenRead(filePath);
+        using var stream = File.OpenRead(filePath);
         
         var results = MimeInspector.Inspect(stream);
         var best = results.ByMimeType().FirstOrDefault();
@@ -111,8 +111,8 @@ public class FileHelper(ISettings settings, ExecutionLogger logger)
             if (!(TextualMimes.Contains(best.MimeType) || 
                   best.MimeType.StartsWith("text/", StringComparison.OrdinalIgnoreCase)))
             {
-                await logger.Log($"File in path: '{filePath}' have MIME Extension [{best.MimeType.ToLower()}] with [{best.Points}] " +
-                                 $"success points which can't be analysed via {ApplicationName}.", LogLevel.Warning);
+                logger.Log($"File in path: '{filePath}' have MIME Extension [{best.MimeType.ToLower()}] with [{best.Points}] " +
+                           $"success points which can't be analysed via {ApplicationName}.", LogLevel.Warning);
                 return false;
             }
         }
@@ -154,8 +154,8 @@ public class FileHelper(ISettings settings, ExecutionLogger logger)
             double successRate = sampled == 0 ? 0 : Math.Max(0, (double)(sampled - malformed) / sampled  * 100);
             if (successRate < threshold)
             {
-                await logger.Log($"File in path: '{filePath}' readability success rate is {successRate:N2} which " +
-                                 $"can't be analysed via {ApplicationName}.", LogLevel.Warning);
+                logger.Log($"File in path: '{filePath}' readability success rate is {successRate:N2} " +
+                           $"which can't be analysed via {ApplicationName}.", LogLevel.Warning);
                 return false;
             }
 
@@ -167,7 +167,7 @@ public class FileHelper(ISettings settings, ExecutionLogger logger)
         return Directory.EnumerateFiles(settings.InputDirectory, "*", SearchOption.AllDirectories);
     }
     
-    public async Task RemoveEmptyDirectories()
+    public void RemoveEmptyDirectories()
     {
         // Get all directories, deepest first
         var directories = Directory
@@ -185,7 +185,7 @@ public class FileHelper(ISettings settings, ExecutionLogger logger)
             catch (Exception ex)
             {
                 // Access issues, locked folders, etc.
-                await logger.Log($"Could not delete directory '{dir}': {ex.Message}", LogLevel.Warning);
+                logger.Log($"Could not delete directory '{dir}': {ex.Message}", LogLevel.Warning);
             }
         }
     }

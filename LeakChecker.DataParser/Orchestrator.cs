@@ -38,7 +38,7 @@ public sealed class Orchestrator(
         }
         catch (Exception e)
         {
-            await logger.Log(e.Message, LogLevel.Failure, LogContext.PythonNerService);
+            logger.Log(e.Message, LogLevel.Failure, LogContext.PythonNerService);
             return 1;
         }
 
@@ -46,7 +46,7 @@ public sealed class Orchestrator(
         {
             // var inputPaths = fileHelper.GetInputFiles();
             // var allPaths = await archiveExtractor.ExtractArchives(inputPaths);
-            var paths = await fileHelper.AreAccessible(FilePaths.Utf8);
+            var paths = fileHelper.AreAccessible(allPaths);
             
             var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(settings.ChannelCapacity)
             {
@@ -85,32 +85,32 @@ public sealed class Orchestrator(
             await Task.WhenAll(consumers.Append(producer));
 
             _stats.ExecutionEnd = DateTime.Now;
-            await logger.LogExecutionStats(_stats);
+            logger.LogExecutionStats(_stats);
             
-            await logger.Log($"Execution finished successfully. Parsed {paths.Count()} files. Current DateTime is " + 
-                             $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Orchestrator);
+            logger.Log($"Execution finished successfully. Parsed {paths.Count()} files. Current DateTime is " + 
+                       $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Orchestrator);
             
-            await logger.Log("Program will exit with exit code 0");
+            logger.Log("Program will exit with exit code 0");
             return 0;
         }
         catch (Exception e)
         {
-            await logger.Log(e.ToString(), LogLevel.Failure, LogContext.Orchestrator);
+            logger.Log(e.ToString(), LogLevel.Failure, LogContext.Orchestrator);
             return 1;
         }
         finally
         {
             await pythonNerService.Stop();
-            await fileHelper.RemoveEmptyDirectories();
+            fileHelper.RemoveEmptyDirectories();
         }
     }
 
     private async Task ParseFileAsync(string filePath)
     {
-        await logger.Log("Started: " + Path.GetFileName(filePath), LogLevel.Info, LogContext.Parsing);
+        logger.Log("Started: " + Path.GetFileName(filePath), LogLevel.Info, LogContext.Parsing);
 
-        var isAccessible = await fileHelper.IsAccessible(filePath);
-        var isTextual = await fileHelper.IsTextual(filePath);
+        var isAccessible = fileHelper.IsAccessible(filePath);
+        var isTextual = fileHelper.IsTextual(filePath);
         var isExcel = FileHelper.IsExcel(filePath);
 
         if (!isAccessible || !(isTextual || isExcel))
@@ -149,11 +149,11 @@ public sealed class Orchestrator(
                 _stats.MalformedRecordsRead += parseStats.MalformedRecordsRead;
             }
         
-            await logger.Log($"Finished: {parseStats.FileName}", LogLevel.Success, LogContext.Parsing);
+            logger.Log($"Finished: {parseStats.FileName}", LogLevel.Success, LogContext.Parsing);
         }
         catch (Exception e)
         {
-            await logger.Log($"{parseStats.ParseId} : {parseStats.FileName}: {e}", LogLevel.Failure, LogContext.Orchestrator);
+            logger.Log($"{parseStats.ParseId} : {parseStats.FileName}: {e}", LogLevel.Failure, LogContext.Orchestrator);
         }
         finally
         {

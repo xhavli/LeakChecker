@@ -57,7 +57,7 @@ public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
         finally
         {
             if (!writtenPaths.IsEmpty)
-                await logger.Log($"Extracted {archivesCount} into {writtenPaths.Count} files.");
+                logger.Log($"Extracted {archivesCount} into {writtenPaths.Count} files.");
             
             foreach (var gate in writtenPaths.Values)
                 gate.Dispose();
@@ -77,8 +77,8 @@ public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
 
         if (!extractionPath.StartsWith(_extractionRoot, StringComparison))
         {
-            await logger.Log($"Potential Zip Slip. Archive entry tries resolve outside " +
-                             $"extraction root: '{entry.FullPath}'", LogLevel.Warning);
+            logger.Log($"Potential Zip Slip. Archive entry tries resolve outside " +
+                       $"extraction root: '{entry.FullPath}'", LogLevel.Warning);
             return null;
         }
 
