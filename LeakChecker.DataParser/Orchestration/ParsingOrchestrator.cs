@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Text;
+using LeakChecker.DataParser.Content;
+using LeakChecker.DataParser.Content.Parse;
 using LeakChecker.DataParser.Format;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Helpers.Extensions;
@@ -8,9 +10,9 @@ using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Parse;
 
-namespace LeakChecker.DataParser.Content.Parse;
+namespace LeakChecker.DataParser.Orchestration;
 
-public class ContentParser : IDisposable
+public class ParsingOrchestrator : IDisposable
 {
     // Parsing state
     private long _linesRead;
@@ -31,7 +33,7 @@ public class ContentParser : IDisposable
 
     private bool _possibleAsciiTable;
 
-    public ContentParser(string filePath, IParseLogger logger, IParseStats stats, ISettings settings)
+    public ParsingOrchestrator(string filePath, IParseLogger logger, IParseStats stats, ISettings settings)
     {
         _encoding = settings.DefaultUtf8;
         var stream = File.OpenRead(filePath);
@@ -43,7 +45,7 @@ public class ContentParser : IDisposable
         _sqlSamplesLimit = settings.SqlSamples;
     }
 
-    public async Task ParseFile()
+    public async Task ParseAsync()
     {
         await _logger.LogContentHeader();
         Stopwatch sw = Stopwatch.StartNew();

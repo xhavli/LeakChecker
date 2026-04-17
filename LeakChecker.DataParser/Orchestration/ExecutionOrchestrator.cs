@@ -16,9 +16,9 @@ using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Execution;
 using LeakChecker.DataParser.Stats.Parse;
 
-namespace LeakChecker.DataParser;
+namespace LeakChecker.DataParser.Orchestration;
 
-public sealed class Orchestrator(
+public sealed class ExecutionOrchestrator(
     ISettings settings,
     FileHelper fileHelper,
     ArchiveExtractor archiveExtractor,
@@ -77,7 +77,7 @@ public sealed class Orchestrator(
                 {
                     await foreach (var filePath in channel.Reader.ReadAllAsync())
                     {
-                        await ParseFileAsync(filePath);
+                        await RunParseAsync(filePath);
                     }
                 }))
                 .ToArray();
@@ -105,7 +105,7 @@ public sealed class Orchestrator(
         }
     }
 
-    private async Task ParseFileAsync(string filePath)
+    private async Task RunParseAsync(string filePath)
     {
         logger.Log("Started: " + Path.GetFileName(filePath), LogLevel.Info, LogContext.Parsing);
 
@@ -134,8 +134,8 @@ public sealed class Orchestrator(
                 
                 await fileHelper.IsReadable(parsePath);
 
-                using ContentParser contentParser = new(parsePath, parseLogger, parseStats, settings);
-                await contentParser.ParseFile();
+                using ParsingOrchestrator parsingOrchestrator = new(parsePath, parseLogger, parseStats, settings);
+                await parsingOrchestrator.ParseAsync();
             }
 
             await parseLogger.LogParseStats(parseStats);
