@@ -8,7 +8,7 @@ public static class HashParser
     private static readonly HttpClient Client = new();
     private const string BaseUrl = "https://hashes.com/en/api/identifier?hash=";
 
-    public static async Task<(bool isHash, ItemEnum hashType)> TryParse(string token)
+    public static async Task<ItemEnum?> TryParse(string token)
     {
         string requestUrl = BaseUrl + Uri.EscapeDataString(token);  //Return one best algorithm
         string requestUrlExtended = requestUrl + "&extended=true";  //Offers more possible algorithms sorted by its popularity
