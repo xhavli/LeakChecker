@@ -57,7 +57,7 @@ public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
         finally
         {
             if (!writtenPaths.IsEmpty)
-                logger.Log($"Extracted {archivesCount} into {writtenPaths.Count} files.");
+                logger.Log($"Extracted {archivesCount} archives into {writtenPaths.Count} files.");
             
             foreach (var gate in writtenPaths.Values)
                 gate.Dispose();
