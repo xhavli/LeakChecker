@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using LeakChecker.DataParser.Helpers.Enums;
+using LeakChecker.DataParser.Helpers.FileHelp;
 using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
@@ -22,58 +23,58 @@ public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
     private static readonly StringComparison StringComparison = OperatingSystem.IsWindows()
         ? StringComparison.OrdinalIgnoreCase
         : StringComparison.Ordinal;
+    
+    private readonly ParallelOptions _parallelOptions = new() { MaxDegreeOfParallelism = settings.ThreadsCapacity };
 
     public async Task<IEnumerable<string>> ExtractArchives(IEnumerable<string> inputPaths)
     {
-        var parsePaths = new ConcurrentDictionary<string, byte>(StringComparer);
-        var writtenPaths = new ConcurrentDictionary<string, SemaphoreSlim>(StringComparer);
-        int archivesCount = 0;
+        var pathsToParse = new ConcurrentDictionary<string, byte>(StringComparer);
+        var writeLocks = new ConcurrentDictionary<string, SemaphoreSlim>(StringComparer);
+        
+        int extractedArchives = 0;
         
         try
         {
-            await Parallel.ForEachAsync(
-                inputPaths,
-                new ParallelOptions { MaxDegreeOfParallelism = settings.ThreadsCapacity },
-                async (path, ct) =>
+            await Parallel.ForEachAsync(inputPaths, _parallelOptions, async (inputPath, ct) =>
                 {
-                    if (!ArchiveDetector.IsPossibleArchive(path))
+                    if (!ArchiveDetector.IsPossibleArchive(inputPath))
                     {
-                        parsePaths.TryAdd(path, 0);
+                        pathsToParse.TryAdd(inputPath, 0);
                         return;
                     }
 
-                    archivesCount++;
+                    Interlocked.Increment(ref extractedArchives);
                     Extractor extractor = new();
 
-                    foreach (var entry in extractor.Extract(path))
+                    foreach (var entry in extractor.Extract(inputPath))
                     {
-                        string? extractedPath = await ExtractFile(path, entry, writtenPaths, ct);
+                        string? extractedPath = await ExtractFile(inputPath, entry, writeLocks, ct);
                         
                         if (extractedPath != null)
-                            parsePaths.TryAdd(extractedPath, 0);
+                            pathsToParse.TryAdd(extractedPath, 0);
                     }
                 });
         }
         finally
         {
-            if (!writtenPaths.IsEmpty)
-                logger.Log($"Extracted {archivesCount} archives into {writtenPaths.Count} files.");
+            if (!writeLocks.IsEmpty)
+                logger.Log($"Extracted {extractedArchives} archives into {writeLocks.Count} files.");
             
-            foreach (var gate in writtenPaths.Values)
+            foreach (var gate in writeLocks.Values)
                 gate.Dispose();
         }
         
-        return parsePaths.Keys;
+        return pathsToParse.Keys;
     }
     
     private async Task<string?> ExtractFile(
-        string sourcePath,
+        string inputPath,
         FileEntry entry,
-        ConcurrentDictionary<string, SemaphoreSlim> writtenPaths,
+        ConcurrentDictionary<string, SemaphoreSlim> writeLocks,
         CancellationToken ct)
     {
-        string relativeFilePath = GetRelativeArchivePath(sourcePath, entry.FullPath);
-        string extractionPath = Path.GetFullPath(Path.Combine(_extractionRoot, relativeFilePath));
+        string relativePath = BuildRelativeExtractionPath(inputPath, entry.FullPath);
+        string extractionPath = Path.GetFullPath(Path.Combine(_extractionRoot, relativePath));
 
         if (!extractionPath.StartsWith(_extractionRoot, StringComparison))
         {
@@ -82,12 +83,10 @@ public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
             return null;
         }
 
-        string? directory = Path.GetDirectoryName(extractionPath);
-        if (!string.IsNullOrWhiteSpace(directory))
-            Directory.CreateDirectory(directory);
+        FileHelper.EnsureDirectoryExists(extractionPath);
 
-        var gate = writtenPaths.GetOrAdd(extractionPath, _ => new SemaphoreSlim(1, 1));
-        await gate.WaitAsync(ct);
+        var writeLock = writeLocks.GetOrAdd(extractionPath, _ => new SemaphoreSlim(1, 1));
+        await writeLock.WaitAsync(ct);
 
         try
         {
@@ -104,13 +103,13 @@ public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
         }
         finally
         {
-            gate.Release();
+            writeLock.Release();
         }
 
         return extractionPath;
     }
     
-    private static string GetRelativeArchivePath(string sourcePath, string entryFullPath)
+    private static string BuildRelativeExtractionPath(string sourcePath, string entryFullPath)
     {
         var rootName = Path.GetFileName(sourcePath);
 

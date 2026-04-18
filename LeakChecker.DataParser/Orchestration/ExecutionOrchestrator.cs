@@ -6,8 +6,6 @@ using LeakChecker.DataParser.Data;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Encodings.Conversion;
 using LeakChecker.DataParser.Encodings.Detection;
-using LeakChecker.DataParser.Helpers;
-using LeakChecker.DataParser.Helpers.ArchiveExtraction;
 using LeakChecker.DataParser.Helpers.FileHelp;
 using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging;
@@ -21,7 +19,6 @@ namespace LeakChecker.DataParser.Orchestration;
 public sealed class ExecutionOrchestrator(
     ISettings settings,
     FileHelper fileHelper,
-    ArchiveExtractor archiveExtractor,
     PythonNerService pythonNerService,
     ExecutionLogger logger,
     IParseLoggerFactory parseLoggerFactory)
@@ -44,9 +41,7 @@ public sealed class ExecutionOrchestrator(
 
         try
         {
-            // var inputPaths = fileHelper.GetInputFiles();
-            // var allPaths = await archiveExtractor.ExtractArchives(inputPaths);
-            var paths = fileHelper.AreAccessible(allPaths);
+            IEnumerable<string> paths = await fileHelper.GetPathsFromInputDirectory();
             
             var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(settings.ChannelCapacity)
             {

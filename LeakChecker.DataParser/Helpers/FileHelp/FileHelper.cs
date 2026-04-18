@@ -1,4 +1,5 @@
 using ExcelDataReader;
+using LeakChecker.DataParser.Helpers.ArchiveExtraction;
 using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
@@ -8,7 +9,7 @@ using MimeDetective.Definitions.Licensing;
 
 namespace LeakChecker.DataParser.Helpers.FileHelp;
 
-public class FileHelper(ISettings settings, ExecutionLogger logger)
+public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, ExecutionLogger logger)
 {
     private static string? ApplicationName { get; } = AppDomain.CurrentDomain.FriendlyName;
 
@@ -86,7 +87,7 @@ public class FileHelper(ISettings settings, ExecutionLogger logger)
         }
     }
 
-    public IEnumerable<string> AreAccessible(IEnumerable<string> filePaths)
+    private List<string> SelectAccessiblePaths(IEnumerable<string> filePaths)
     {
         List<string> parsePaths = new();
         
@@ -162,9 +163,11 @@ public class FileHelper(ISettings settings, ExecutionLogger logger)
             return true;
     }
     
-    public IEnumerable<string> GetInputFiles()
+    public async Task<IEnumerable<string>> GetPathsFromInputDirectory()
     {
-        return Directory.EnumerateFiles(settings.InputDirectory, "*", SearchOption.AllDirectories);
+        IEnumerable<string> inputPaths = Directory.EnumerateFiles(settings.InputDirectory, "*", SearchOption.AllDirectories);
+        IEnumerable<string> allPaths = await archiveExtractor.ExtractArchives(inputPaths);
+        return SelectAccessiblePaths(allPaths);
     }
     
     public void RemoveEmptyDirectories()
@@ -188,5 +191,13 @@ public class FileHelper(ISettings settings, ExecutionLogger logger)
                 logger.Log($"Could not delete directory '{dir}': {ex.Message}", LogLevel.Warning);
             }
         }
+    }
+    
+    public static void EnsureDirectoryExists(string directory)
+    {
+        string? directoryPath = Path.GetDirectoryName(directory);
+
+        if (!string.IsNullOrWhiteSpace(directoryPath))
+            Directory.CreateDirectory(directoryPath);
     }
 }
