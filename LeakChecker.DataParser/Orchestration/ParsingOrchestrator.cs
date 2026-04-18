@@ -78,7 +78,7 @@ public class ParsingOrchestrator : IDisposable
             
             if (line.IsSqlInsert())
             {
-                await ProcessSqlInsert();
+                await ParseSqlInsert();
                 _possibleAsciiTable = false;
                 continue;
             }
@@ -89,7 +89,7 @@ public class ParsingOrchestrator : IDisposable
                 line.Contains("<body", StringComparison.OrdinalIgnoreCase)) {}  // test if it really is an HTML and parse it
 
             // Fallback to CSV format
-            await ProcessCsvFile();
+            await ParseCsv();
         }
 
         _stats.LinesRead = _linesRead;
@@ -100,7 +100,7 @@ public class ParsingOrchestrator : IDisposable
         await _logger.Log($"Content parsing finished successfully. Time taken: {sw.Elapsed}", LogLevel.Success, LogContext.Parsing);
     }
 
-    private async Task ProcessSqlInsert()
+    private async Task ParseSqlInsert()
     {
         long sqlInsertStart = _readerPosition;
         
@@ -132,14 +132,14 @@ public class ParsingOrchestrator : IDisposable
             MalformedLimit = _sqlSamplesLimit,
         };
         SqlInsertParser parser = new(parsingContext);
-        ParsingResult result = await parser.ParseFile();
+        ParsingResult result = await parser.Parse();
         UpdateParsingState(result);
         
         _stats.Formats.Add(FormatEnum.SqlInsert);
         _stats.Delimiters.Add(',');
     }
 
-    private async Task ProcessCsvFile()
+    private async Task ParseCsv()
     {
         long csvFormatStart = _readerPosition;
 
@@ -187,7 +187,7 @@ public class ParsingOrchestrator : IDisposable
             MalformedLimit = _csvSamplesLimit,
         };
         CsvParser parser = new(parsingContext);
-        ParsingResult result = await parser.ParseFile();
+        ParsingResult result = await parser.Parse();
         UpdateParsingState(result);
         
         if (_possibleAsciiTable && delimiter == '|')

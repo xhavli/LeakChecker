@@ -14,7 +14,7 @@ public class CsvParser(ParsingContext parsingContext)
     private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
     private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new();
     
-    public async Task<ParsingResult> ParseFile()
+    public async Task<ParsingResult> Parse()
     {
         StreamReader reader = parsingContext.Reader;
         long startLine = parsingContext.StartLine;

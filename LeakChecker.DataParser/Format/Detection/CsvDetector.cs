@@ -31,8 +31,8 @@ public static class CsvDetector
             
             if (line.IsSqlInsert())
             {
-                await logger.Log($"Detected SQL Insert while sampling CSV file on line {startLine + linesRead}: {line}. " +
-                                  $"Returning back to recompute schema.", LogLevel.Warning);
+                await logger.Log($"Detected SQL Insert while sampling CSV file on line {startLine + linesRead}: {line}. " + 
+                                 $"Returning back to recompute schema.", LogLevel.Warning);
                 break;
             }
             
