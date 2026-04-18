@@ -19,23 +19,25 @@ public static class HashParser
         var root = jsonDoc.RootElement;
         
         bool isHash = root.GetProperty("success").GetBoolean();
-        if (isHash)
+        if (!isHash)
+            return null;
+        
+        var algorithms = root.GetProperty("algorithms").EnumerateArray();
+            
+        string hashName = algorithms.First().ToString();
+            
+        if (hashName.Trim().StartsWith("Base64", StringComparison.InvariantCultureIgnoreCase))
         {
-            var algorithms = root.GetProperty("algorithms").EnumerateArray();
-            
-            string hashName = algorithms.First().ToString();
-            
-            if (hashName.Trim().StartsWith("Base64", StringComparison.InvariantCultureIgnoreCase))
-            {
-                if (!Base64.IsValid(token, out _)) return (false, ItemEnum.Null);
-            }
-            
-            ItemEnum hashType = HashTypeMap.GetValueOrDefault(hashName.Trim(), ItemEnum.Null);
-            
-            return (isHash, hashType);
+            if (!Base64.IsValid(token, out _)) 
+                return null;
         }
-
-        return (false, ItemEnum.Null);
+            
+        ItemEnum hashType = HashTypeMap.GetValueOrDefault(hashName.Trim(), ItemEnum.Null);
+            
+        if (hashType != ItemEnum.Null)
+            return hashType;
+        
+        return null;
     }
 
     private static readonly Dictionary<string, ItemEnum> HashTypeMap = new(StringComparer.OrdinalIgnoreCase)

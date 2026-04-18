@@ -11,10 +11,6 @@ namespace LeakChecker.DataParser.Content.Detection;
 
 public static class ContentDetector
 {
-    private const string Person = "PERSON";
-    private const string Location = "LOCATION";
-    private const string Organization = "ORGANIZATION";
-    
     public static async Task<List<SchemaHeuristicRecord>> DetectLine(string line, char delimiter, IParseLogger logger)
     {
         line = line.Trim();
@@ -98,40 +94,24 @@ public static class ContentDetector
             List<PresidioEntity> analyzeResults = await PythonNerServiceRecognizer.TryRecognize(line);
             foreach (var entity in analyzeResults.OrderBy(e => e.Start))
             {
+                ItemEnum? itemType = PythonNerServiceRecognizer.MapEntityType(entity.Type);
+                if (itemType is null)
+                {
+                    await logger.Log($"Unsupported entity type : {entity.Type}", LogLevel.Warning, LogContext.PythonNerService);
+                    continue;
+                }
+                
                 string item = line.Substring(entity.Start, entity.End - entity.Start);
                 int position = CountDelimitersBefore(originalLine, item, delimiter);
-                string entityType = entity.Type;
-                switch (entityType)
+                
+                linePatterns.Add(new SchemaHeuristicRecord
                 {
-                    case Person:
-                        linePatterns.Add(new SchemaHeuristicRecord
-                        {
-                            Attribute = ItemEnum.Name,
-                            Position = position,
-                            DelimitersInside = item.Count(ch => ch == delimiter)
-                        });
-                        break;
-                    case Location:
-                        linePatterns.Add(new SchemaHeuristicRecord
-                        {
-                            Attribute = ItemEnum.Location,
-                            Position = position,
-                            DelimitersInside = item.Count(ch => ch == delimiter)
-                        });
-                        break;
-                    case Organization:
-                        linePatterns.Add(new SchemaHeuristicRecord
-                        {
-                            Attribute = ItemEnum.Organization,
-                            Position = position,
-                            DelimitersInside = item.Count(ch => ch == delimiter)
-                        });
-                        break;
-                    default:
-                        throw new Exception($"Unknown entity type: {entityType} returned from PythonNerService");
-                }
+                    Attribute = itemType.Value,
+                    Position = position,
+                    DelimitersInside = item.Count(ch => ch == delimiter)
+                });
 
-                // Console.WriteLine($"[{position}] {entityType} = {item}");
+                // Console.WriteLine($"[{position}] {itemType.Value} = {item}");
             }
 
             foreach (var entity in analyzeResults.OrderByDescending(e => e.Start))
@@ -230,23 +210,14 @@ public static class ContentDetector
         
         try
         {
-            List<PresidioEntity> analyzeResults = await PythonNerServiceRecognizer.TryRecognize(token);
-            if (analyzeResults.Count > 0)
-            {
-                string entityType = analyzeResults.First().Type;
-                return entityType switch
-                {
-                    Person => ItemEnum.Name,
-                    Location => ItemEnum.Location,
-                    Organization => ItemEnum.Organization,
-                    _ => throw new Exception($"Unknown entity type: {entityType} returned from PythonNerService"),
-                };
-            }
+            var itemType = await PythonNerServiceRecognizer.TryRecognizeToken(token);
+            if (itemType != null)
+                return itemType.Value;
         }
         catch (Exception e)
         {
             // throw new NotImplementedException($"Communication with PythonNerService failed. {e.Message}");
-            await logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Failure, LogContext.Content);
+            await logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Failure, LogContext.PythonNerService);
         }
         
         if (GuidRecognizer.TryRecognize(token, out _, out _))
@@ -258,8 +229,8 @@ public static class ContentDetector
         if (MaritalStatusParser.TryParse(token, out _))
             return ItemEnum.MaritalStatus;
         
-        if (IpAddressParser.TryParse(token, out ItemEnum itemType, out _))
-            return itemType;
+        if (IpAddressParser.TryParse(token, out ItemEnum ipType, out _))
+            return ipType;
         
         if (PhoneNumberParser.TryParse(token, out _))
             return ItemEnum.PhoneNumber;
@@ -275,14 +246,14 @@ public static class ContentDetector
         
         try
         {
-            var (isHash, hashType) = await HashParser.TryParse(token);
-            if (isHash)
-                return hashType;
+            var hashType = await HashParser.TryParse(token);
+            if (hashType != null)
+                return hashType.Value;
         }
         catch (Exception e)
         {
             // throw new NotImplementedException($"Communication with www.hashes.com failed. {e.Message}");
-            await logger.Log($"Communication with www.hashes.com failed. {e.Message}", LogLevel.Failure, LogContext.Content);
+            await logger.Log($"Communication with www.hashes.com failed. {e.Message}", LogLevel.Failure, LogContext.ExternalService);
         }
         
         return ItemEnum.Other;
