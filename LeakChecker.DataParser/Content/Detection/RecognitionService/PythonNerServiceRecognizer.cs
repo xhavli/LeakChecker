@@ -34,14 +34,14 @@ public static class PythonNerServiceRecognizer
         var json = await response.Content.ReadAsStringAsync();
         List<PresidioEntity> result = JsonSerializer.Deserialize<List<PresidioEntity>>(json, Options) ?? new();
         
-        return result.Count > 0 ? null : MapEntityType(result.First().Type);
+        return result.Count == 0 ? null : MapEntityType(result.First().Type);
     }
 
-    public static ItemEnum? MapEntityType(string entityType) => entityType switch
+    public static ItemEnum MapEntityType(string entityType) => entityType switch
     {
         Person => ItemEnum.Name,
         Location => ItemEnum.Location,
         Organization => ItemEnum.Organization,
-        _ => null
+        _ => throw new Exception($"Unknown entity type: '{entityType}' returned from PythonNerService")
     };
 }

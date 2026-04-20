@@ -94,19 +94,13 @@ public static class ContentDetector
             List<PresidioEntity> analyzeResults = await PythonNerServiceRecognizer.TryRecognize(line);
             foreach (var entity in analyzeResults.OrderBy(e => e.Start))
             {
-                ItemEnum? itemType = PythonNerServiceRecognizer.MapEntityType(entity.Type);
-                if (itemType is null)
-                {
-                    await logger.Log($"Unsupported entity type : {entity.Type}", LogLevel.Warning, LogContext.PythonNerService);
-                    continue;
-                }
-                
+                ItemEnum itemType = PythonNerServiceRecognizer.MapEntityType(entity.Type);
                 string item = line.Substring(entity.Start, entity.End - entity.Start);
                 int position = CountDelimitersBefore(originalLine, item, delimiter);
                 
                 linePatterns.Add(new SchemaHeuristicRecord
                 {
-                    Attribute = itemType.Value,
+                    Attribute = itemType,
                     Position = position,
                     DelimitersInside = item.Count(ch => ch == delimiter)
                 });
