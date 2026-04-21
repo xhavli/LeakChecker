@@ -1,6 +1,6 @@
+using LeakChecker.DataParser.Content.Parse;
 using LeakChecker.DataParser.Format;
 using LeakChecker.DataParser.Helpers.Settings;
-using LeakChecker.DataParser.Orchestration;
 using LeakChecker.DataParser.Tests.Helpers.AppBuilder;
 using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
 using LeakChecker.DataParser.Tests.Helpers.Stats;
@@ -30,7 +30,7 @@ public class MixedFormatDetectionTests
         using var host = LeakCheckerApplicationFactory.CreateHost();
         var config = host.Services.GetRequiredService<ISettings>();
 
-        using var parser = new ParsingOrchestrator(filePath, _logger, stats, config);
+        using var parser = new ContentParser(filePath, _logger, stats, config);
 
         // Act
         await parser.ParseAsync();
@@ -52,7 +52,7 @@ public class MixedFormatDetectionTests
         using var host = LeakCheckerApplicationFactory.CreateHost();
         var config = host.Services.GetRequiredService<ISettings>();
 
-        using var parser = new ParsingOrchestrator(filePath, _logger, stats, config);
+        using var parser = new ContentParser(filePath, _logger, stats, config);
 
         // Act
         await parser.ParseAsync();
@@ -74,7 +74,7 @@ public class MixedFormatDetectionTests
         using var host = LeakCheckerApplicationFactory.CreateHost();
         var config = host.Services.GetRequiredService<ISettings>();
 
-        using var parser = new ParsingOrchestrator(filePath, _logger, stats, config);
+        using var parser = new ContentParser(filePath, _logger, stats, config);
 
         // Act
         await parser.ParseAsync();
