@@ -1,4 +1,3 @@
-using System.Net.Mail;
 using LeakChecker.DataParser.Content.Detection.ItemParsing;
 using LeakChecker.DataParser.Content.Detection.ItemRecognition;
 using LeakChecker.DataParser.Content.Detection.RecognitionService;
@@ -17,75 +16,33 @@ public static class ContentDetector
         string originalLine = line;
         List<SchemaHeuristicRecord> linePatterns = new();
         
-        if (WebRecognizer.TryRecognize(line, out List<string> stringUris, out List<Uri> uris))
+        if (WebRecognizer.TryRecognize(line, out List<string> uris, out _))
         {
-            if (stringUris.Count == uris.Count)
+            foreach (var uri in uris.OrderByDescending(s => s.Length))
             {
-                foreach (var uri in stringUris.OrderByDescending(s => s.Length))
-                {
-                    int position = CountDelimitersBefore(originalLine, uri, delimiter);
-                    // Console.WriteLine($"[{position}] {ItemEnum.Web} = {uri}");
-
-                    linePatterns.Add(new SchemaHeuristicRecord
-                    {
-                        Attribute = ItemEnum.Web,
-                        Position = position,
-                        DelimitersInside = uri.Count(ch => ch == delimiter)
-                    });
-                    line = line.Replace(uri, "");
-                }
-            }
-            else
-            {
-                await logger.Log("stringUris.Count != uris.Count", LogLevel.Warning, LogContext.Content);
+                int position = CountDelimitersBefore(originalLine, uri, delimiter);
+                AddLinePatterns(linePatterns, position, ItemEnum.Web, uri, delimiter);
+                line = line.Replace(uri, "");
             }
         }
         
-        if (EmailRecognizer.TryRecognize(line, out List<string> stringEmails, out List<MailAddress> emails))
+        if (EmailRecognizer.TryRecognize(line, out List<string> emails, out _))
         {
-            if (stringEmails.Count == emails.Count)
+            foreach (var email in emails)
             {
-                foreach (var email in stringEmails)
-                {
-                    int position = CountDelimitersBefore(originalLine, email, delimiter);
-                    // Console.WriteLine($"[{position}] {ItemEnum.Email} = {email}");
-
-                    linePatterns.Add(new SchemaHeuristicRecord
-                    {
-                        Attribute = ItemEnum.Email,
-                        Position = position,
-                        DelimitersInside = email.Count(ch => ch == delimiter)
-                    });
-                    line = line.Replace(email, "", StringComparison.InvariantCultureIgnoreCase);
-                }
-            }
-            else
-            {
-                await logger.Log("stringEmails.Count != emails.Count", LogLevel.Warning, LogContext.Content);
+                int position = CountDelimitersBefore(originalLine, email, delimiter);
+                AddLinePatterns(linePatterns, position, ItemEnum.Email, email, delimiter);
+                line = line.Replace(email, "", StringComparison.InvariantCultureIgnoreCase);
             }
         }
         
-        if (TimestampRecognizer.TryRecognize(line, out List<string> stringTimeStamps, out List<DateTime> timeStamps))
+        if (TimestampRecognizer.TryRecognize(line, out List<string> timeStamps, out _))
         {
-            if (stringTimeStamps.Count == timeStamps.Count)
+            foreach (var timeStamp in timeStamps.OrderByDescending(ts => ts.Length))
             {
-                foreach (var timeStamp in stringTimeStamps.OrderByDescending(ts => ts.Length))
-                {
-                    int position = CountDelimitersBefore(originalLine, timeStamp, delimiter);
-                    // Console.WriteLine($"[{position}] {ItemEnum.TimeStamp} = {timeStamp}");
-
-                    linePatterns.Add(new SchemaHeuristicRecord
-                    {
-                        Attribute = ItemEnum.Timestamp,
-                        Position = position,
-                        DelimitersInside = timeStamp.Count(ch => ch == delimiter)
-                    });
-                    line = line.Replace(timeStamp, "", StringComparison.InvariantCultureIgnoreCase);
-                }
-            }
-            else
-            {
-                await logger.Log("stringTimeStamps.Count != timeStamps.Count", LogLevel.Warning, LogContext.Content);
+                int position = CountDelimitersBefore(originalLine, timeStamp, delimiter);
+                AddLinePatterns(linePatterns, position, ItemEnum.Timestamp, timeStamp, delimiter);
+                line = line.Replace(timeStamp, "", StringComparison.InvariantCultureIgnoreCase);
             }
         }
         
@@ -97,15 +54,7 @@ public static class ContentDetector
                 ItemEnum itemType = PythonNerServiceRecognizer.MapEntityType(entity.Type);
                 string item = line.Substring(entity.Start, entity.End - entity.Start);
                 int position = CountDelimitersBefore(originalLine, item, delimiter);
-                
-                linePatterns.Add(new SchemaHeuristicRecord
-                {
-                    Attribute = itemType,
-                    Position = position,
-                    DelimitersInside = item.Count(ch => ch == delimiter)
-                });
-
-                // Console.WriteLine($"[{position}] {itemType.Value} = {item}");
+                AddLinePatterns(linePatterns, position, itemType, item, delimiter);
             }
 
             foreach (var entity in analyzeResults.OrderByDescending(e => e.Start))
@@ -119,27 +68,13 @@ public static class ContentDetector
             await logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Failure,LogContext.Content);
         }
         
-        if (GuidRecognizer.TryRecognize(line, out List<string> stringGuids, out List<Guid> guids))
+        if (GuidRecognizer.TryRecognize(line, out List<string> stringGuids, out _))
         {
-            if (stringGuids.Count == guids.Count)
+            foreach (var guid in stringGuids)
             {
-                foreach (var guid in stringGuids)
-                {
-                    int position = CountDelimitersBefore(originalLine, guid, delimiter);
-                    // Console.WriteLine($"[{position}] {ItemEnum.Id} = {guid}");
-
-                    linePatterns.Add(new SchemaHeuristicRecord
-                    {
-                        Attribute = ItemEnum.Id,
-                        Position = position,
-                        DelimitersInside = guid.Count(ch => ch == delimiter)
-                    });
-                    line = line.Replace(guid, "");
-                }
-            }
-            else
-            {
-                await logger.Log("stringGuids.Count != guids.Count", LogLevel.Warning, LogContext.Content);
+                int position = CountDelimitersBefore(originalLine, guid, delimiter);
+                AddLinePatterns(linePatterns, position, ItemEnum.Id, guid, delimiter);
+                line = line.Replace(guid, "");
             }
         }
         
@@ -179,13 +114,7 @@ public static class ContentDetector
                 }
             }
             
-            linePatterns.Add(new SchemaHeuristicRecord
-            {
-                Position = i,
-                Attribute = itemType,
-                DelimitersInside = token.Count(ch => ch == delimiter)
-            });
-            // Console.WriteLine($"[{i}] {itemType} = {token}");
+            AddLinePatterns(linePatterns, i, itemType, token, delimiter);
         }
         
         return linePatterns;
@@ -268,5 +197,15 @@ public static class ContentDetector
                 count++;
         }
         return count;
+    }
+    
+    private static void AddLinePatterns(List<SchemaHeuristicRecord> linePatterns, int position, ItemEnum itemType, string itemValue, char delimiter)
+    {
+        linePatterns.Add(new SchemaHeuristicRecord
+        {
+            Attribute = itemType,
+            Position = position,
+            DelimitersInside = itemValue.Count(ch => ch == delimiter)
+        });
     }
 }
