@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Globalization;
 
 namespace LeakChecker.DataParser.Helpers.Extensions;
@@ -110,6 +111,23 @@ public static class StringExtensions
                 span[i] = state[j];
             }
         });
+    }
+    
+    public static string RemoveWhitespaces(this string input)
+    {
+        char[] buffer = ArrayPool<char>.Shared.Rent(input.Length);
+        int j = 0;
+
+        foreach (char c in input)
+        {
+            if (!char.IsWhiteSpace(c))
+                buffer[j++] = c;
+        }
+
+        string result = new string(buffer, 0, j);
+        ArrayPool<char>.Shared.Return(buffer);
+
+        return result;
     }
     
     

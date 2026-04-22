@@ -1,4 +1,3 @@
-using LeakChecker.DataParser.Helpers.DataNormalization;
 using PhoneNumbers;
 
 namespace LeakChecker.DataParser.Content.Detection.ItemParsing;
@@ -40,11 +39,5 @@ public static class PhoneNumberParser
         }
         
         return false;
-    }
-    
-    public static NormalizedData NormalizePhoneNumber(string value)
-    {
-        value = value.Replace(" ", "");
-        return new NormalizedData(ItemEnum.PhoneNumber, value);
     }
 }
