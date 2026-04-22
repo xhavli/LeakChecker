@@ -17,7 +17,7 @@ public static class ExcelParser
         Dictionary<int, Dictionary<int, ItemEnum>> schemas = 
             await ExcelDetector.DetectFormat(filePath, logger, settings.ExcelSamples, settings.SchemaThreshold);
 
-        await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
+        await using var stream = File.OpenRead(filePath);
         using var reader = ExcelReaderFactory.CreateReader(stream);
 
         long rowsRead = 0;
