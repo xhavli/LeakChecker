@@ -38,6 +38,8 @@ public enum ItemEnum
     //    "plaintext" is "pass" in hashcat    //
     ////////////////////////////////////////////
     
+    Hash,
+    
     // MD4
     MD4,
     
