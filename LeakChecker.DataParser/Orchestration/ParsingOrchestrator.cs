@@ -70,7 +70,7 @@ public class ParsingOrchestrator(
         }
         catch (Exception e)
         {
-            logger.Log($"{parseStats.ParseId} : {parseStats.FileName}: {e}", LogLevel.Failure, LogContext.Execution);
+            logger.Log($"{parseStats.ParseId} : {parseStats.FileName}: {e}", LogLevel.Failure, LogContext.Parsing);
         }
         finally
         {
