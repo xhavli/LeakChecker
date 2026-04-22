@@ -91,11 +91,25 @@ public static class StringExtensions
             return true;
         
         if (line.All(ch => char.GetUnicodeCategory(ch) == UnicodeCategory.DashPunctuation)) // or UnicodeCategory.OtherPunctuation 
-            return true; // Sql comment boundary
+            return true; // SQL comment boundary
         if (line.LastIndexOf("--", StringComparison.Ordinal) == 0)
-            return true; // Sql comment start
+            return true; // SQL comment start
         
         return false;
+    }
+    
+    public static string Reverse(this string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        return string.Create(input.Length, input, (span, state) =>
+        {
+            for (int i = 0, j = state.Length - 1; i < state.Length; i++, j--)
+            {
+                span[i] = state[j];
+            }
+        });
     }
     
     
