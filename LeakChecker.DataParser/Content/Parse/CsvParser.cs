@@ -70,7 +70,7 @@ public class CsvParser(ParsingContext parsingContext)
             await ParseRow(row);
             if (_cachedRecords.Count > 2000)
             {
-                await DatabaseFacade.SaveUserMany(_cachedRecords, _parseId);
+                await _database.SaveUserMany(_cachedRecords, _parseId);
                 _cachedRecords.Clear();
             }
             
@@ -81,7 +81,7 @@ public class CsvParser(ParsingContext parsingContext)
                 break;
         }
         
-        await DatabaseFacade.SaveUserMany(_cachedRecords, _parseId);
+        await _database.SaveUserMany(_cachedRecords, _parseId);
         
         return new ParsingResult
         {
@@ -122,7 +122,7 @@ public class CsvParser(ParsingContext parsingContext)
             i = nextIndex;
         }
 
-        // TODO: forward to content storage
+        // Forward to content storage
         _cachedRecords.Add(record);
     }
     

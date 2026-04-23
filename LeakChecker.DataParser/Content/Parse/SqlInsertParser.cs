@@ -130,7 +130,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
                             await ParseRow(row);
                             if (_cachedRecords.Count > 2000)
                             {
-                                await DatabaseFacade.SaveUserMany(_cachedRecords, _parseId);
+                                await _database.SaveUserMany(_cachedRecords, _parseId);
                                 _cachedRecords.Clear();
                             }
                             malformedReadSequence = 0;
@@ -162,7 +162,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
                 break;
         }
 
-        await DatabaseFacade.SaveUserMany(_cachedRecords, _parseId);
+        await _database.SaveUserMany(_cachedRecords, _parseId);
         
         return new ParsingResult
         {
@@ -272,7 +272,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
             // Console.WriteLine($"[{i}] {schemaEntry} = {row[i]}");
         }
         
-        // TODO: forward to content storage
+        // Forward to content storage
         _cachedRecords.Add(record);
     }
 }
