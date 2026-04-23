@@ -13,6 +13,7 @@ public class CsvParser(ParsingContext parsingContext)
     private readonly IParseLogger _logger = parsingContext.Logger;
     private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
     private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new();
+    private readonly IDatabase _database = parsingContext.Settings.Database;
     
     public async Task<ParsingResult> Parse()
     {

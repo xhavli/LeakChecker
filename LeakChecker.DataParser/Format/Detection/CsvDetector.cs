@@ -15,9 +15,9 @@ public static class CsvDetector
         IParseLogger logger = parsingContext.Logger;
         StreamReader reader = parsingContext.Reader;
         char delimiter = parsingContext.Delimiter;
-        int samplesLimit = parsingContext.SamplesLimit;
+        int samplesLimit = parsingContext.Settings.CsvSamples;
         long startLine = parsingContext.StartLine;
-        int threshold = parsingContext.Threshold;
+        int threshold = parsingContext.Settings.SchemaThreshold;
         
         int linesRead = 0;
         int samplesCount = 0;

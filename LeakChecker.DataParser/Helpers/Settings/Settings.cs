@@ -49,6 +49,7 @@ public class Settings : ISettings
             DefaultUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
             Environment = jsonSettings.Environment!,
             Verbose = jsonSettings.Verbose,
+            Database = new MongoDbDatabaseFacade()
         };
     }
 }

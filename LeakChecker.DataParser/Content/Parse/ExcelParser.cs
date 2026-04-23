@@ -14,8 +14,7 @@ public static class ExcelParser
 
     public static async Task ParseAsync(string filePath, IParseLogger logger, IParseStats stats, ISettings settings)
     {
-        Dictionary<int, Dictionary<int, ItemEnum>> schemas = 
-            await ExcelDetector.DetectFormat(filePath, logger, settings.ExcelSamples, settings.SchemaThreshold);
+        Dictionary<int, Dictionary<int, ItemEnum>> schemas = await ExcelDetector.DetectFormat(filePath, logger, settings);
 
         await using var stream = File.OpenRead(filePath);
         using var reader = ExcelReaderFactory.CreateReader(stream);

@@ -12,6 +12,8 @@ namespace LeakChecker.DataParser.Content.Parse;
 
 public class ContentParser : IDisposable
 {
+    // Settings
+    private readonly ISettings _settings;
     // Parsing state
     private long _linesRead;
     private long _recordsRead;
@@ -23,11 +25,8 @@ public class ContentParser : IDisposable
     // Logging and Statistics
     private readonly IParseStats _stats;
     private readonly IParseLogger _logger;
-    // Default constants
-    private static int _sqlSamplesLimit;
-    private static int _csvSamplesLimit;
+    // Constants
     private const long ParseLimit = long.MaxValue;
-    private readonly int _schemaThreshold;
 
     private bool _possibleAsciiTable;
 
@@ -38,9 +37,7 @@ public class ContentParser : IDisposable
         _reader = new StreamReader(stream, _encoding, detectEncodingFromByteOrderMarks: false);
         _logger = logger;
         _stats = stats;
-        _schemaThreshold = settings.SchemaThreshold;
-        _csvSamplesLimit = settings.CsvSamples;
-        _sqlSamplesLimit = settings.SqlSamples;
+        _settings = settings;
     }
 
     public async Task ParseAsync()
@@ -111,9 +108,9 @@ public class ContentParser : IDisposable
             Reader = _reader,
             Logger = _logger,
             Stats = _stats,
+            Settings = _settings,
             StartLine = _linesRead,
-            SamplesLimit = _sqlSamplesLimit,
-            Threshold = _schemaThreshold,
+            MalformedLimit = _settings.SqlSamples,
         };
         var schema = await SqlInsertDetector.DetectSchema(detectionContext);
 
@@ -124,10 +121,11 @@ public class ContentParser : IDisposable
             Reader = _reader,
             Logger = _logger,
             Stats = _stats,
+            Settings = _settings,
             Schema = schema,
             StartLine = _linesRead,
             ParseLimit = ParseLimit,
-            MalformedLimit = _sqlSamplesLimit,
+            MalformedLimit = _settings.SqlSamples,
         };
         SqlInsertParser parser = new(parsingContext);
         ParsingResult result = await parser.Parse();
@@ -164,10 +162,10 @@ public class ContentParser : IDisposable
             Reader = _reader,
             Logger = _logger,
             Stats = _stats,
+            Settings = _settings,
             Delimiter = delimiter,
             StartLine = _linesRead,
-            SamplesLimit = _csvSamplesLimit,
-            Threshold = _schemaThreshold,
+            MalformedLimit = _settings.CsvSamples,
         };
         var schema = await CsvDetector.DetectSchema(detectionContext);
         
@@ -178,11 +176,12 @@ public class ContentParser : IDisposable
             Reader = _reader,
             Logger = _logger,
             Stats = _stats,
+            Settings = _settings,
             Schema = schema,
             Delimiter = delimiter,
             StartLine = _linesRead,
             ParseLimit = ParseLimit,
-            MalformedLimit = _csvSamplesLimit,
+            MalformedLimit = _settings.CsvSamples,
         };
         CsvParser parser = new(parsingContext);
         ParsingResult result = await parser.Parse();

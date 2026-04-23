@@ -2,14 +2,14 @@ using System.Text;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
+using LeakChecker.DataParser.Tests.Helpers.Settings;
 
 namespace LeakChecker.DataParser.Tests.Format.Detection;
 
 public class ExcelDetectorTests
 {
-    private const int SamplesLimit = 23;
-    private const int ThresholdPercent = 50;
     private readonly string _testDataDirectory;
+    private readonly NullSettings _settings = new();
     private readonly NullParseLogger _logger = new();
 
     public ExcelDetectorTests()
@@ -44,8 +44,7 @@ public class ExcelDetectorTests
         string filePath = Path.Combine(_testDataDirectory, fileName);
         
         // Act
-        Dictionary<int, Dictionary<int, ItemEnum>> result = 
-            await ExcelDetector.DetectFormat(filePath, _logger, SamplesLimit, ThresholdPercent);
+        Dictionary<int, Dictionary<int, ItemEnum>> result = await ExcelDetector.DetectFormat(filePath, _logger, _settings);
 
         // Assert
         Assert.Equal(expectedSchema, result);
@@ -78,8 +77,7 @@ public class ExcelDetectorTests
         string filePath = Path.Combine(_testDataDirectory, fileName);
         
         // Act
-        Dictionary<int, Dictionary<int, ItemEnum>> result = 
-            await ExcelDetector.DetectFormat(filePath, _logger, SamplesLimit, ThresholdPercent);
+        Dictionary<int, Dictionary<int, ItemEnum>> result = await ExcelDetector.DetectFormat(filePath, _logger, _settings);
 
         // Assert
         Assert.Equal(expectedSchema, result);

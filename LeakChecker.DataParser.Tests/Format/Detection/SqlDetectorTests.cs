@@ -1,16 +1,15 @@
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Format.Detection;
-using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
+using LeakChecker.DataParser.Tests.Helpers.Settings;
 using LeakChecker.DataParser.Tests.Helpers.Stats;
 
 namespace LeakChecker.DataParser.Tests.Format.Detection;
 
 public class SqlDetectorTests
 {
-    private const int SqlSamplesLimit = 31;
-    private const int ThresholdPercent = 50;
     private readonly string _testDataDirectory;
+    private readonly NullSettings _settings = new();
     private readonly NullParseLogger _logger = new();
     
     private static readonly Dictionary<int, ItemEnum> SqlSchema = new()
@@ -50,9 +49,8 @@ public class SqlDetectorTests
             Reader = streamReader,
             Logger = _logger,
             Stats = stats,
+            Settings = _settings,
             StartLine = 0,
-            SamplesLimit = SqlSamplesLimit,
-            Threshold = ThresholdPercent,
         };
 
         // Act

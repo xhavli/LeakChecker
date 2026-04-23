@@ -1,15 +1,15 @@
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
+using LeakChecker.DataParser.Tests.Helpers.Settings;
 using LeakChecker.DataParser.Tests.Helpers.Stats;
 
 namespace LeakChecker.DataParser.Tests.Format.Detection;
 
 public class CsvDetectorTests
 {
-    private const int CsvSamplesLimit = 103;
-    private const int ThresholdPercent = 50;
     private readonly string _testDataDirectory;
+    private readonly NullSettings _settings = new();
     private readonly NullParseLogger _logger = new();
     
     public CsvDetectorTests()
@@ -48,10 +48,9 @@ public class CsvDetectorTests
             Reader = reader,
             Logger = _logger,
             Stats = stats,
+            Settings = _settings,
             Delimiter = delimiter,
             StartLine = 0,
-            SamplesLimit = CsvSamplesLimit,
-            Threshold = ThresholdPercent,
         };
 
         // Act
@@ -84,10 +83,9 @@ public class CsvDetectorTests
             Reader = reader,
             Logger = _logger,
             Stats = stats,
+            Settings = _settings,
             Delimiter = delimiter,
             StartLine = 0,
-            SamplesLimit = CsvSamplesLimit,
-            Threshold = ThresholdPercent,
         };
 
         // Act
@@ -117,10 +115,9 @@ public class CsvDetectorTests
             Reader = reader,
             Logger = _logger,
             Stats = stats,
+            Settings = _settings,
             Delimiter = delimiter,
             StartLine = 0,
-            SamplesLimit = CsvSamplesLimit,
-            Threshold = ThresholdPercent,
         };
 
         // Act
@@ -150,10 +147,9 @@ public class CsvDetectorTests
             Reader = reader,
             Logger = _logger,
             Stats = stats,
+            Settings = _settings,
             Delimiter = delimiter,
             StartLine = 0,
-            SamplesLimit = CsvSamplesLimit,
-            Threshold = ThresholdPercent,
         };
 
         // Act

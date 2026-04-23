@@ -20,9 +20,9 @@ public static class SqlInsertDetector
     {
         IParseLogger logger = parsingContext.Logger;
         StreamReader reader = parsingContext.Reader;
-        int threshold = parsingContext.Threshold;
+        int threshold = parsingContext.Settings.SchemaThreshold;
         long linesRead = parsingContext.StartLine;
-        int samplesLimit = parsingContext.SamplesLimit;
+        int samplesLimit = parsingContext.Settings.SqlSamples;
         
         int parenDepth = 0;
         int samplesRead = 0;

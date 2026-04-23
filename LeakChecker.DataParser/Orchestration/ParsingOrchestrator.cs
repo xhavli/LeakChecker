@@ -55,7 +55,7 @@ public class ParsingOrchestrator(
             }
 
             await parseLogger.LogParseStats(parseStats);
-            // await DatabaseFacade.SaveParseOne(parseStats);
+            await settings.Database.SaveParseOne(parseStats);
 
             lock (stats)
             {

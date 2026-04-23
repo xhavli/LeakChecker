@@ -3,6 +3,7 @@ using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Content.Detection;
 using LeakChecker.DataParser.Content.Parse;
 using LeakChecker.DataParser.Format.Schema;
+using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging.Parse;
 
 namespace LeakChecker.DataParser.Format.Detection;
@@ -10,15 +11,20 @@ namespace LeakChecker.DataParser.Format.Detection;
 public static class ExcelDetector
 {
     public static async Task<Dictionary<int, Dictionary<int, ItemEnum>>> DetectFormat(
-        string filePath, IParseLogger logger, int detectSamples, int thresholdPercent)
+        string filePath, IParseLogger logger, ISettings settings)
     {
         await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
         using var reader = ExcelReaderFactory.CreateReader(stream);
         
         await logger.LogSchemaDetectionHeader();
+        
+        int detectSamples = settings.ExcelSamples;
+        int thresholdPercent = settings. SchemaThreshold;
         Dictionary<int, Dictionary<int, ItemEnum>> schemas = new();
         
+
         int sheetNumber = 0;
+        
         do
         {
             sheetNumber++;

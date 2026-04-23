@@ -1,5 +1,7 @@
 using System.Text;
+using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Helpers.Settings;
+using LeakChecker.DataParser.Tests.Helpers.Database;
 
 namespace LeakChecker.DataParser.Tests.Helpers.Settings;
 
@@ -24,6 +26,7 @@ public class NullSettings : ISettings
     public Encoding DefaultUtf8 { get; init; } = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
     public string Environment { get; init; } = string.Empty;
     public bool Verbose { get; init; } = false;
+    public IDatabase Database { get; init; } = new NullDatabase();
 
     public void ApplyGlobalSettings()
     {

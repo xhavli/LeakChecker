@@ -1,3 +1,4 @@
+using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Parse;
 
@@ -13,8 +14,8 @@ public class ParsingContext
     public required IParseLogger Logger;
 
     public long StartLine;
-    public int Threshold;
     public long ParseLimit;
-    public int SamplesLimit;
     public int MalformedLimit;
+    
+    public required ISettings Settings;
 }
