@@ -7,7 +7,7 @@ using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
 using LeakChecker.DataParser.Tests.Helpers.Stats;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LeakChecker.DataParser.Tests.Orchestration.ParsingOrchestratorTests.FormatDetectionTests;
+namespace LeakChecker.DataParser.Tests.Content.Parse.ContentParserTests.FormatDetectionTests;
 
 public class SingleFormatDetectionTests
 {
@@ -87,9 +87,10 @@ public class SingleFormatDetectionTests
         NullParseStats stats = new NullParseStats();
         using var host = LeakCheckerApplicationFactory.CreateHost();
         var config = host.Services.GetRequiredService<ISettings>();
+        ExcelParser excelParser = new ExcelParser(filePath, _logger, stats, config);
         
         // Act
-        await ExcelParser.ParseAsync(filePath, _logger, stats, config);
+        await excelParser.ParseAsync();
 
         // Assert
         Assert.Single(stats.Formats);

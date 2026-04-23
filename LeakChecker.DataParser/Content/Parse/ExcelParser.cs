@@ -1,4 +1,5 @@
 using ExcelDataReader;
+using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Format;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Helpers.Settings;
@@ -8,11 +9,14 @@ using LeakChecker.DataParser.Stats.Parse;
 
 namespace LeakChecker.DataParser.Content.Parse;
 
-public static class ExcelParser
+public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats, ISettings settings)
 {
     private const long ParseLimit = long.MaxValue;
+    private readonly Guid _parseId = stats.ParseId;
+    private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new();
+    private readonly IDatabase _database = settings.Database;
 
-    public static async Task ParseAsync(string filePath, IParseLogger logger, IParseStats stats, ISettings settings)
+    public async Task ParseAsync()
     {
         Dictionary<int, Dictionary<int, ItemEnum>> schemas = await ExcelDetector.DetectFormat(filePath, logger, settings);
 
@@ -49,24 +53,13 @@ public static class ExcelParser
                                      $"got {fieldsCount}.", LogLevel.Warning);
                 } 
                 
-                for (int column = 0; column < fieldsCount; column++)
+                await ParseRow(reader, schema, sheetName, row);
+                if (_cachedRecords.Count > 2000)
                 {
-                    // GetValue(i)? is necessary to have wit ? because can be null
-                    string value = reader.GetValue(column)?.ToString() ?? string.Empty;
-                    
-                    if (string.IsNullOrWhiteSpace(value))
-                        continue;
-
-                    ItemEnum type = schema[column];
-
-                    if (type == ItemEnum.Empty)
-                        type = ItemEnum.Other;
-
-                    //TODO forward to storage
-                    // Console.WriteLine($"Row [{row}] Column [{column}], {type}: {value}");
+                    await _database.SaveUserMany(_cachedRecords, _parseId);
+                    _cachedRecords.Clear();
                 }
                 
-                // Console.WriteLine();
                 if (rowsRead == ParseLimit)
                     break;
             }
@@ -74,18 +67,52 @@ public static class ExcelParser
             rowsRead += row;
         }
         while (reader.NextResult());
+
+        await _database.SaveUserMany(_cachedRecords, _parseId);
         
         stats.MalformedRead = 0; // Cant properly detect
         stats.RecordsRead = recordsRead;
         stats.LinesRead = rowsRead;
         stats.BytesRead = new FileInfo(filePath).Length;
     }
+
+    private async Task ParseRow(IExcelDataReader reader, Dictionary<int, ItemEnum> schema, string sheetName, int row)
+    {
+        Dictionary<ItemEnum, List<string>> record = new();
+
+        for (int column = 0; column < reader.FieldCount; column++)
+        {
+            // GetValue(i)? can be null
+            string value = reader.GetValue(column)?.ToString() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(value))
+                continue;
+
+            if (!schema.TryGetValue(column, out ItemEnum type))
+            {
+                await logger.Log($"Unmapped Excel column[{column}] at sheet [{sheetName}] row [{row}] = {value}",
+                                 LogLevel.Warning, LogContext.Parsing);
+                continue;
+            }
+
+            if (type == ItemEnum.Empty)
+                type = ItemEnum.Other;
+
+            if (!record.TryGetValue(type, out List<string>? values))
+                record[type] = values = new List<string>();
+
+            values.Add(value);
+        }
+
+        // Forward to content storage
+        _cachedRecords.Add(record);
+    }
     
     public static bool IsRowEmpty(IExcelDataReader reader)
     {
         for (int column = 0; column < reader.FieldCount; column++)
         {
-            // GetValue(i)? is necessary to have wit ? because can be null
+            // GetValue(i)? can be null
             string value = reader.GetValue(column)?.ToString() ?? string.Empty;
             
             if (!string.IsNullOrWhiteSpace(value))

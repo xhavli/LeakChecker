@@ -38,7 +38,8 @@ public class ParsingOrchestrator(
         {
             if (FileHelper.IsExcel(filePath))
             {
-                await ExcelParser.ParseAsync(filePath, parseLogger, parseStats, settings);
+                ExcelParser excelParser = new(filePath, parseLogger, parseStats, settings);
+                await excelParser.ParseAsync();
             }
             else
             {
