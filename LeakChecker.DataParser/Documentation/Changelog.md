@@ -375,11 +375,10 @@ Database replication take around 8 hours
 - Use DI in `ContentParser`, create factories for almost everything with interfaces to override the normal behavior
 - Remove async await chains or ConfigureAwait(false) to increase performance due to marshaling 
 - Tune `DelimiterDetector` to work with same occurence of delimiter on each line of differs much then lower probability
+- Replace `StringExtension` `IsSqlInsert` with `ReaderExtension` `IsSqlInsert` which will read predefined lines returns true/false and discard buffers
 - Parse also `JSON`, `HTML` and `XML`
 - Fix byte counting position tracking system
-- Remove async from Execution logging chain
 - Make proper parallel `ArchiveExtractor` using batching technique
-- Replace `StringExtension` `IsSqlInsert` with `ReaderExtension` `IsSqlInsert` which will read predefined lines returns true/false and discard buffers
 - When all is number then not bind `ItemEnum.Other`, else try to recompute without other as an `ItemEnum.Empty`, when full numbers, bind `ItemEnum.Id`
 - Wait properly for python start. READY signal is sent earlier than running python API
 - Make `TestBase` with EncProvider(RegisterEnc) and projectDir and testDir paths, variables and dependencies, use DI
