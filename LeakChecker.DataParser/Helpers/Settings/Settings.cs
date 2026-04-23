@@ -1,4 +1,5 @@
 using System.Text;
+using LeakChecker.DataParser.Database;
 
 namespace LeakChecker.DataParser.Helpers.Settings;
 
@@ -22,6 +23,7 @@ public class Settings : ISettings
     public required Encoding DefaultUtf8 { get; init; }
     public required string Environment { get; init; }
     public required bool Verbose { get; init; }
+    public required IDatabase Database { get; init; }
 
     public static Settings FromJson(JsonSettings jsonSettings)
     {
