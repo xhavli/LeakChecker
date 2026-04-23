@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeakChecker.DataParser", "L
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeakChecker.DataParser.Tests", "LeakChecker.DataParser.Tests\LeakChecker.DataParser.Tests.csproj", "{41F754ED-08EB-464E-A10B-AB7603540657}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeakChecker.Common", "LeakChecker.Common\LeakChecker.Common.csproj", "{89EA6AD9-69C7-4BAA-B585-B95258E8E0EF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{41F754ED-08EB-464E-A10B-AB7603540657}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{41F754ED-08EB-464E-A10B-AB7603540657}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{41F754ED-08EB-464E-A10B-AB7603540657}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89EA6AD9-69C7-4BAA-B585-B95258E8E0EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89EA6AD9-69C7-4BAA-B585-B95258E8E0EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89EA6AD9-69C7-4BAA-B585-B95258E8E0EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89EA6AD9-69C7-4BAA-B585-B95258E8E0EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
