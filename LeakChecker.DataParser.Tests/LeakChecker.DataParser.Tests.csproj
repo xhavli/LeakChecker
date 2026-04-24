@@ -12,6 +12,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <!-- PrivateAssets is like sealed class, can be used in this project -->
+        <!-- IncludeAssets specify only assets which have to be used from all -->
         <PackageReference Include="coverlet.collector" Version="10.0.0">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
