@@ -1,7 +1,6 @@
 using System.Text;
 using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Helpers.Settings;
-using LeakChecker.DataParser.Tests.Helpers.Database;
 
 namespace LeakChecker.DataParser.Tests.Helpers.Settings;
 
@@ -31,12 +30,8 @@ public class NullSettings : ISettings
     public void ApplyGlobalSettings()
     {
         ApplyEncodingSettings();
-        
-        if (Environment == "Test")
-            System.Environment.SetEnvironmentVariable("LeakCheckerRunningTest", "true");
-        else
-            System.Environment.SetEnvironmentVariable("LeakCheckerRunningTest", null);
-            
+
+        System.Environment.SetEnvironmentVariable("LeakCheckerRunningTest", Environment == "Test" ? "true" : null);
     }
 
     private void ApplyEncodingSettings()

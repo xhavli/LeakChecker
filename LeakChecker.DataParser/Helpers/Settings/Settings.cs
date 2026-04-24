@@ -30,6 +30,7 @@ public class Settings : ISettings
         ArgumentNullException.ThrowIfNull(jsonSettings);
 
         jsonSettings.Validate();
+        IDatabase database = ResolveDatabase(jsonSettings.DbProvider);
         
         return new Settings
         {
@@ -51,7 +52,19 @@ public class Settings : ISettings
             DefaultUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
             Environment = jsonSettings.Environment!,
             Verbose = jsonSettings.Verbose,
-            Database = new MongoDbDatabaseFacade()
+            Database = database
+        };
+    }
+
+    private static IDatabase ResolveDatabase(string? dbProvider)
+    {
+        if (string.IsNullOrWhiteSpace(dbProvider))
+            return new NullDatabase();
+
+        return dbProvider.Trim().ToLowerInvariant() switch
+        {
+            "mongodb" => new MongoDbFacade(),
+            _ => throw new NotSupportedException($"Unsupported database provider '{dbProvider}'.")
         };
     }
 }

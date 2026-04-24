@@ -18,6 +18,7 @@ public class JsonSettings
     public int ExcelSamples { get; set; }
     public string? Environment { get; set; }
     public bool Verbose { get; set; }
+    public string? DbProvider { get; set; }
 
     public void Validate()
     {

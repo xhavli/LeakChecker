@@ -4,7 +4,7 @@ using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Database;
 
-public class MongoDbDatabaseFacade : IDatabase
+public class MongoDbFacade : IDatabase
 {
     public async Task SaveUserOne(Dictionary<ItemEnum, List<string>> record, Guid parseId)
     {

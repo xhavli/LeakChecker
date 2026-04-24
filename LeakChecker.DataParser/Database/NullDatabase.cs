@@ -1,8 +1,7 @@
 using LeakChecker.DataParser.Content;
-using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Stats.Parse;
 
-namespace LeakChecker.DataParser.Tests.Helpers.Database;
+namespace LeakChecker.DataParser.Database;
 
 public class NullDatabase : IDatabase
 {
