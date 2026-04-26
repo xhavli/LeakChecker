@@ -99,7 +99,7 @@ public static class StringExtensions
         return false;
     }
     
-    public static string Reverse(this string input)
+    public static string ReverseString(this string input)
     {
         if (string.IsNullOrEmpty(input))
             return input;

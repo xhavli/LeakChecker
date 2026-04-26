@@ -79,7 +79,7 @@ public static class UserDocumentFactory
                     emailElement.Add(new BsonDocument
                     {
                         { "Raw", email },
-                        { "DomainReversed", domain.Reverse() },
+                        { "DomainReversed", domain.ReverseString() },
                         { "Lowercase", email.ToLowerInvariant() }
                     });
                 }
