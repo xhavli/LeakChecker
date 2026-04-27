@@ -10,9 +10,9 @@ public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourc
 {
     public Guid ParseId { get; init; } = parseLogger.ParseId;
     public Guid ExecutionId { get; init; } = executionId;
+    public string ParsePath { get; set; } = string.Empty;
     public string SourcePath { get; init; } = sourcePath;
     public string FileName => Path.GetFileName(SourcePath);
-    public string ParsePath { get; set; } = string.Empty;
     public long FileSize { get; init; } = new FileInfo(sourcePath).Length;
     public long LinesRead { get; set; }
     public long BytesRead { get; set; }
@@ -24,27 +24,30 @@ public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourc
     public List<FormatEnum> Formats { get; init; } = new();
     public List<string> Context { get; init; } = new();
     public List<Dictionary<int, ItemEnum>> Schemas { get; init; } = new();
-    public DateTime ParseStart { get; init; } = parseLogger.ParseStart;
+    public DateTime ParseStart { get; init; } = DateTime.Now;
     public DateTime ParseEnd { get; set; }
     
     public TimeSpan Duration => ParseEnd - ParseStart;
     public double ByteSpeed => Duration.TotalSeconds > 0 ? BytesRead / Duration.TotalSeconds : 0;
     public double LineSpeed => Duration.TotalSeconds > 0 ? LinesRead / Duration.TotalSeconds : 0;
-    public double Accuracy =>
-        RecordsRead <= 0 ? 0 : Math.Max(0, (double)(RecordsRead - MalformedRead) / RecordsRead * 100);
+    public double Accuracy => RecordsRead <= 0 ? 0 : Math.Max(0, (double)(RecordsRead - MalformedRead) / RecordsRead * 100);
 
     public BsonDocument ToBsonDocument()
     {
-        var document = new BsonDocument
+        return new BsonDocument
         {
             { nameof(ParseId), new BsonBinaryData(ParseId, GuidRepresentation.Standard) },
             { nameof(ExecutionId), new BsonBinaryData(ExecutionId, GuidRepresentation.Standard) },
             { nameof(SourcePath), SourcePath },
+            { nameof(FileName), FileName },
             { nameof(FileSize), FileSize },
-            { nameof(MalformedRead), MalformedRead },
-            { nameof(LinesRead), LinesRead },
             { nameof(BytesRead), BytesRead },
+            { nameof(ByteSpeed), ByteSpeed },
+            { nameof(LinesRead), LinesRead },
+            { nameof(LineSpeed), LineSpeed },
             { nameof(RecordsRead), RecordsRead },
+            { nameof(MalformedRead), MalformedRead },
+            { nameof(Accuracy), Accuracy },
             { nameof(Encoding), Encoding?.WebName is null ? BsonNull.Value : Encoding.WebName },
             { nameof(EncodingSegments), new BsonArray(EncodingSegments.Select(segment => new BsonDocument
                 {
@@ -62,9 +65,8 @@ public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourc
             },
             { nameof(ParseStart), ParseStart.ToUniversalTime() },
             { nameof(ParseEnd), ParseEnd.ToUniversalTime() },
+            { nameof(Duration), Duration.Seconds },
         };
-
-        return document;
     }
 }
 
