@@ -11,7 +11,7 @@ public class ExecutionLogger : IDisposable
     public readonly DateTime ExecutionStart;
     
     private readonly StreamWriter _writer;
-    private readonly object _logLock = new();
+    private readonly Lock _logLock = new();
     private const ConsoleColor InfoColor = ConsoleColor.DarkBlue;
     private const ConsoleColor WarningColor = ConsoleColor.DarkYellow;
     private const ConsoleColor SuccessColor = ConsoleColor.Green;
@@ -108,16 +108,16 @@ public class ExecutionLogger : IDisposable
             LogInternal($"    Parse ID: {id}");
         }
 
-        LogInternal($"Correct records parsed: {stats.RecordsParsed:N0}");
-        LogInternal($"Malformed records parsed: {stats.MalformedRecordsRead:N0}");
+        LogInternal($"Correct records parsed: {stats.RecordsRead:N0}");
+        LogInternal($"Malformed records read: {stats.MalformedRead:N0}");
         LogInternal($"Parse accuracy (correct vs malformed): {stats.Accuracy:N2} %");
 
-        LogInternal($"Lines parsed: {stats.LinesParsed:N0}");
+        LogInternal($"Lines parsed: {stats.LinesRead:N0}");
         LogInternal($"Line speed: {stats.LineSpeed:N2} lines/second");
         
-        double parsedMb = (double) stats.BytesParsed / SizeEnum.MegaByte;
-        double parsedGb = (double) stats.BytesParsed / SizeEnum.GigaByte;
-        LogInternal($"Bytes parsed: {stats.BytesParsed:N0} B / {parsedMb:F2} MiB / {parsedGb:F2} GiB");
+        double parsedMb = (double) stats.BytesRead / SizeEnum.MegaByte;
+        double parsedGb = (double) stats.BytesRead / SizeEnum.GigaByte;
+        LogInternal($"Bytes parsed: {stats.BytesRead:N0} B / {parsedMb:F2} MiB / {parsedGb:F2} GiB");
         LogInternal($"Byte speed: {stats.ByteSpeed:N2} bytes/second");
 
         LogInternal($"Execution start: {ExecutionStart.ToString("F", CultureInfo.InvariantCulture)}");
