@@ -45,22 +45,19 @@ public static class UserDocumentFactory
             
             if (type == ItemEnum.Username)
             { 
-                document.Add(nameof(ItemEnum.Username), new BsonArray(values));
-                
                 for (int i = 0; i < property.Value.Count; i++)
                 {
                     property.Value[i] = property.Value[i].ToLowerInvariant();
                 }
                 
-                document.Add(nameof(ItemEnum.Email), usernameElement);
+                document.Add(nameof(ItemEnum.Username), new BsonArray(values));
                 document.Add(nameof(ItemEnum.UsernameLowercase), new BsonArray(property.Value));
+                
                 continue;
             }
 
             if (type == ItemEnum.Email)
             {
-                // BsonArray emailArray = new();
-
                 foreach (var email in property.Value)
                 {
                     var parts = email.Split('@');
@@ -77,15 +74,6 @@ public static class UserDocumentFactory
                     
                     if (!domains.Contains(domainReversed))
                         domains.Add(BsonValue.Create(domainReversed));
-
-                    // BsonDocument emailDocument = new BsonDocument
-                    // {
-                    //     { "Raw", email },
-                    //     { "DomainReversed", domain.ReverseString() },
-                    //     { "Lowercase", email.ToLowerInvariant() }
-                    // };
-                    //
-                    // emailArray.Add(emailDocument);
                 }
 
                 string[] emailLowercase = new string[property.Value.Count];
@@ -97,7 +85,6 @@ public static class UserDocumentFactory
                 document.Add(nameof(ItemEnum.Email), new BsonArray(values));
                 document.Add(nameof(ItemEnum.EmailLowercase), new BsonArray(emailLowercase));
                 
-                // document.Add(nameof(ItemEnum.Email), emailElement);
                 continue;
             }
             
