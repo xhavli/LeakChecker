@@ -1,5 +1,5 @@
 using System.Text;
-using LeakChecker.DataParser.Content;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
 using LeakChecker.DataParser.Tests.Helpers.Settings;

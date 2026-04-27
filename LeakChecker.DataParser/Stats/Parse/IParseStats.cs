@@ -1,7 +1,6 @@
 using System.Text;
-using LeakChecker.DataParser.Content;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Encodings;
-using LeakChecker.DataParser.Format;
 
 namespace LeakChecker.DataParser.Stats.Parse;
 

@@ -1,4 +1,5 @@
 using System.Globalization;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Helpers.DataNormalization;
 
 namespace LeakChecker.DataParser.Content.Detection.ItemParsing;

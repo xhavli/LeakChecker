@@ -1,5 +1,5 @@
 using ExcelDataReader;
-using LeakChecker.DataParser.Content;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Content.Detection;
 using LeakChecker.DataParser.Content.Parse;
 using LeakChecker.DataParser.Format.Schema;

@@ -1,3 +1,4 @@
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Parse;

@@ -1,4 +1,4 @@
-using LeakChecker.DataParser.Content;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Helpers.DataNormalization;
 using LeakChecker.DataParser.Helpers.Extensions;
 using MongoDB.Bson;
@@ -11,6 +11,7 @@ public static class UserDocumentFactory
     {
         BsonArray hashes = new();
         BsonArray others = new();
+        BsonArray domains = new();
         BsonDocument document = new BsonDocument { { "ParseId", new BsonBinaryData(parseId, GuidRepresentation.Standard) } };
 
         foreach (var property in record)
@@ -28,6 +29,7 @@ public static class UserDocumentFactory
             if (type == ItemEnum.Other)
             {
                 others.Add(new BsonArray(values));
+                continue;
             }
 
             if (type >= ItemEnum.Hash)
@@ -43,24 +45,21 @@ public static class UserDocumentFactory
             
             if (type == ItemEnum.Username)
             { 
-                var usernameElement = new BsonArray();
-
-                foreach (var username in property.Value)
+                document.Add(nameof(ItemEnum.Username), new BsonArray(values));
+                
+                for (int i = 0; i < property.Value.Count; i++)
                 {
-                    usernameElement.Add(new BsonDocument
-                    {
-                        { "Raw", username },
-                        { "Lowercase", username.ToLowerInvariant() }
-                    });
+                    property.Value[i] = property.Value[i].ToLowerInvariant();
                 }
                 
                 document.Add(nameof(ItemEnum.Email), usernameElement);
+                document.Add(nameof(ItemEnum.UsernameLowercase), new BsonArray(property.Value));
                 continue;
             }
 
             if (type == ItemEnum.Email)
             {
-                var emailElement = new BsonArray();
+                // BsonArray emailArray = new();
 
                 foreach (var email in property.Value)
                 {
@@ -74,17 +73,31 @@ public static class UserDocumentFactory
                     }
 
                     // Valid Email
-                    var domain = parts[1].ToLowerInvariant();
+                    string domainReversed = parts[1].ToLowerInvariant().ReverseString();
+                    
+                    if (!domains.Contains(domainReversed))
+                        domains.Add(BsonValue.Create(domainReversed));
 
-                    emailElement.Add(new BsonDocument
-                    {
-                        { "Raw", email },
-                        { "DomainReversed", domain.ReverseString() },
-                        { "Lowercase", email.ToLowerInvariant() }
-                    });
+                    // BsonDocument emailDocument = new BsonDocument
+                    // {
+                    //     { "Raw", email },
+                    //     { "DomainReversed", domain.ReverseString() },
+                    //     { "Lowercase", email.ToLowerInvariant() }
+                    // };
+                    //
+                    // emailArray.Add(emailDocument);
+                }
+
+                string[] emailLowercase = new string[property.Value.Count];
+                for (int i = 0; i < property.Value.Count; i++)
+                {
+                    emailLowercase[i] = property.Value[i].ToLowerInvariant();
                 }
                 
-                document.Add(nameof(ItemEnum.Email), emailElement);
+                document.Add(nameof(ItemEnum.Email), new BsonArray(values));
+                document.Add(nameof(ItemEnum.EmailLowercase), new BsonArray(emailLowercase));
+                
+                // document.Add(nameof(ItemEnum.Email), emailElement);
                 continue;
             }
             
@@ -96,6 +109,9 @@ public static class UserDocumentFactory
         
         if (others.Count > 0)
             document.Add(nameof(ItemEnum.Other), others);
+
+        if (domains.Count > 0)
+            document.Add(nameof(ItemEnum.DomainReversedLowercase), domains);
 
         return document;
     }

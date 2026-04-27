@@ -1,5 +1,6 @@
 using System.Buffers.Text;
 using System.Text.Json;
+using LeakChecker.Common.Enums;
 
 namespace LeakChecker.DataParser.Content.Detection.ItemParsing;
 

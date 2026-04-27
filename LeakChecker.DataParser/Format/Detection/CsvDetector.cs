@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Content.Detection;
 using LeakChecker.DataParser.Format.Schema;

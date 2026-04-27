@@ -1,24 +1,30 @@
-namespace LeakChecker.DataParser.Content;
+namespace LeakChecker.Common.Enums;
 
 public enum ItemEnum
 {
     // Control
-    Previous,
-    Empty,
     Null,
+    Empty,
+    Previous,
+    
+    // Search
+    NameLowercase,
+    EmailLowercase,
+    UsernameLowercase,
+    DomainReversedLowercase,
     
     // Content
+    Mac,
     Ipv4,
     Ipv6,
-    Mac,
-    PhoneNumber,
     Email,
+    PhoneNumber,
     Web,
+    NetTicks,
+    FileTime,
     Timestamp,
     UnixSeconds,
     UnixMilliseconds,
-    NetTicks,
-    FileTime,
     Location,
     Organization,
     Name,
@@ -27,6 +33,7 @@ public enum ItemEnum
     Iban,
     Username,
     Password,
+    Hash,
     Salt,
     Token,
     Id,
@@ -35,10 +42,9 @@ public enum ItemEnum
     ////////////////////////////////////////////
     //                Hash types              //
     ////////////////////////////////////////////
-    //    "plaintext" is "pass" in hashcat    //
+    //    "plaintext" is "pass" in Hashcat    //
     ////////////////////////////////////////////
     
-    Hash,
     
     // MD4
     MD4,

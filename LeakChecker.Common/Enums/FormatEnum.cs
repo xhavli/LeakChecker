@@ -1,4 +1,4 @@
-namespace LeakChecker.DataParser.Format;
+namespace LeakChecker.Common.Enums;
 
 public enum FormatEnum
 {

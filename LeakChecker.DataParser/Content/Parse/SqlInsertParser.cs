@@ -1,4 +1,5 @@
 using System.Text;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Helpers.Extensions;
 using LeakChecker.DataParser.Logging;

@@ -1,5 +1,5 @@
 using System.Globalization;
-using LeakChecker.DataParser.Content;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Format.Schema;

@@ -1,4 +1,4 @@
-using LeakChecker.DataParser.Content;
+using LeakChecker.Common.Enums;
 
 namespace LeakChecker.DataParser.Format;
 

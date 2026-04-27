@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using LeakChecker.Common.Enums;
 
 namespace LeakChecker.DataParser.Content.Detection.ItemParsing;
 

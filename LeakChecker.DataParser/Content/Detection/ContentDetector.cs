@@ -1,3 +1,4 @@
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Content.Detection.ItemParsing;
 using LeakChecker.DataParser.Content.Detection.ItemRecognition;
 using LeakChecker.DataParser.Content.Detection.RecognitionService;

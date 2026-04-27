@@ -1,6 +1,6 @@
 using ExcelDataReader;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Database;
-using LeakChecker.DataParser.Format;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging;

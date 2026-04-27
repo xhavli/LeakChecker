@@ -35,4 +35,8 @@
       <Folder Include="Content\Detection\RecognitionService\Python\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\LeakChecker.Common\LeakChecker.Common.csproj" />
+    </ItemGroup>
+
 </Project>

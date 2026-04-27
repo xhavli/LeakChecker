@@ -1,3 +1,4 @@
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Content;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;

@@ -1,3 +1,4 @@
+using LeakChecker.Common.Enums;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -7,9 +8,9 @@ public static class MongoDbRepository
 {
     private static readonly MongoClient Client = new("mongodb://localhost:27017");
     private static readonly IMongoDatabase Database = Client.GetDatabase("LeakCheckerDb");
-    private static readonly IMongoCollection<BsonDocument> UserCollection = Database.GetCollection<BsonDocument>("Users");
-    private static readonly IMongoCollection<BsonDocument> ParseCollection = Database.GetCollection<BsonDocument>("Parses");
-    private static readonly IMongoCollection<BsonDocument> ExecutionCollection = Database.GetCollection<BsonDocument>("Executions");
+    private static readonly IMongoCollection<BsonDocument> UserCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Users));
+    private static readonly IMongoCollection<BsonDocument> ParseCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Parses));
+    private static readonly IMongoCollection<BsonDocument> ExecutionCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Executions));
     private static readonly InsertManyOptions UnorderedOptions = new() { IsOrdered = false };
 
     public static async Task SaveUserDocument(BsonDocument document)
