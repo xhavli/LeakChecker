@@ -1,4 +1,5 @@
 using LeakChecker.Common.Enums;
+using LeakChecker.DataParser.Stats.Execution;
 using LeakChecker.DataParser.Stats.Parse;
 using MongoDB.Bson;
 
@@ -31,19 +32,19 @@ public class MongoDbFacade : IDatabase
     {
         await MongoDbRepository.SaveParsingDocument(stats.ToBsonDocument());
     }
-
-    public async Task SaveParseMany(List<ParseStats> stats)
+    
+    public async Task SaveExecutionOne(ExecutionStats stats)
     {
-        if (stats.Count == 0)
-            return;
+        await MongoDbRepository.SaveExecutionDocument(stats.ToBsonDocument());
+    }
+    
+    public async Task UpsertDashboardStats(ParseStats stats)
+    {
+        await MongoDbRepository.UpsertDashboardFromParse(stats);
+    }
 
-        var documents = new List<BsonDocument>();
-        
-        foreach (var stat in stats)
-        {
-            documents.Add(stat.ToBsonDocument());
-        }
-        
-        await MongoDbRepository.SaveParsingDocuments(documents);
+    public async Task<BsonDocument?> GetDashboardStats()
+    {
+        return await MongoDbRepository.GetDashboardStats();
     }
 }
