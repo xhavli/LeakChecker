@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Threading.Channels;
 using LeakChecker.DataParser.Content.Detection.RecognitionService;
+using LeakChecker.DataParser.Data;
 using LeakChecker.DataParser.Helpers.FileHelp;
 using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging;
@@ -76,6 +77,7 @@ public sealed class ExecutionOrchestrator(
 
             _stats.ExecutionEnd = DateTime.Now;
             logger.LogExecutionStats(_stats);
+            await settings.Database.SaveExecutionOne(_stats);
             
             logger.Log($"Execution finished successfully. Parsed {paths.Count()} files. Current DateTime is " + 
                        $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Execution);

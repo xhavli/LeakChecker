@@ -57,15 +57,9 @@ public class ParsingOrchestrator(
 
             await parseLogger.LogParseStats(parseStats);
             await settings.Database.SaveParseOne(parseStats);
+            await settings.Database.UpsertDashboardStats(parseStats);
 
-            lock (stats)
-            {
-                stats.FilesParsed.Add(parseStats.ParseId);
-                stats.LinesParsed += parseStats.LinesRead;
-                stats.BytesParsed += parseStats.BytesRead;
-                stats.RecordsParsed += parseStats.RecordsRead;
-                stats.MalformedRecordsRead += parseStats.MalformedRead;
-            }
+            stats.Update(parseStats);
         
             logger.Log($"Finished: {parseStats.FileName}", LogLevel.Success, LogContext.Parsing);
         }
