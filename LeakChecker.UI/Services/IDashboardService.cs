@@ -4,6 +4,7 @@ namespace LeakChecker.UI.Services;
 
 public interface IDashboardService
 {
-    Task<DashboardStats>  GetStatsAsync();
-    Task<List<ParseRow>>  GetRecentParsesAsync(int limit = 10);
+    Task<DashboardStats>        GetStatsAsync();
+    Task<List<ParseListModel>>  GetRecentParsesAsync(int limit = 50);
+    Task<ParseDetailModel?> GetParseByIdAsync(string mongoId);
 }

@@ -6,10 +6,11 @@ namespace LeakChecker.UI.Components.Pages;
 
 public class HomeBase : ComponentBase
 {
+    [Inject] protected NavigationManager Nav { get; set; } = default!;
     [Inject] private IDashboardService DashboardService { get; set; } = null!;
 
     protected DashboardStats    Stats        { get; private set; } = new();
-    protected List<ParseRow>    RecentParses { get; private set; } = [];
+    protected List<ParseListModel> RecentParses { get; set; } = [];
     protected bool              Loaded       { get; private set; }
     protected string?           Error        { get; private set; }
 
@@ -35,4 +36,7 @@ public class HomeBase : ComponentBase
             Loaded = true;
         }
     }
+    
+    protected static string AccuracyClass(double a) =>
+        a >= 99.8 ? "status-ok" : a >= 95 ? "status-warn" : "status-err";
 }

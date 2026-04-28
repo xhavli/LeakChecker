@@ -13,9 +13,7 @@ public class DashboardService(IDatabase database, IMongoDatabase db) : IDashboar
     public async Task<DashboardStats> GetStatsAsync()
     {
         var doc = await database.GetDashboardStats();
-
-        if (doc is null)
-            return new DashboardStats();
+        if (doc is null) return new DashboardStats();
 
         return new DashboardStats
         {
@@ -26,7 +24,7 @@ public class DashboardService(IDatabase database, IMongoDatabase db) : IDashboar
         };
     }
 
-    public async Task<List<ParseRow>> GetRecentParsesAsync(int limit = 50)
+    public async Task<List<ParseListModel>> GetRecentParsesAsync(int limit = 50)
     {
         var docs = await _parses
             .Find(FilterDefinition<BsonDocument>.Empty)
@@ -34,18 +32,29 @@ public class DashboardService(IDatabase database, IMongoDatabase db) : IDashboar
             .Limit(limit)
             .ToListAsync();
 
-        return docs.Select(Map).ToList();
+        return docs.Select(MapList).ToList();
     }
 
-    private static ParseRow Map(BsonDocument p)
+    public async Task<ParseDetailModel?> GetParseByIdAsync(string mongoId)
     {
-        var records  = p.GetValue("RecordsRead",   0L).ToInt64();
-        var malformed = p.GetValue("MalformedRead", 0L).ToInt64();
-        var start    = ParseDate(p, "ParseStart");
-        var end      = ParseDate(p, "ParseEnd");
+        var filter = Builders<BsonDocument>.Filter.Eq(
+            "_id", ObjectId.Parse(mongoId));
 
-        return new ParseRow
+        var doc = await _parses.Find(filter).FirstOrDefaultAsync();
+        return doc is null ? null : MapDetail(doc);
+    }
+
+    private static ParseListModel MapList(BsonDocument p)
+    {
+        var records   = p.GetValue("RecordsRead",   0L).ToInt64();
+        var malformed = p.GetValue("MalformedRead", 0L).ToInt64();
+        var start     = ParseDate(p, "ParseStart");
+        var end       = ParseDate(p, "ParseEnd");
+
+        return new ParseListModel
         {
+            MongoId     = p["_id"].AsObjectId.ToString(),
+            ParseId     = ReadGuid(p, "ParseId"),
             SourcePath  = p.GetValue("SourcePath", "?").AsString,
             RecordsRead = records,
             BytesRead   = p.GetValue("BytesRead", 0L).ToInt64(),
@@ -55,8 +64,67 @@ public class DashboardService(IDatabase database, IMongoDatabase db) : IDashboar
         };
     }
 
+    private static ParseDetailModel MapDetail(BsonDocument p)
+    {
+        var start = ParseDate(p, "ParseStart");
+        var end   = ParseDate(p, "ParseEnd");
+
+        var schemas = new List<Dictionary<string, string>>();
+        if (p.Contains("Schemas") && p["Schemas"] is BsonArray schemaArr)
+            foreach (var s in schemaArr.OfType<BsonDocument>())
+                schemas.Add(s.ToDictionary(e => e.Name, e => e.Value.ToString() ?? ""));
+
+        var segments = new List<EncodingSegmentModel>();
+        if (p.Contains("EncodingSegments") && p["EncodingSegments"] is BsonArray segArr)
+            foreach (var s in segArr.OfType<BsonDocument>())
+                segments.Add(new EncodingSegmentModel
+                {
+                    Start      = s.GetValue("Start",      0L).ToInt64(),
+                    Length     = s.GetValue("Length",     0L).ToInt64(),
+                    Encoding   = s.GetValue("Encoding", BsonNull.Value) != BsonNull.Value
+                        ? s["Encoding"].AsString 
+                        : null,
+                });
+
+        return new ParseDetailModel
+        {
+            MongoId      = p["_id"].AsObjectId.ToString(),
+            ParseId      = ReadGuid(p, "ParseId"),
+            ExecutionId  = ReadGuid(p, "ExecutionId"),
+            SourcePath   = p.GetValue("SourcePath",  "?").AsString,
+            FileSize     = p.GetValue("FileSize",    0L).ToInt64(),
+            BytesRead    = p.GetValue("BytesRead",   0L).ToInt64(),
+            ByteSpeed    = p.GetValue("ByteSpeed",   0.0).ToDouble(),
+            LinesRead    = p.GetValue("LinesRead",   0L).ToInt64(),
+            LineSpeed    = p.GetValue("LineSpeed",   0.0).ToDouble(),
+            RecordsRead  = p.GetValue("RecordsRead", 0L).ToInt64(),
+            MalformedRead = p.GetValue("MalformedRead", 0L).ToInt64(),
+            Accuracy     = p.GetValue("Accuracy",   0.0).ToDouble(),
+            ParseStart   = start,
+            ParseEnd     = end,
+            Duration     = end > start ? end - start : TimeSpan.Zero,
+            Encoding     = p.GetValue("Encoding", BsonNull.Value) != BsonNull.Value
+                               ? p["Encoding"].AsString : null,
+            EncodingSegments = segments,
+            Formats      = p.Contains("Formats")    && p["Formats"]    is BsonArray fa
+                               ? fa.Select(v => v.AsString).ToList() : [],
+            Delimiters   = p.Contains("Delimiters") && p["Delimiters"] is BsonArray da
+                               ? da.Select(v => v.AsString[0]).ToList() : [],
+            Context      = p.Contains("Context")    && p["Context"]    is BsonArray ca
+                               ? ca.Select(v => v.AsString).ToList() : [],
+            Schemas      = schemas,
+        };
+    }
+
     private static DateTime ParseDate(BsonDocument doc, string field) =>
         doc.GetValue(field, BsonNull.Value) != BsonNull.Value
             ? doc[field].ToUniversalTime()
             : DateTime.MinValue;
+
+    private static Guid ReadGuid(BsonDocument doc, string field)
+    {
+        if (!doc.Contains(field)) return Guid.Empty;
+        var v = doc[field];
+        return v.IsBsonBinaryData ? v.AsBsonBinaryData.ToGuid() : Guid.Empty;
+    }
 }
