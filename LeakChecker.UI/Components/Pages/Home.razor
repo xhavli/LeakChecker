@@ -1,0 +1,100 @@
+﻿@page "/"
+@using LeakChecker.UI.Helpers
+@inherits HomeBase
+
+<PageTitle>Dashboard</PageTitle>
+
+<style>
+    .dash-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+        margin-bottom: 2rem;
+    }
+    .metric-card {
+        padding: 1rem 1.25rem;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        background: #fff;
+    }
+    .metric-label { font-size: 12px; color: #868e96; margin-bottom: 6px; }
+    .metric-value { font-size: 24px; font-weight: 500; color: #212529; }
+    .metric-sub   { font-size: 12px; color: #adb5bd; margin-top: 4px; }
+    .section-title { font-size: 15px; font-weight: 500; color: #212529; margin-bottom: 12px; }
+    .parse-table { width: 100%; font-size: 13px; border-collapse: collapse; }
+    .parse-table th {
+        text-align: left;
+        font-weight: 500;
+        color: #868e96;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0 12px 8px 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .parse-table td {
+        padding: 10px 12px 10px 0;
+        color: #212529;
+        border-bottom: 1px solid #f1f3f5;
+        font-family: monospace;
+        font-size: 12px;
+    }
+    .parse-table tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: #e9ecef; color: #495057; font-family: sans-serif; }
+    .status-ok   { background: #d3f9d8; color: #2b8a3e; }
+    .status-warn { background: #fff3bf; color: #e67700; }
+    .status-err  { background: #ffe3e3; color: #c92a2a; }
+    .refresh-btn { font-size: 12px; color: #868e96; background: none; border: 1px solid #dee2e6; border-radius: 6px; padding: 4px 12px; cursor: pointer; }
+    .refresh-btn:hover { background: #f8f9fa; }
+    .error-box { padding: 1rem; border-radius: 8px; background: #fff5f5; border: 1px solid #ffc9c9; color: #c92a2a; font-size: 13px; }
+</style>
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+    <span style="font-size:18px;font-weight:500;">Dashboard</span>
+    <button class="refresh-btn" @onclick="Load">Refresh</button>
+</div>
+
+@if (Error is not null)
+{
+<div class="error-box">Could not connect to MongoDB: @Error</div>
+}
+else if (!Loaded)
+{
+<p style="color:#adb5bd;font-size:13px;">Loading...</p>
+}
+else
+{
+<div class="dash-grid">
+    <MetricCard Label="Users"            Value="@Formatter.Number(Stats.TotalRecords)" Sub="total records" />
+    <MetricCard Label="Parses"           Value="@Formatter.Number(Stats.TotalParses)"  Sub="total records" />
+    <MetricCard Label="Avg accuracy"     Value="@Formatter.Percent(Stats.Accuracy)"    Sub="weighted across all parses" />
+    <MetricCard Label="Total bytes read" Value="@Formatter.Bytes(Stats.TotalBytes)"    Sub="across all parses" />
+</div>
+
+<div class="section-title">Recent parses</div>
+<table class="parse-table">
+    <thead>
+    <tr>
+        <th>File Name</th>
+        <th>Records</th>
+        <th>Accuracy</th>
+        <th>File Size</th>
+        <th>Duration</th>
+        <th>Finished</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var p in RecentParses)
+    {
+    <tr>
+        <td title="@p.SourcePath">@Formatter.Truncate(p.FileName, 28)</td>
+        <td>@Formatter.Number(p.RecordsRead)</td>
+        <td><span class="badge @(p.Accuracy >= 99.8 ? "status-ok" : p.Accuracy >= 95 ? "status-warn" : "status-err")">@p.Accuracy.ToString("F2")%</span></td>
+        <td>@Formatter.Bytes(p.BytesRead)</td>
+        <td>@Formatter.Duration(p.Duration)</td>
+        <td>@p.ParseEnd.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+    </tr>
+    }
+    </tbody>
+</table>
+}
