@@ -71,10 +71,10 @@ else if (!Loaded)
 else
 {
 <div class="dash-grid">
-    <MetricCard Label="Users"            Value="@Formatter.Number(Stats.TotalRecords)" Sub="total records"  />
-    <MetricCard Label="Parses"           Value="@Formatter.Number(Stats.TotalParses)"  Sub="parse files"    />
+    <MetricCard Label="Identities"       Value="@Formatter.Number(Stats.TotalRecords)" Sub="total records"  />
+    <MetricCard Label="Parses"           Value="@Formatter.Number(Stats.TotalParses)"  Sub="parsed files"    />
     <MetricCard Label="Avg accuracy"     Value="@Formatter.Percent(Stats.Accuracy)"    Sub="weighted across all parses" />
-    <MetricCard Label="Total bytes read" Value="@Formatter.Bytes(Stats.TotalBytes)"    Sub="across all parses"  />
+    <MetricCard Label="Total bytes read" Value="@Formatter.Bytes(Stats.TotalBytes)"    Sub="all files"  />
 </div>
 
 <div class="section-title">Recent parses</div>
