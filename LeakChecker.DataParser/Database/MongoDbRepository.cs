@@ -43,7 +43,6 @@ public static class MongoDbRepository
     public static async Task UpsertDashboardFromParse(ParseStats stats)
     {
         var update = Builders<BsonDocument>.Update
-            .Inc("TotalUsers",    stats.RecordsRead - stats.MalformedRead)
             .Inc("TotalParses",   1L)
             .Inc("TotalBytes",    stats.BytesRead)
             .Inc("TotalRecords",  stats.RecordsRead)
@@ -58,5 +57,43 @@ public static class MongoDbRepository
         return await StatsCollection
             .Find(DashboardFilter)
             .FirstOrDefaultAsync();
+    }
+    
+    public static async Task CreateUsersIndexes()
+    {
+        var indexModels = new List<CreateIndexModel<BsonDocument>>
+        {
+            // IDX_DomainReversedLowercase_Asc_Sparse
+            new CreateIndexModel<BsonDocument>(
+                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.DomainReversedLowercase)),
+                new CreateIndexOptions { Name = "IDX_DomainReversedLowercase_Asc_Sparse", Sparse = true }
+            ),
+
+            // IDX_EmailLowercase_Asc_Sparse
+            new CreateIndexModel<BsonDocument>(
+                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.EmailLowercase)),
+                new CreateIndexOptions { Name = "IDX_EmailLowercase_Asc_Sparse", Sparse = true }
+            ),
+
+            // IDX_PhoneNumber_Asc_Sparse
+            new CreateIndexModel<BsonDocument>(
+                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.PhoneNumber)),
+                new CreateIndexOptions { Name = "IDX_PhoneNumber_Asc_Sparse", Sparse = true }
+            ),
+
+            // IDX_UsernameLowercase_Asc_Sparse
+            new CreateIndexModel<BsonDocument>(
+                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.UsernameLowercase)),
+                new CreateIndexOptions { Name = "IDX_UsernameLowercase_Asc_Sparse", Sparse = true }
+            ),
+
+            // IDX_Timestamps_Asc_Sparse
+            new CreateIndexModel<BsonDocument>(
+                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Timestamp)),
+                new CreateIndexOptions { Name = "IDX_Timestamps_Asc_Sparse", Sparse = true }
+            ),
+        };
+
+        await UsersCollection.Indexes.CreateManyAsync(indexModels);
     }
 }
