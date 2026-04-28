@@ -65,7 +65,6 @@ public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourc
             },
             { nameof(ParseStart), ParseStart.ToUniversalTime() },
             { nameof(ParseEnd), ParseEnd.ToUniversalTime() },
-            { nameof(Duration), Duration.Seconds },
         };
     }
 }

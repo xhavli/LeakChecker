@@ -46,7 +46,6 @@ public class ExecutionStats(Guid executionId, DateTime startTime)
             { nameof(Accuracy), Accuracy },
             { nameof(ExecutionStart), ExecutionStart.ToUniversalTime() },
             { nameof(ExecutionEnd), ExecutionEnd.ToUniversalTime() },
-            { nameof(Duration), Duration.Seconds },
         };
     }
 }
