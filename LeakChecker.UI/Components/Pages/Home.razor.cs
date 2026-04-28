@@ -2,7 +2,7 @@ using LeakChecker.UI.Models;
 using LeakChecker.UI.Services;
 using Microsoft.AspNetCore.Components;
 
-namespace LeakChecker.UI.Components.Pages;
+namespace LeakChecker.UI.Components;
 
 public class HomeBase : ComponentBase
 {
