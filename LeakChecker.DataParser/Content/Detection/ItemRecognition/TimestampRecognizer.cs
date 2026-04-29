@@ -6,21 +6,19 @@ public static class TimestampRecognizer
 {
     private const string Culture = Microsoft.Recognizers.Text.Culture.English; // or Culture.EnglishOthers
 
-    private sealed class TimestampCandidate
-    {
-        public required string Text { get; init; }
-        public required DateTime Value { get; init; }
-        public int Start { get; init; }
-        public int End { get; init; }
-    }
-    
-    public static Boolean TryRecognize(string line, out List<string> stringTimeStamps, out List<DateTime> timeStamps)
+    private readonly record struct TimestampCandidate(string Text, DateTime Value, int Start, int End);
+
+    public static bool TryRecognize(string line, out List<string> stringTimeStamps, out List<DateTime> timeStamps)
     {
         stringTimeStamps = new List<string>();
         timeStamps = new List<DateTime>();
-        var candidates = new List<TimestampCandidate>();
         
         var results = DateTimeRecognizer.RecognizeDateTime(line, Culture);
+        if (results.Count == 0)
+            return false;
+
+        var candidates = new List<TimestampCandidate>(results.Count);
+
         foreach (var result in results)
         {
             dynamic resolution = result.Resolution;
@@ -39,44 +37,59 @@ public static class TimestampRecognizer
             
             if (DateTime.TryParse(dateTimeString, out DateTime timeStamp))
             {
-                candidates.Add(new TimestampCandidate
-                {
-                    Text = result.Text,
-                    Value = timeStamp,
-                    Start = result.Start,
-                    End = result.End
-                });
+                candidates.Add(new TimestampCandidate(result.Text, timeStamp, result.Start, result.End));
             }
         }
 
-        var standaloneCandidates = candidates
-            .Where(candidate => !candidates.Any(other => IsNested(candidate, other)))
-            .GroupBy(c => new { c.Start, c.End })
-            .Select(g => g.First())
-            .ToList();
-
-        foreach (var candidate in standaloneCandidates)
+        foreach (var candidate in candidates)
         {
-            stringTimeStamps.Add(candidate.Text);
-            timeStamps.Add(candidate.Value);
+            if (IsStandalone(candidate, candidates))
+            {
+                stringTimeStamps.Add(candidate.Text);
+                timeStamps.Add(candidate.Value);
+            }
         }
 
-        return standaloneCandidates.Count > 0;
+        // Deduplicate by (Start, End) — keep first occurrence
+        if (stringTimeStamps.Count > 1)
+            DeduplicateByPosition(stringTimeStamps, timeStamps, candidates);
+
+        return stringTimeStamps.Count > 0;
     }
 
-    private static bool IsNested(TimestampCandidate candidate, TimestampCandidate other)
+    private static bool IsStandalone(TimestampCandidate candidate, List<TimestampCandidate> all)
     {
-        if (ReferenceEquals(candidate, other))
+        if (candidate.Start < 0 || candidate.End < candidate.Start)
             return false;
 
-        bool hasCandidateRange = candidate.Start >= 0 && candidate.End >= candidate.Start;
-        bool hasOtherRange = other.Start >= 0 && other.End >= other.Start;
+        foreach (var other in all)
+        {
+            if (other.Start < 0 || other.End < other.Start)
+                continue;
 
-        if (!hasCandidateRange || !hasOtherRange)
-            return false;
+            // candidate is nested inside other
+            if (candidate.Start >= other.Start &&
+                candidate.End <= other.End &&
+                (candidate.Start != other.Start || candidate.End != other.End))
+                return false;
+        }
+        return true;
+    }
 
-        return candidate.Start >= other.Start &&
-               candidate.End <= other.End &&
-               (candidate.Start != other.Start || candidate.End != other.End);
+    private static void DeduplicateByPosition(List<string> texts, List<DateTime> times, List<TimestampCandidate> candidates)
+    {
+        // Walk backwards and remove duplicates with same (Start, End)
+        var seen = new HashSet<(int, int)>(texts.Count);
+        // Rebuild from candidates that passed IsStandalone (parallel lists)
+        texts.Clear();
+        times.Clear();
+        foreach (var c in candidates)
+        {
+            if (c.Start >= 0 && c.End >= c.Start && seen.Add((c.Start, c.End)))
+            {
+                texts.Add(c.Text);
+                times.Add(c.Value);
+            }
+        }
     }
 }
