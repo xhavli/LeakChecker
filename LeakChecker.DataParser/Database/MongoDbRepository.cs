@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Stats.Parse;
 using MongoDB.Bson;
@@ -95,5 +96,54 @@ public static class MongoDbRepository
         };
 
         await UsersCollection.Indexes.CreateManyAsync(indexModels);
+    }
+    
+    public static async Task<List<BsonDocument>> SearchUsers(
+        string field,
+        ConditionType condition,
+        string value,
+        ObjectId? afterId = null,
+        int limit = 50)
+    {
+        FilterDefinition<BsonDocument> conditionFilter = condition switch
+        {
+            ConditionType.ExactMatch => Builders<BsonDocument>.Filter.AnyEq(field, value),
+            ConditionType.StartsWith => Builders<BsonDocument>.Filter.AnyIn(field,
+                [new BsonRegularExpression($"^{Regex.Escape(value)}")]),
+            ConditionType.EndsWith   => Builders<BsonDocument>.Filter.AnyIn(field,
+                [new BsonRegularExpression($"{Regex.Escape(value)}$")]),
+            ConditionType.Contains   => Builders<BsonDocument>.Filter.AnyIn(field,
+                [new BsonRegularExpression(Regex.Escape(value))]),
+            _ => throw new ArgumentOutOfRangeException(nameof(condition))
+        };
+
+        // Cursor: only fetch docs after the last seen _id
+        var cursorFilter = afterId.HasValue
+            ? Builders<BsonDocument>.Filter.And(conditionFilter,
+                Builders<BsonDocument>.Filter.Gt("_id", afterId.Value))
+            : conditionFilter;
+
+        return await UsersCollection
+            .Find(cursorFilter)
+            .Sort(Builders<BsonDocument>.Sort.Ascending("_id"))
+            .Limit(limit)
+            .ToListAsync();
+    }
+    
+    public static async Task<long> CountUsers(string field, ConditionType condition, string value)
+    {
+        FilterDefinition<BsonDocument> filter = condition switch
+        {
+            ConditionType.ExactMatch => Builders<BsonDocument>.Filter.AnyEq(field, value),
+            ConditionType.StartsWith => Builders<BsonDocument>.Filter.AnyIn(field,
+                [new BsonRegularExpression($"^{Regex.Escape(value)}")]),
+            ConditionType.EndsWith   => Builders<BsonDocument>.Filter.AnyIn(field,
+                [new BsonRegularExpression($"{Regex.Escape(value)}$")]),
+            ConditionType.Contains   => Builders<BsonDocument>.Filter.AnyIn(field,
+                [new BsonRegularExpression(Regex.Escape(value))]),
+            _ => throw new ArgumentOutOfRangeException(nameof(condition))
+        };
+
+        return await UsersCollection.CountDocumentsAsync(filter);
     }
 }
