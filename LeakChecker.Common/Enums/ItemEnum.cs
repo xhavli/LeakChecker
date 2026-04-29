@@ -20,6 +20,7 @@ public enum ItemEnum
     Email,
     PhoneNumber,
     Web,
+    Domain,
     NetTicks,
     FileTime,
     Timestamp,
