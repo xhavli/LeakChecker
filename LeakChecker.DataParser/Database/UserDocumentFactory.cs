@@ -12,16 +12,20 @@ public static class UserDocumentFactory
         BsonArray hashes = new();
         BsonArray others = new();
         BsonArray domains = new();
+        HashSet<string> domainsSeen = new(StringComparer.Ordinal);
         BsonDocument document = new BsonDocument { { "ParseId", new BsonBinaryData(parseId, GuidRepresentation.Standard) } };
 
         foreach (var property in record)
         {
+            List<string> rawValues = property.Value;
+            int count = rawValues.Count;
+
             ItemEnum type = property.Key;
-            var values = new List<BsonValue>();
-            
-            foreach (var item in property.Value)
+            var values = new List<BsonValue>(count);
+
+            for (int i = 0; i < count; i++)
             {
-                NormalizedData normalized = DataNormalizer.NormalizeData(property.Key, item);
+                NormalizedData normalized = DataNormalizer.NormalizeData(property.Key, rawValues[i]);
                 type = normalized.Type;
                 values.Add(BsonValue.Create(normalized.Value));
             }
@@ -32,68 +36,62 @@ public static class UserDocumentFactory
                 continue;
             }
 
-            if (type >= ItemEnum.Hash)
+            if (type > ItemEnum.Other)
             {
                 hashes.Add(new BsonDocument
                 {
                     { "Type", type.ToString() },
                     { "Values", new BsonArray(values) }
                 });
-                
                 continue;
             }
-            
+
             if (type == ItemEnum.Username)
-            { 
-                for (int i = 0; i < property.Value.Count; i++)
-                {
-                    property.Value[i] = property.Value[i].ToLowerInvariant();
-                }
-                
+            {
+                var lowercased = new BsonValue[count];
+                for (int i = 0; i < count; i++)
+                    lowercased[i] = BsonValue.Create(rawValues[i].ToLowerInvariant());
+
                 document.Add(nameof(ItemEnum.Username), new BsonArray(values));
-                document.Add(nameof(ItemEnum.UsernameLowercase), new BsonArray(property.Value));
-                
+                document.Add(nameof(ItemEnum.UsernameLowercase), new BsonArray(lowercased));
                 continue;
             }
 
             if (type == ItemEnum.Email)
             {
-                foreach (var email in property.Value)
+                var emailLowercase = new BsonValue[count];
+                for (int i = 0; i < count; i++)
                 {
-                    var parts = email.Split('@');
+                    string email = rawValues[i];
+                    string emailLower = email.ToLowerInvariant();
+                    emailLowercase[i] = BsonValue.Create(emailLower);
 
-                    // Invalid Email -> Other
-                    if (parts.Length != 2)
+                    int atIndex = emailLower.IndexOf('@');
+
+                    // Invalid email -> Other
+                    if (atIndex < 0 || atIndex != emailLower.LastIndexOf('@'))
                     {
                         others.Add(BsonValue.Create(email));
                         continue;
                     }
 
-                    // Valid Email
-                    string domainReversed = parts[1].ToLowerInvariant().ReverseString();
-                    
-                    if (!domains.Contains(domainReversed))
+                    // Valid email — extract and reverse domain from already-lowercased string
+                    string domainReversed = emailLower.AsSpan(atIndex + 1).ToString().ReverseString();
+                    if (domainsSeen.Add(domainReversed))
                         domains.Add(BsonValue.Create(domainReversed));
                 }
 
-                string[] emailLowercase = new string[property.Value.Count];
-                for (int i = 0; i < property.Value.Count; i++)
-                {
-                    emailLowercase[i] = property.Value[i].ToLowerInvariant();
-                }
-                
                 document.Add(nameof(ItemEnum.Email), new BsonArray(values));
                 document.Add(nameof(ItemEnum.EmailLowercase), new BsonArray(emailLowercase));
-                
                 continue;
             }
-            
+
             document.Add(type.ToString(), new BsonArray(values));
         }
 
         if (hashes.Count > 0)
             document.Add(nameof(ItemEnum.Hash), hashes);
-        
+
         if (others.Count > 0)
             document.Add(nameof(ItemEnum.Other), others);
 
