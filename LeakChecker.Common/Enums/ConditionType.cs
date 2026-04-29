@@ -2,8 +2,8 @@ namespace LeakChecker.Common.Enums;
 
 public enum ConditionType
 {
-    Match,
-    Contains,
     StartsWith,
-    EndsWith
+    Contains,
+    EndsWith,
+    ExactMatch,
 }
