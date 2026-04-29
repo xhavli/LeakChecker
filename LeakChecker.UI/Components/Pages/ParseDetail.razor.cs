@@ -43,4 +43,28 @@ public class ParseDetailBase : ComponentBase
         if (isOpen)
             await Js.InvokeVoidAsync("setSubSchemas", true);
     }
+    
+    protected static IEnumerable<(T Item, int Count)> RunLengthEncode<T>(IEnumerable<T> source) where T : notnull
+    {
+        using var e = source.GetEnumerator();
+        if (!e.MoveNext()) yield break;
+
+        var current = e.Current;
+        int count = 1;
+
+        while (e.MoveNext())
+        {
+            if (EqualityComparer<T>.Default.Equals(e.Current, current))
+            {
+                count++;
+            }
+            else
+            {
+                yield return (current, count);
+                current = e.Current;
+                count = 1;
+            }
+        }
+        yield return (current, count);
+    }
 }
