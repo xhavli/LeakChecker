@@ -1,3 +1,5 @@
+using MongoDB.Bson;
+
 namespace LeakChecker.UI.Helpers;
 
 public static class Formatter
@@ -20,5 +22,16 @@ public static class Formatter
         string[] suffixes = ["B", "KB", "MB", "GB", "TB"];
         int i = Math.Min((int)Math.Floor(Math.Log(bytes, 1024)), suffixes.Length - 1);
         return $"{bytes / Math.Pow(1024, i):F2} {suffixes[i]}";
+    }
+    
+    public static string FormatHashes(BsonArray hashes)
+    {
+        return string.Join(", ", hashes
+            .GroupBy(h => h["Type"].AsString)
+            .Select(g =>
+            {
+                var values = g.SelectMany(h => h["Values"].AsBsonArray.Select(v => v.ToString()));
+                return $"{g.Key}: [{string.Join(", ", values)}]";
+            }));
     }
 }
