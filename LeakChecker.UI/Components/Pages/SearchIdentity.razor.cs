@@ -18,9 +18,6 @@ public class SearchIdentityBase : ComponentBase
                 and not ItemEnum.UnixMilliseconds)
             .ToArray();
 
-    private static readonly HashSet<string> ResultFields =
-        SearchableItems.Select(i => i.ToString()).ToHashSet();
-
     protected string SearchValue { get; set; } = string.Empty;
     protected ConditionType SelectedCondition { get; set; } = ConditionType.ExactMatch;
     protected ItemEnum SelectedItem { get; set; } = ItemEnum.Email;
@@ -40,7 +37,7 @@ public class SearchIdentityBase : ComponentBase
     protected long? TotalMatched { get; set; }
     protected TimeSpan Elapsed { get; set; }
     private DateTime _searchStart;
-    private System.Threading.Timer? _timer;
+    private Timer? _timer;
 
     private (string field, string value, ConditionType condition) ResolveQuery()
     {
@@ -84,10 +81,10 @@ public class SearchIdentityBase : ComponentBase
         _lastId       = null;
         Results       = [];
         ResultColumns = [];
-        TotalMatched = null;
-        _searchStart = DateTime.UtcNow;
+        TotalMatched  = null;
+        _searchStart  = DateTime.UtcNow;
         _timer?.Dispose();
-        _timer = new System.Threading.Timer(_ =>
+        _timer = new Timer(_ =>
         {
             Elapsed = DateTime.UtcNow - _searchStart;
             InvokeAsync(StateHasChanged);
@@ -96,19 +93,15 @@ public class SearchIdentityBase : ComponentBase
         try
         {
             var (field, value, condition) = ResolveQuery();
+
             var docs = await MongoDbRepository.SearchUsers(field, condition, value, afterId: null, limit: PageSize);
-            
-
-            var docsTask  = MongoDbRepository.SearchUsers(field, condition, value, afterId: null, limit: PageSize);
-            var countTask = MongoDbRepository.CountUsers(field, condition, value);
-
-            await Task.WhenAll(docsTask, countTask);
-
-            TotalMatched = countTask.Result;
-            ApplyPage(docsTask.Result);
-
             ApplyPage(docs);
             HasSearched = true;
+            IsSearching = false;
+            await InvokeAsync(StateHasChanged); // show results immediately
+
+            TotalMatched = await MongoDbRepository.CountUsers(field, condition, value);
+            // ↑ timer is still ticking here
         }
         catch (Exception ex)
         {
@@ -116,10 +109,11 @@ public class SearchIdentityBase : ComponentBase
         }
         finally
         {
-            _timer?.Dispose();
+            _timer?.Dispose();  // ← stop timer only now
             _timer = null;
             Elapsed = DateTime.UtcNow - _searchStart; // final accurate value
             IsSearching = false;
+            await InvokeAsync(StateHasChanged);
         }
     }
 

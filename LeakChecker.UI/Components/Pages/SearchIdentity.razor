@@ -74,7 +74,7 @@
         display: flex;
         align-items: center;
         gap: 6px;
-        background: #1b6ec2;
+        background: #3d35a8 ;
         color: #fff;
     }
 
@@ -177,13 +177,15 @@
         </select>
 
         <button class="search-btn" @onclick="RunSearch" disabled="@(IsSearching || string.IsNullOrWhiteSpace(SearchValue))">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+            </svg>
             @if (IsSearching)
             {
                 <span>Searching…</span>
             }
             else
             {
-                <span>&#128269;</span>
                 <span>Search</span>
             }
         </button>
@@ -200,7 +202,7 @@
     <div class="search-card">
         <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:1rem;">
             <div class="section-title" style="margin-bottom:0;">Results in</div>
-            <div style="font-size:14px;color:#868e96;font-family:monospace;">
+            <div style="font-size:15px;color:#868e96;font-family:monospace;">
                 @Elapsed.ToString(@"hh\:mm\:ss")
             </div>
         </div>
