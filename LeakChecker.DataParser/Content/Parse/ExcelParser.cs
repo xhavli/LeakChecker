@@ -56,7 +56,7 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
                 await ParseRow(reader, schema, sheetName, row);
                 if (_cachedRecords.Count > 2000)
                 {
-                    await _database.SaveUserMany(_cachedRecords, _parseId);
+                    await _database.SaveIdentityMany(_cachedRecords, _parseId);
                     _cachedRecords.Clear();
                 }
                 
@@ -68,7 +68,7 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
         }
         while (reader.NextResult());
 
-        await _database.SaveUserMany(_cachedRecords, _parseId);
+        await _database.SaveIdentityMany(_cachedRecords, _parseId);
         
         stats.MalformedRead = 0; // Cant properly detect
         stats.RecordsRead = recordsRead;

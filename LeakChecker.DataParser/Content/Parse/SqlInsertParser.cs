@@ -131,7 +131,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
                             await ParseRow(row);
                             if (_cachedRecords.Count > 2000)
                             {
-                                await _database.SaveUserMany(_cachedRecords, _parseId);
+                                await _database.SaveIdentityMany(_cachedRecords, _parseId);
                                 _cachedRecords.Clear();
                             }
                             malformedReadSequence = 0;
@@ -163,7 +163,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
                 break;
         }
 
-        await _database.SaveUserMany(_cachedRecords, _parseId);
+        await _database.SaveIdentityMany(_cachedRecords, _parseId);
         
         return new ParsingResult
         {

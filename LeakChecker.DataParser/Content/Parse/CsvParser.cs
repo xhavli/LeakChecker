@@ -71,7 +71,7 @@ public class CsvParser(ParsingContext parsingContext)
             await ParseRow(row);
             if (_cachedRecords.Count > 2000)
             {
-                await _database.SaveUserMany(_cachedRecords, _parseId);
+                await _database.SaveIdentityMany(_cachedRecords, _parseId);
                 _cachedRecords.Clear();
             }
             
@@ -82,7 +82,7 @@ public class CsvParser(ParsingContext parsingContext)
                 break;
         }
         
-        await _database.SaveUserMany(_cachedRecords, _parseId);
+        await _database.SaveIdentityMany(_cachedRecords, _parseId);
         
         return new ParsingResult
         {
