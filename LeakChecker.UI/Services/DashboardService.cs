@@ -8,7 +8,7 @@ namespace LeakChecker.UI.Services;
 public class DashboardService(IDatabase database, IMongoDatabase db) : IDashboardService
 {
     private readonly IMongoCollection<BsonDocument> _parses =
-        db.GetCollection<BsonDocument>("Parsings");
+        db.GetCollection<BsonDocument>(nameof(CollectionType.Parsings));
 
     public async Task<DashboardStats> GetStatsAsync()
     {
