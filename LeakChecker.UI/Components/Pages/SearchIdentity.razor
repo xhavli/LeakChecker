@@ -74,7 +74,7 @@
         display: flex;
         align-items: center;
         gap: 6px;
-        background: #3d35a8 ;
+        background: #3d35a8;
         color: #fff;
     }
 
@@ -131,6 +131,31 @@
         background: #f8f9fa;
     }
 
+    .results-table td.col-source {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .source-badge {
+        display: inline-block;
+        font-family: sans-serif;
+        font-size: 11px;
+        font-weight: 500;
+        color: #5f3dc4;
+        background: #f3f0ff;
+        border: 1px solid #d0bfff;
+        border-radius: 4px;
+        padding: 1px 7px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 190px;
+        vertical-align: middle;
+        cursor: default;
+    }
+
     .empty-state {
         color: #adb5bd;
         font-size: 13px;
@@ -165,14 +190,14 @@
         <select class="search-select" @bind="SelectedCondition">
             @foreach (var c in Enum.GetValues<ConditionType>())
             {
-                <option value="@c">@c</option>
+            <option value="@c">@c</option>
             }
         </select>
 
         <select class="search-select" @bind="SelectedItem">
             @foreach (var item in SearchableItems)
             {
-                <option value="@item">@item</option>
+            <option value="@item">@item</option>
             }
         </select>
 
@@ -182,79 +207,89 @@
             </svg>
             @if (IsSearching)
             {
-                <span>Searching…</span>
+            <span>Searching…</span>
             }
             else
             {
-                <span>Search</span>
+            <span>Search</span>
             }
         </button>
     </div>
 
     @if (ErrorMessage is not null)
     {
-        <div class="error-msg">@ErrorMessage</div>
+    <div class="error-msg">@ErrorMessage</div>
     }
 </div>
 
 @if (HasSearched)
 {
-    <div class="search-card">
-        <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:1rem;">
-            <div class="section-title" style="margin-bottom:0;">Results in</div>
-            <div style="font-size:15px;color:#868e96;font-family:monospace;">
-                @Elapsed.ToString(@"hh\:mm\:ss")
-            </div>
+<div class="search-card">
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:1rem;">
+        <div class="section-title" style="margin-bottom:0;">Results in</div>
+        <div style="font-size:15px;color:#868e96;font-family:monospace;">
+            @Elapsed.ToString(@"hh\:mm\:ss")
         </div>
+    </div>
 
-        @if (Results.Count == 0)
-        {
-            <div class="empty-state">No records found.</div>
-        }
-        else
-        {
-            <div class="result-count">
-                Showing <strong>@TotalLoaded</strong> of <strong>@(TotalMatched?.ToString() ?? "…")</strong> records found
-            </div>
-            <div style="overflow-x:auto;">
-                <table class="results-table">
-                    <thead>
-                    <tr>
-                        @foreach (var col in ResultColumns)
-                        {
-                            <th>@col</th>
-                        }
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach (var row in Results)
-                    {
-                        <tr>
-                            @foreach (var col in ResultColumns)
-                            {
-                                <td>@row.GetValueOrDefault(col, "-")</td>
-                            }
-                        </tr>
-                    }
-                    </tbody>
-                </table>
-                @if (HasMore)
+    @if (Results.Count == 0)
+    {
+    <div class="empty-state">No records found.</div>
+    }
+    else
+    {
+    <div class="result-count">
+        Showing <strong>@TotalLoaded</strong> of <strong>@(TotalMatched?.ToString() ?? "…")</strong> records found
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="results-table">
+            <thead>
+            <tr>
+                @foreach (var col in ResultColumns)
                 {
-                    <div style="margin-top:1rem;text-align:center;">
-                        <button class="search-btn" style="margin:0 auto;" @onclick="LoadMore" disabled="@IsLoadingMore">
-                            @if (IsLoadingMore)
-                            {
-                                <span>Loading…</span>
-                            }
-                            else
-                            {
-                                <span>Load more</span>
-                            }
-                        </button>
-                    </div>
+                <th>@col</th>
                 }
-            </div>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var row in Results)
+            {
+            <tr>
+                @foreach (var col in ResultColumns)
+                {
+                @if (col == "Source")
+                {
+                <td class="col-source">
+                                            <span class="source-badge" title="@row.GetValueOrDefault(col, "-")">
+                                                @row.GetValueOrDefault(col, "-")
+                                            </span>
+                </td>
+                }
+                else
+                {
+                <td>@row.GetValueOrDefault(col, "-")</td>
+                }
+                }
+            </tr>
+            }
+            </tbody>
+        </table>
+        @if (HasMore)
+        {
+        <div style="margin-top:1rem;text-align:center;">
+            <button class="search-btn" style="margin:0 auto;" @onclick="LoadMore" disabled="@IsLoadingMore">
+                @if (IsLoadingMore)
+                {
+                <span>Loading…</span>
+                }
+                else
+                {
+                <span>Load more</span>
+                }
+            </button>
+        </div>
         }
-     </div>
- }
-
+    </div>
+    }
+</div>
+}

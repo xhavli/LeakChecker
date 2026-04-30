@@ -1,6 +1,7 @@
 using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Database;
 using LeakChecker.UI.Helpers;
+using LeakChecker.UI.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using MongoDB.Bson;
@@ -9,6 +10,8 @@ namespace LeakChecker.UI.Components;
 
 public class SearchIdentityBase : ComponentBase
 {
+    [Inject] private IDashboardService DashboardService { get; set; } = default!;
+
     protected static readonly ItemEnum[] SearchableItems =
         Enum.GetValues<ItemEnum>()
             .Where(i => i is >= ItemEnum.Mac and <= ItemEnum.Other)
@@ -16,6 +19,8 @@ public class SearchIdentityBase : ComponentBase
                 and not ItemEnum.FileTime
                 and not ItemEnum.UnixSeconds
                 and not ItemEnum.UnixMilliseconds)
+            .OrderBy(i => i == ItemEnum.Other)
+            .ThenBy(i => i.ToString())
             .ToArray();
 
     protected string SearchValue { get; set; } = string.Empty;
@@ -29,7 +34,11 @@ public class SearchIdentityBase : ComponentBase
     protected string? ErrorMessage { get; set; }
 
     private const int PageSize = 50;
+    private const string SourceColumn = "Source";
     private ObjectId? _lastId;
+
+    // Cache: ParseId → FileName, shared across searches for the lifetime of the component
+    private readonly Dictionary<ObjectId, string> _sourceCache = [];
 
     protected List<Dictionary<string, string?>> Results { get; set; } = [];
     protected List<string> ResultColumns { get; set; } = [];
@@ -43,6 +52,7 @@ public class SearchIdentityBase : ComponentBase
     {
         var raw = SearchValue.Trim();
 
+        
         if (SelectedItem == ItemEnum.Domain && SelectedCondition == ConditionType.EndsWith)
         {
             var reversed = Reverse(raw.ToLowerInvariant());
@@ -51,10 +61,10 @@ public class SearchIdentityBase : ComponentBase
 
         return SelectedItem switch
         {
-            ItemEnum.Email    => (nameof(ItemEnum.EmailLowercase),    raw.ToLowerInvariant(), SelectedCondition),
-            ItemEnum.Username => (nameof(ItemEnum.UsernameLowercase),  raw.ToLowerInvariant(), SelectedCondition),
-            ItemEnum.Name     => (nameof(ItemEnum.NameLowercase),      raw.ToLowerInvariant(), SelectedCondition),
-            _                 => (SelectedItem.ToString(),             raw,                    SelectedCondition),
+            ItemEnum.Name     => (nameof(ItemEnum.NameLowercase),    raw.ToLowerInvariant(), SelectedCondition),
+            ItemEnum.Email    => (nameof(ItemEnum.EmailLowercase),   raw.ToLowerInvariant(), SelectedCondition),
+            ItemEnum.Username => (nameof(ItemEnum.UsernameLowercase),raw.ToLowerInvariant(), SelectedCondition),
+            _                 => (SelectedItem.ToString(),           raw,                    SelectedCondition),
         };
     }
 
@@ -71,7 +81,6 @@ public class SearchIdentityBase : ComponentBase
             await RunSearch();
     }
 
-    // Fresh search — resets everything
     protected async Task RunSearch()
     {
         ErrorMessage  = null;
@@ -94,14 +103,13 @@ public class SearchIdentityBase : ComponentBase
         {
             var (field, value, condition) = ResolveQuery();
 
-            var docs = await MongoDbRepository.SearchUsers(field, condition, value, afterId: null, limit: PageSize);
-            ApplyPage(docs);
+            var docs = await MongoDbRepository.SearchIdentity(field, condition, value, afterId: null, limit: PageSize);
+            await ApplyPageAsync(docs);
             HasSearched = true;
             IsSearching = false;
-            await InvokeAsync(StateHasChanged); // show results immediately
+            await InvokeAsync(StateHasChanged);
 
-            TotalMatched = await MongoDbRepository.CountUsers(field, condition, value);
-            // ↑ timer is still ticking here
+            TotalMatched = await MongoDbRepository.CountIdentities(field, condition, value);
         }
         catch (Exception ex)
         {
@@ -109,15 +117,14 @@ public class SearchIdentityBase : ComponentBase
         }
         finally
         {
-            _timer?.Dispose();  // ← stop timer only now
+            _timer?.Dispose();
             _timer = null;
-            Elapsed = DateTime.UtcNow - _searchStart; // final accurate value
+            Elapsed = DateTime.UtcNow - _searchStart;
             IsSearching = false;
             await InvokeAsync(StateHasChanged);
         }
     }
 
-    // Load next page and append
     protected async Task LoadMore()
     {
         if (!HasMore || IsLoadingMore) return;
@@ -128,9 +135,8 @@ public class SearchIdentityBase : ComponentBase
         try
         {
             var (field, value, condition) = ResolveQuery();
-            var docs = await MongoDbRepository.SearchUsers(field, condition, value, afterId: _lastId, limit: PageSize);
-
-            ApplyPage(docs);
+            var docs = await MongoDbRepository.SearchIdentity(field, condition, value, afterId: _lastId, limit: PageSize);
+            await ApplyPageAsync(docs);
         }
         catch (Exception ex)
         {
@@ -142,7 +148,7 @@ public class SearchIdentityBase : ComponentBase
         }
     }
 
-    private void ApplyPage(List<BsonDocument> docs)
+    private async Task ApplyPageAsync(List<BsonDocument> docs)
     {
         if (docs.Count == 0)
         {
@@ -150,24 +156,51 @@ public class SearchIdentityBase : ComponentBase
             return;
         }
 
-        // Update cursor to last doc's _id
         _lastId = docs[^1]["_id"].AsObjectId;
         HasMore = docs.Count == PageSize;
 
-        // Merge new columns
+        // Fetch and cache any ParseIds we haven't seen yet
+        var uncached = docs
+            .Where(d => d.Contains("ParseId"))
+            .Select(d => d["ParseId"].AsObjectId)
+            .Distinct()
+            .Where(id => !_sourceCache.ContainsKey(id))
+            .ToList();
+
+        foreach (var id in uncached)
+        {
+            var detail = await DashboardService.GetParseByIdAsync(id.ToString());
+            _sourceCache[id] = detail?.FileName ?? id.ToString();
+        }
+
+        // Source is always first column
+        if (!ResultColumns.Contains(SourceColumn))
+            ResultColumns.Insert(0, SourceColumn);
+
+        // Merge any new data columns
         var newCols = SearchableItems
             .Select(i => i.ToString())
             .Where(name => docs.Any(d => d.Contains(name)) && !ResultColumns.Contains(name));
         ResultColumns.AddRange(newCols);
 
-        // Map rows
         foreach (var doc in docs)
         {
             var row = new Dictionary<string, string?>();
+
+            if (doc.TryGetValue("ParseId", out var parseIdVal))
+            {
+                var pid = parseIdVal.AsObjectId;
+                row[SourceColumn] = _sourceCache.TryGetValue(pid, out var name) ? name : pid.ToString();
+            }
+            else
+            {
+                row[SourceColumn] = "-";
+            }
+
             foreach (var col in ResultColumns)
             {
-                if (!doc.TryGetValue(col, out var bval))
-                    continue;
+                if (col == SourceColumn) continue;
+                if (!doc.TryGetValue(col, out var bval)) continue;
 
                 row[col] = col == nameof(ItemEnum.Hash)
                     ? Formatter.FormatHashes(bval.AsBsonArray)
@@ -177,6 +210,7 @@ public class SearchIdentityBase : ComponentBase
                         _             => bval.ToString()
                     };
             }
+
             Results.Add(row);
         }
     }

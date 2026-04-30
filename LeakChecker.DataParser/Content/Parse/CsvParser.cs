@@ -69,7 +69,8 @@ public class CsvParser(ParsingContext parsingContext)
                 continue;
             }
 
-            await ParseRow(row);
+            ParseRow(rowBuffer, fieldCount);
+
             if (_cachedRecords.Count > FlushThreshold)
             {
                 await _database.SaveIdentityMany(_cachedRecords, _parseId);
