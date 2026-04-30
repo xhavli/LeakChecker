@@ -260,14 +260,14 @@
                 @if (col == "Source")
                 {
                 <td class="col-source">
-                                            <span class="source-badge" title="@row.GetValueOrDefault(col, "-")">
-                                                @row.GetValueOrDefault(col, "-")
-                                            </span>
+                    <span class="source-badge" title="@row.GetValueOrDefault(col, "-")">
+                        @row.GetValueOrDefault(col, "-")
+                    </span>
                 </td>
                 }
                 else
                 {
-                <td>@row.GetValueOrDefault(col, "-")</td>
+                    <td title="@col">@row.GetValueOrDefault(col, "-")</td>
                 }
                 }
             </tr>
