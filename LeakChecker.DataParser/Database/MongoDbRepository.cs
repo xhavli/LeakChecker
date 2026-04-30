@@ -10,25 +10,26 @@ public static class MongoDbRepository
 {
     private static readonly MongoClient Client = new("mongodb://localhost:27017");
     private static readonly IMongoDatabase Database = Client.GetDatabase("LeakCheckerDb");
-    private static readonly IMongoCollection<BsonDocument> StatsCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Stats));
-    private static readonly IMongoCollection<BsonDocument> UsersCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Users));
     private static readonly IMongoCollection<BsonDocument> ParseCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Parsings));
+    private static readonly IMongoCollection<BsonDocument> StatsCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Dashboard));
     private static readonly IMongoCollection<BsonDocument> ExecutionCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Executions));
+    private static readonly IMongoCollection<BsonDocument> IdentitiesCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Identities));
     private static readonly InsertManyOptions UnorderedOptions = new() { IsOrdered = false };
     
-    private static readonly FilterDefinition<BsonDocument> DashboardFilter = Builders<BsonDocument>.Filter.Eq("_id", "dashboard");
+    private const string DashboardId = "dashboard";
+    private static readonly FilterDefinition<BsonDocument> DashboardFilter = Builders<BsonDocument>.Filter.Eq("_id", DashboardId);
 
-    public static async Task SaveUserDocument(BsonDocument document)
+    public static async Task SaveIdentityDocument(BsonDocument document)
     {
-        await UsersCollection.InsertOneAsync(document);
+        await IdentitiesCollection.InsertOneAsync(document);
     }
     
-    public static async Task SaveUserDocuments(List<BsonDocument> documents)
+    public static async Task SaveIdentityDocuments(List<BsonDocument> documents)
     {
         if (documents.Count == 0)
             return;
         
-        await UsersCollection.InsertManyAsync(documents, UnorderedOptions);
+        await IdentitiesCollection.InsertManyAsync(documents, UnorderedOptions);
     }
     
     public static async Task SaveParsingDocument(BsonDocument document)
@@ -48,7 +49,7 @@ public static class MongoDbRepository
             .Inc("TotalBytes",    stats.BytesRead)
             .Inc("TotalRecords",  stats.RecordsRead)
             .Inc("TotalMalformed", stats.MalformedRead)
-            .SetOnInsert("_id", "dashboard");
+            .SetOnInsert("_id", DashboardId);
 
         await StatsCollection.UpdateOneAsync(DashboardFilter, update, new UpdateOptions { IsUpsert = true });
     }
@@ -60,7 +61,7 @@ public static class MongoDbRepository
             .FirstOrDefaultAsync();
     }
     
-    public static async Task CreateUsersIndexes()
+    public static async Task CreateIdentityIndexes()
     {
         var indexModels = new List<CreateIndexModel<BsonDocument>>
         {
@@ -95,10 +96,10 @@ public static class MongoDbRepository
             ),
         };
 
-        await UsersCollection.Indexes.CreateManyAsync(indexModels);
+        await IdentitiesCollection.Indexes.CreateManyAsync(indexModels);
     }
     
-    public static async Task<List<BsonDocument>> SearchUsers(
+    public static async Task<List<BsonDocument>> SearchIdentity(
         string field,
         ConditionType condition,
         string value,
@@ -123,14 +124,14 @@ public static class MongoDbRepository
                 Builders<BsonDocument>.Filter.Gt("_id", afterId.Value))
             : conditionFilter;
 
-        return await UsersCollection
+        return await IdentitiesCollection
             .Find(cursorFilter)
             .Sort(Builders<BsonDocument>.Sort.Ascending("_id"))
             .Limit(limit)
             .ToListAsync();
     }
     
-    public static async Task<long> CountUsers(string field, ConditionType condition, string value)
+    public static async Task<long> CountIdentities(string field, ConditionType condition, string value)
     {
         FilterDefinition<BsonDocument> filter = condition switch
         {
@@ -144,6 +145,6 @@ public static class MongoDbRepository
             _ => throw new ArgumentOutOfRangeException(nameof(condition))
         };
 
-        return await UsersCollection.CountDocumentsAsync(filter);
+        return await IdentitiesCollection.CountDocumentsAsync(filter);
     }
 }
