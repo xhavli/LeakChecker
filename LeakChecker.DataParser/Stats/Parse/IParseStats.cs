@@ -1,12 +1,13 @@
 using System.Text;
 using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Encodings;
+using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Stats.Parse;
 
 public interface IParseStats
 {
-    public Guid ParseId { get; init; }
+    public ObjectId ParseId { get; init; }
     public string SourcePath { get; init; }
     public string ParsePath { get; set; }
     public long LinesRead { get; set; }

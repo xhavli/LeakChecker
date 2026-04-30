@@ -4,13 +4,14 @@ using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Helpers.Extensions;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
+using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Content.Parse;
 
 public class SqlInsertParser(ParsingContext parsingContext)
 {
     private const string Values = "VALUES";
-    private readonly Guid _parseId = parsingContext.Stats.ParseId;
+    private readonly ObjectId _parseId = parsingContext.Stats.ParseId;
     private readonly IParseLogger _logger = parsingContext.Logger;
     private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
     private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new();

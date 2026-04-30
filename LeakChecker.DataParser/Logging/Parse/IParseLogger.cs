@@ -3,12 +3,13 @@ using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Format.Schema;
 using LeakChecker.DataParser.Stats.Parse;
+using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Logging.Parse;
 
 public interface IParseLogger : IDisposable
 {
-    Guid ParseId { get; }
+    ObjectId ParseId { get; }
     DateTime ParseStart { get; }
     string SubjectFilePath { get; }
     string SubjectTmpFilePath { get; }

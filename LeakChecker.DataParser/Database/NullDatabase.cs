@@ -7,8 +7,8 @@ namespace LeakChecker.DataParser.Database;
 
 public class NullDatabase : IDatabase
 {
-    public Task SaveUserOne(Dictionary<ItemEnum, List<string>> record, Guid parseId) => Task.CompletedTask;
-    public Task SaveUserMany(List<Dictionary<ItemEnum, List<string>>> records, Guid parseId) => Task.CompletedTask;
+    public Task SaveIdentityOne(Dictionary<ItemEnum, List<string>> record, ObjectId parseId) => Task.CompletedTask;
+    public Task SaveIdentityMany(List<Dictionary<ItemEnum, List<string>>> records, ObjectId parseId) => Task.CompletedTask;
     public Task SaveParseOne(ParseStats stats) => Task.CompletedTask;
     public Task SaveExecutionOne(ExecutionStats stats) => Task.CompletedTask;
     public Task UpsertDashboardStats(ParseStats stats) => Task.CompletedTask;

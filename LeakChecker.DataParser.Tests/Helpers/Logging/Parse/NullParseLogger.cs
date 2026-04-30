@@ -5,12 +5,13 @@ using LeakChecker.DataParser.Format.Schema;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Parse;
+using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
 
 public sealed class NullParseLogger : IParseLogger
 {
-    public Guid ParseId => Guid.Empty;
+    public ObjectId ParseId => ObjectId.Empty;
     public DateTime ParseStart => DateTime.MaxValue;
     public string SubjectFilePath => string.Empty;
     public string SubjectTmpFilePath => string.Empty;

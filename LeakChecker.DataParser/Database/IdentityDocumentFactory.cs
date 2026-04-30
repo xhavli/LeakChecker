@@ -5,15 +5,15 @@ using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Database;
 
-public static class UserDocumentFactory
+public class IdentityDocumentFactory(ObjectId parseId)
 {
-    public static BsonDocument CreateUserDocument(Dictionary<ItemEnum, List<string>> record, Guid parseId)
+    public BsonDocument CreateIdentityDocument(Dictionary<ItemEnum, List<string>> record)
     {
         BsonArray hashes = new();
         BsonArray others = new();
         BsonArray domains = new();
         HashSet<string> domainsSeen = new(StringComparer.Ordinal);
-        BsonDocument document = new BsonDocument { { "ParseId", new BsonBinaryData(parseId, GuidRepresentation.Standard) } };
+        BsonDocument document = new BsonDocument { { "ParseId", parseId } };
 
         foreach (var property in record)
         {
@@ -32,7 +32,9 @@ public static class UserDocumentFactory
 
             if (type == ItemEnum.Other)
             {
-                others.Add(new BsonArray(values));
+                foreach (var v in values)
+                    others.Add(v);
+                
                 continue;
             }
 
@@ -43,6 +45,17 @@ public static class UserDocumentFactory
                     { "Type", type.ToString() },
                     { "Values", new BsonArray(values) }
                 });
+                continue;
+            }
+            
+            if (type == ItemEnum.Name)
+            {
+                var lowercased = new BsonValue[count];
+                for (int i = 0; i < count; i++)
+                    lowercased[i] = BsonValue.Create(rawValues[i].ToLowerInvariant());
+
+                document.Add(nameof(ItemEnum.Name), new BsonArray(values));
+                document.Add(nameof(ItemEnum.NameLowercase), new BsonArray(lowercased));
                 continue;
             }
 

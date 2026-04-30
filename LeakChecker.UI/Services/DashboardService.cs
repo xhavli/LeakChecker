@@ -1,3 +1,4 @@
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Database;
 using LeakChecker.UI.Models;
 using MongoDB.Bson;
@@ -53,8 +54,7 @@ public class DashboardService(IDatabase database, IMongoDatabase db) : IDashboar
 
         return new ParseListModel
         {
-            MongoId     = p["_id"].AsObjectId.ToString(),
-            ParseId     = ReadGuid(p, "ParseId"),
+            ParseId     = p["_id"].AsObjectId,
             SourcePath  = p.GetValue("SourcePath", "?").AsString,
             RecordsRead = records,
             BytesRead   = p.GetValue("BytesRead", 0L).ToInt64(),
@@ -88,8 +88,7 @@ public class DashboardService(IDatabase database, IMongoDatabase db) : IDashboar
 
         return new ParseDetailModel
         {
-            MongoId      = p["_id"].AsObjectId.ToString(),
-            ParseId      = ReadGuid(p, "ParseId"),
+            ParseId      = p["_id"].AsObjectId,
             ExecutionId  = ReadGuid(p, "ExecutionId"),
             SourcePath   = p.GetValue("SourcePath",  "?").AsString,
             FileSize     = p.GetValue("FileSize",    0L).ToInt64(),

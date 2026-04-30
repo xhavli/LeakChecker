@@ -71,10 +71,10 @@ else if (!Loaded)
 else
 {
 <div class="dash-grid">
-    <MetricCard Label="Identities"       Value="@Formatter.Number(Stats.TotalRecords)" Sub="total records"  />
-    <MetricCard Label="Parses"           Value="@Formatter.Number(Stats.TotalParses)"  Sub="parsed files"    />
-    <MetricCard Label="Avg accuracy"     Value="@Formatter.Percent(Stats.Accuracy)"    Sub="weighted across all parses" />
-    <MetricCard Label="Total bytes read" Value="@Formatter.Bytes(Stats.TotalBytes)"    Sub="all files"  />
+    <MetricCard Label="Identities"      Value="@Formatter.Number(Stats.TotalRecords)" Sub="total records"  />
+    <MetricCard Label="Files"           Value="@Formatter.Number(Stats.TotalParses)"  Sub="total parsed"    />
+    <MetricCard Label="Avg accuracy"    Value="@Formatter.Percent(Stats.Accuracy)"    Sub="weighted across all parses" />
+    <MetricCard Label="Data size"       Value="@Formatter.Bytes(Stats.TotalBytes)"    Sub="all raw files"  />
 </div>
 
 <div class="section-title">Recent parses</div>
@@ -92,7 +92,7 @@ else
     <tbody>
     @foreach (var p in RecentParses)
     {
-        <tr @onclick='() => Nav.NavigateTo($"/parse/{p.MongoId}")'>
+        <tr @onclick='() => Nav.NavigateTo($"/parse/{p.ParseId}")'>
             <td>@Formatter.Truncate(p.FileName, 28)</td>
             <td>@Formatter.Number(p.RecordsRead)</td>
             <td><span class="badge @AccuracyClass(p.Accuracy)">@p.Accuracy.ToString("F2")%</span></td>

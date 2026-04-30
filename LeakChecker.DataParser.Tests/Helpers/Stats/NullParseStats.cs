@@ -2,12 +2,13 @@ using System.Text;
 using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Stats.Parse;
+using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Tests.Helpers.Stats;
 
 public sealed class NullParseStats(string sourcePath = "") : IParseStats
 {
-    public Guid ParseId { get; init; } = Guid.Empty;
+    public ObjectId ParseId { get; init; } = ObjectId.Empty;
     public string SourcePath { get; init; } = sourcePath;
     public string ParsePath { get; set; } = string.Empty;
     public long LinesRead { get; set; } = 0;

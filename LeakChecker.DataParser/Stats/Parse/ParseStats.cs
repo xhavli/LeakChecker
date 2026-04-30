@@ -8,7 +8,7 @@ namespace LeakChecker.DataParser.Stats.Parse;
 
 public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourcePath) : IParseStats
 {
-    public Guid ParseId { get; init; } = parseLogger.ParseId;
+    public ObjectId ParseId { get; init; } = parseLogger.ParseId;
     public Guid ExecutionId { get; init; } = executionId;
     public string ParsePath { get; set; } = string.Empty;
     public string SourcePath { get; init; } = sourcePath;
@@ -36,7 +36,7 @@ public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourc
     {
         return new BsonDocument
         {
-            { nameof(ParseId), new BsonBinaryData(ParseId, GuidRepresentation.Standard) },
+            { "_id", ParseId },
             { nameof(ExecutionId), new BsonBinaryData(ExecutionId, GuidRepresentation.Standard) },
             { nameof(SourcePath), SourcePath },
             { nameof(FileName), FileName },

@@ -6,12 +6,13 @@ using LeakChecker.DataParser.Format.Schema;
 using LeakChecker.DataParser.Helpers.Enums;
 using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Stats.Parse;
+using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Logging.Parse;
 
 public class ParseLogger : IParseLogger
 {
-    public Guid ParseId { get; }
+    public ObjectId ParseId { get; }
     public DateTime ParseStart { get; }
     public string SubjectFilePath { get; }
     public string SubjectTmpFilePath { get; }
@@ -23,7 +24,7 @@ public class ParseLogger : IParseLogger
     private const ConsoleColor FailureColor = ConsoleColor.Red;
 
     private ParseLogger(
-        Guid parseId,
+        ObjectId parseId,
         DateTime parseStart,
         string subjectFilePath,
         string tmpFilePath,
@@ -40,7 +41,7 @@ public class ParseLogger : IParseLogger
 
     public static async Task<IParseLogger> CreateAsync(string subjectFilePath, ISettings settings)
     {
-        Guid parseId = Guid.NewGuid();
+        ObjectId parseId = ObjectId.GenerateNewId();
         DateTime parseStart = DateTime.Now;
         
         string fileName = Path.GetFileName(subjectFilePath);

@@ -1,9 +1,10 @@
+using MongoDB.Bson;
+
 namespace LeakChecker.UI.Models;
 
 public class ParseDetailModel
 {
-    public string   MongoId           { get; init; } = string.Empty;
-    public Guid     ParseId           { get; init; }
+    public ObjectId ParseId           { get; init; }
     public Guid     ExecutionId       { get; init; }
     public string   SourcePath        { get; init; } = string.Empty;
     public string   FileName          => Path.GetFileName(SourcePath);
@@ -19,7 +20,6 @@ public class ParseDetailModel
     public DateTime ParseStart        { get; init; }
     public DateTime ParseEnd          { get; init; }
     public string?  Encoding          { get; init; }
-    public string   DisplayEncoding   => Encoding ?? "[NULL]";
     public List<EncodingSegmentModel> EncodingSegments { get; init; } = [];
     public List<string>               Formats          { get; init; } = [];
     public List<char>                 Delimiters       { get; init; } = [];

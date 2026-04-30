@@ -6,13 +6,14 @@ using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Parse;
+using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Content.Parse;
 
 public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats, ISettings settings)
 {
     private const long ParseLimit = long.MaxValue;
-    private readonly Guid _parseId = stats.ParseId;
+    private readonly ObjectId _parseId = stats.ParseId;
     private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new();
     private readonly IDatabase _database = settings.Database;
 

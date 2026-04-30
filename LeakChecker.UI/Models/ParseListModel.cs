@@ -1,9 +1,10 @@
+using MongoDB.Bson;
+
 namespace LeakChecker.UI.Models;
 
 public class ParseListModel
 {
-    public string   MongoId     { get; init; } = string.Empty;
-    public Guid     ParseId     { get; init; }
+    public ObjectId ParseId     { get; init; }
     public string   SourcePath  { get; init; } = string.Empty;
     public string   FileName    => Path.GetFileName(SourcePath);
     public long     RecordsRead { get; init; }

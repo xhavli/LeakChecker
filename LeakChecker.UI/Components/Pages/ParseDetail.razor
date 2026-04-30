@@ -1,4 +1,4 @@
-@page "/parse/{MongoId}"
+@page "/parse/{ParseId}"
 @using LeakChecker.UI.Helpers
 @inherits ParseDetailBase
 @rendermode InteractiveServer
@@ -80,8 +80,8 @@ else
 
     <div class="section-title">Identifiers</div>
     <table class="detail-table" style="padding-left:1.25rem;">
-        <tr><td style="color:#868e96;width:140px;">Parse ID</td>    <td>@Detail.ParseId</td></tr>
-        <tr><td style="color:#868e96;">Execution ID</td>            <td>@Detail.ExecutionId</td></tr>
+        <tr><td style="color:#868e96;width:140px;">Execution ID</td>            <td>@Detail.ExecutionId</td></tr>
+        <tr><td style="color:#868e96;">Parse ID</td>                <td>@Detail.ParseId</td></tr>
         <tr><td style="color:#868e96;">Source path</td>             <td>@Detail.SourcePath</td></tr>
         <tr><td style="color:#868e96;">Started</td>                 <td>@Detail.ParseStart.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td></tr>
         <tr><td style="color:#868e96;">Finished</td>                <td>@Detail.ParseEnd.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td></tr>

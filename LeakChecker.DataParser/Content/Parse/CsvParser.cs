@@ -4,18 +4,21 @@ using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Helpers.Extensions;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
+using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Content.Parse;
 
 public class CsvParser(ParsingContext parsingContext)
 {
     private readonly char _delimiter = parsingContext.Delimiter;
-    private readonly Guid _parseId = parsingContext.Stats.ParseId;
+    private readonly ObjectId _parseId = parsingContext.Stats.ParseId;
     private readonly IParseLogger _logger = parsingContext.Logger;
     private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
-    private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new();
+    private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new(2001);
     private readonly IDatabase _database = parsingContext.Settings.Database;
-    
+
+    private const int FlushThreshold = 2000;
+
     public async Task<ParsingResult> Parse()
     {
         StreamReader reader = parsingContext.Reader;
@@ -56,9 +59,7 @@ public class CsvParser(ParsingContext parsingContext)
                                   $"got {row.Length} content: {line}", LogLevel.Warning);
 
                 malformedRead++;
-                malformedReadSequence++;
-
-                if (malformedReadSequence >= malformedLimit)
+                if (++malformedReadSequence >= malformedLimit)
                 {
                     await _logger.Log($"Parsing reach malformed limit {malformedLimit}. " +
                                       $"Returning back to recompute schema.", LogLevel.Warning, LogContext.Parsing);
@@ -69,7 +70,7 @@ public class CsvParser(ParsingContext parsingContext)
             }
 
             await ParseRow(row);
-            if (_cachedRecords.Count > 2000)
+            if (_cachedRecords.Count > FlushThreshold)
             {
                 await _database.SaveIdentityMany(_cachedRecords, _parseId);
                 _cachedRecords.Clear();

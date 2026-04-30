@@ -6,7 +6,7 @@ namespace LeakChecker.DataParser.Stats.Execution;
 public class ExecutionStats(Guid executionId, DateTime startTime)
 {
     public Guid ExecutionId { get; } = executionId;
-    public List<Guid> FilesParsed { get; set; } = new();
+    public List<ObjectId> FilesParsed { get; set; } = new();
     public long BytesRead { get; set; }
     public long LinesRead { get; set; }
     public long RecordsRead { get; set; }
@@ -36,7 +36,7 @@ public class ExecutionStats(Guid executionId, DateTime startTime)
         return new BsonDocument
         {
             { nameof(ExecutionId), new BsonBinaryData(ExecutionId, GuidRepresentation.Standard) },
-            {nameof(FilesParsed), new BsonArray(FilesParsed.Select(id => new BsonBinaryData(id, GuidRepresentation.Standard))) },
+            {nameof(FilesParsed), new BsonArray(FilesParsed) },
             { nameof(BytesRead), BytesRead },
             { nameof(ByteSpeed), ByteSpeed },
             { nameof(LinesRead), LinesRead },
