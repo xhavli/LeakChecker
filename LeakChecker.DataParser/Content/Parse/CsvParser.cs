@@ -69,7 +69,7 @@ public class CsvParser(ParsingContext parsingContext)
                 continue;
             }
 
-            ParseRow(rowBuffer, fieldCount);
+            await ParseRow(row);
 
             if (_cachedRecords.Count > FlushThreshold)
             {
