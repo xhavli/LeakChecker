@@ -14,7 +14,7 @@ public enum ItemEnum
     DomainReversedLowercase,
     
     // Content
-    Mac,
+    MacAddress,
     Ipv4,
     Ipv6,
     Email,

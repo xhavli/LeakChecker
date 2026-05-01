@@ -37,16 +37,16 @@ public class HeaderGuesserTests
 
     // ---------------- Mac ----------------
     [Theory]
-    [InlineData("mac", ItemEnum.Mac)]
-    [InlineData("macaddr", ItemEnum.Mac)]
-    [InlineData("mac_address", ItemEnum.Mac)]
-    [InlineData("macAddress", ItemEnum.Mac)]
-    [InlineData("MACADDRESS", ItemEnum.Mac)]
-    [InlineData("device-mac", ItemEnum.Mac)]
-    [InlineData("clientMacAddr", ItemEnum.Mac)]
-    [InlineData("wifi_mac", ItemEnum.Mac)]
-    [InlineData("ethernetMac", ItemEnum.Mac)]
-    [InlineData("user-mac-address", ItemEnum.Mac)]
+    [InlineData("mac", ItemEnum.MacAddress)]
+    [InlineData("macaddr", ItemEnum.MacAddress)]
+    [InlineData("mac_address", ItemEnum.MacAddress)]
+    [InlineData("macAddress", ItemEnum.MacAddress)]
+    [InlineData("MACADDRESS", ItemEnum.MacAddress)]
+    [InlineData("device-mac", ItemEnum.MacAddress)]
+    [InlineData("clientMacAddr", ItemEnum.MacAddress)]
+    [InlineData("wifi_mac", ItemEnum.MacAddress)]
+    [InlineData("ethernetMac", ItemEnum.MacAddress)]
+    [InlineData("user-mac-address", ItemEnum.MacAddress)]
     public void ShouldGuess_Mac(string header, ItemEnum expected)
         => Assert.Equal(expected, HeaderGuesser.GuessItem(header));
 

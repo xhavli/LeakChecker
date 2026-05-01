@@ -160,7 +160,7 @@ public static class ContentDetector
             return ItemEnum.PhoneNumber;
         
         if (MacAddressParser.TryParse(token, out _))
-            return ItemEnum.Mac;
+            return ItemEnum.MacAddress;
         
         if (IbanParser.TryParse(token))
             return ItemEnum.Iban;

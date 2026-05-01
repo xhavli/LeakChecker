@@ -35,7 +35,7 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.Mac, [
+            ItemEnum.MacAddress, [
                 new("mac", MatchPolicy.Token),
                 new("macaddr", MatchPolicy.Substring),
                 new("macaddress", MatchPolicy.Substring),
