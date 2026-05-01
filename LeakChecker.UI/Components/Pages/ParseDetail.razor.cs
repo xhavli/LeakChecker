@@ -7,7 +7,7 @@ namespace LeakChecker.UI.Components;
 
 public class ParseDetailBase : ComponentBase
 {
-    [Parameter] public required string MongoId { get; set; }
+    [Parameter] public required string ParseId { get; set; }
 
     [Inject] protected IDashboardService DashboardService { get; set; } = default!;
     [Inject] protected NavigationManager Nav              { get; set; } = default!;
@@ -25,7 +25,7 @@ public class ParseDetailBase : ComponentBase
         Error  = null;
         try
         {
-            Detail = await DashboardService.GetParseByIdAsync(MongoId);
+            Detail = await DashboardService.GetParseByIdAsync(ParseId);
         }
         catch (Exception ex)
         {
