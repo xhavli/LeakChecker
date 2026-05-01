@@ -6,5 +6,5 @@ public interface IDashboardService
 {
     Task<DashboardStats>        GetStatsAsync();
     Task<List<ParseListModel>>  GetRecentParsesAsync(int limit = 50);
-    Task<ParseDetailModel?> GetParseByIdAsync(string mongoId);
+    Task<ParseDetailModel?> GetParseByIdAsync(string parseId);
 }
