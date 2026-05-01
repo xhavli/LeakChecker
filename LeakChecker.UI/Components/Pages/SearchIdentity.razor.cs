@@ -4,12 +4,14 @@ using LeakChecker.UI.Helpers;
 using LeakChecker.UI.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using MongoDB.Bson;
 
 namespace LeakChecker.UI.Components;
 
 public class SearchIdentityBase : ComponentBase
 {
+    [Inject] private IJSRuntime Js { get; set; } = default!;
     [Inject] protected NavigationManager Nav { get; set; } = default!;
     [Inject] private IDashboardService DashboardService { get; set; } = default!;
 
@@ -232,5 +234,11 @@ public class SearchIdentityBase : ComponentBase
 
             Results.Add(row);
         }
+    }
+    
+    protected async Task OpenParse(string? navId)
+    {
+        if (navId is not null)
+            await Js.InvokeVoidAsync("open", $"/parse/{navId}", "_blank");
     }
 }

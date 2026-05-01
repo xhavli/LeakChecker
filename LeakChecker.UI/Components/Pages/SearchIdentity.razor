@@ -279,7 +279,7 @@
                         }
                         <span class="source-badge"
                               title="@(sourcePath ?? sourceName)"
-                              @onclick="@(() => { if (navId is not null) Nav.NavigateTo($"/parse/{navId}"); })">
+                              @onclick="@(() => OpenParse(row.GetValueOrDefault("Source_navid", null)))">
                             @sourceName
                         </span>
                     </td>
