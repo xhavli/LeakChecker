@@ -61,7 +61,7 @@ public static class MongoDbRepository
             .FirstOrDefaultAsync();
     }
     
-    public static async Task CreateIdentityIndexes()
+    public static async Task CreateIndexes()
     {
         var indexModels = new List<CreateIndexModel<BsonDocument>>
         {

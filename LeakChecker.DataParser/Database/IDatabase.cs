@@ -12,5 +12,6 @@ public interface IDatabase
     Task SaveParseOne(ParseStats stats);
     Task SaveExecutionOne(ExecutionStats stats);
     Task UpsertDashboardStats(ParseStats stats);
+    Task CreateIndexes();
     Task<BsonDocument?> GetDashboardStats();
 }

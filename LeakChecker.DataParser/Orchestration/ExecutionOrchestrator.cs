@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Threading.Channels;
 using LeakChecker.DataParser.Content.Detection.RecognitionService;
 using LeakChecker.DataParser.Data;
-using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Helpers.FileHelp;
 using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging;
@@ -86,7 +85,7 @@ public sealed class ExecutionOrchestrator(
 
             logger.Log("Creating MongoDB indexes for Users collection...");
             Stopwatch sw = Stopwatch.StartNew();
-            await MongoDbRepository.CreateUsersIndexes();
+            await settings.Database.CreateIndexes();
             logger.Log($"MongoDB indexes created in {sw.Elapsed}.", LogLevel.Success, LogContext.Execution);
             
             logger.Log("Program will exit with exit code 0");

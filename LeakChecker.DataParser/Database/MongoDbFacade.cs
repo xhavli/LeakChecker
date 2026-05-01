@@ -49,4 +49,9 @@ public class MongoDbFacade : IDatabase
     {
         return await MongoDbRepository.GetDashboardStats();
     }
+
+    public async Task CreateIndexes()
+    {
+        await MongoDbRepository.CreateIndexes();
+    }
 }
