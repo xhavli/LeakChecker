@@ -225,11 +225,22 @@ public class SearchIdentityBase : ComponentBase
 
                 row[col] = col == nameof(ItemEnum.Hash)
                     ? StringFormatter.FormatHashes(bVal.AsBsonArray)
-                    : bVal switch
-                    {
-                        BsonArray arr => string.Join(", ", arr.Select(v => v.ToString())),
-                        _             => bVal.ToString()
-                    };
+                    : col == nameof(ItemEnum.Timestamp)
+                        ? bVal switch
+                        {
+                            BsonArray arr => string.Join(", ", arr.Select(v =>
+                                BsonTypeMapper.MapToDotNetValue(v) is DateTime dt
+                                    ? dt.ToString("yyyy-MM-dd HH:mm:ss")
+                                    : v.ToString())),
+                            _ => BsonTypeMapper.MapToDotNetValue(bVal) is DateTime ts
+                                    ? ts.ToString("yyyy-MM-dd HH:mm:ss")
+                                    : bVal.ToString()
+                        }
+                        : bVal switch
+                        {
+                            BsonArray arr => string.Join(", ", arr.Select(v => v.ToString())),
+                            _             => bVal.ToString()
+                        };
             }
 
             Results.Add(row);
