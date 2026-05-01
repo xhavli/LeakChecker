@@ -222,6 +222,18 @@
     }
 </div>
 
+@if (IsSearching)
+{
+<div class="search-card">
+    <div style="display:flex;align-items:baseline;gap:12px;">
+        <div class="section-title" style="margin-bottom:0;">Searching…</div>
+        <div style="font-size:15px;color:#868e96;font-family:monospace;">
+            @Elapsed.ToString(@"hh\:mm\:ss")
+        </div>
+    </div>
+</div>
+}
+
 @if (HasSearched)
 {
 <div class="search-card">
@@ -239,7 +251,7 @@
     else
     {
     <div class="result-count">
-        Showing <strong>@TotalLoaded</strong> of <strong>@(TotalMatched?.ToString() ?? "…")</strong> records found
+        Showing <strong>@TotalLoaded</strong> of <strong>@(TotalMatched?.ToString("N0") ?? "…")</strong> records found
     </div>
     <div style="overflow-x:auto;">
         <table class="results-table">

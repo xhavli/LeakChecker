@@ -217,14 +217,14 @@ public class SearchIdentityBase : ComponentBase
             foreach (var col in ResultColumns)
             {
                 if (col == SourceColumn) continue;
-                if (!doc.TryGetValue(col, out var bsonValue)) continue;
+                if (!doc.TryGetValue(col, out var bVal)) continue;
 
                 row[col] = col == nameof(ItemEnum.Hash)
-                    ? Formatter.FormatHashes(bsonValue.AsBsonArray)
-                    : bsonValue switch
+                    ? Formatter.FormatHashes(bVal.AsBsonArray)
+                    : bVal switch
                     {
                         BsonArray arr => string.Join(", ", arr.Select(v => v.ToString())),
-                        _             => bsonValue.ToString()
+                        _             => bVal.ToString()
                     };
             }
 
