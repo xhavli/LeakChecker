@@ -271,11 +271,18 @@
                 {
                 @if (col == "Source")
                 {
-                <td class="col-source">
-                    <span class="source-badge" title="@row.GetValueOrDefault(col, "-")">
-                        @row.GetValueOrDefault(col, "-")
-                    </span>
-                </td>
+                    <td class="col-source">
+                        @{
+                            var sourceName = row.GetValueOrDefault("Source", "-");
+                            var sourcePath = row.GetValueOrDefault("Source_path", null);
+                            var navId      = row.GetValueOrDefault("Source_navid", null);
+                        }
+                        <span class="source-badge"
+                              title="@(sourcePath ?? sourceName)"
+                              @onclick="@(() => { if (navId is not null) Nav.NavigateTo($"/parse/{navId}"); })">
+                            @sourceName
+                        </span>
+                    </td>
                 }
                 else
                 {

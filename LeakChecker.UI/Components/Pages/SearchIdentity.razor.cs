@@ -10,6 +10,7 @@ namespace LeakChecker.UI.Components;
 
 public class SearchIdentityBase : ComponentBase
 {
+    [Inject] protected NavigationManager Nav { get; set; } = default!;
     [Inject] private IDashboardService DashboardService { get; set; } = default!;
 
     protected static readonly ItemEnum[] SearchableItems =
@@ -37,8 +38,8 @@ public class SearchIdentityBase : ComponentBase
     private const string SourceColumn = "Source";
     private ObjectId? _lastId;
 
-    // Cache: ParseId -> FileName, shared across searches for the lifetime of the component
-    private readonly Dictionary<ObjectId, string> _sourceCache = [];
+    private readonly Dictionary<ObjectId, string> _sourceNameCache = [];
+    private readonly Dictionary<ObjectId, string> _sourcePathCache = [];
 
     protected List<Dictionary<string, string?>> Results { get; set; } = [];
     protected List<string> ResultColumns { get; set; } = [];
@@ -176,25 +177,22 @@ public class SearchIdentityBase : ComponentBase
         _lastId = docs[^1]["_id"].AsObjectId;
         HasMore = docs.Count == PageSize;
 
-        // Fetch and cache any ParseIds we haven't seen yet
         var uncached = docs
             .Where(d => d.Contains("ParseId"))
             .Select(d => d["ParseId"].AsObjectId)
-            .Distinct()
-            .Where(id => !_sourceCache.ContainsKey(id))
-            .ToList();
+            .Where(id => !_sourceNameCache.ContainsKey(id))
+            .ToHashSet();
 
-        foreach (var id in uncached)
+        await Task.WhenAll(uncached.Select(async id =>
         {
             var detail = await DashboardService.GetParseByIdAsync(id.ToString());
-            _sourceCache[id] = detail?.FileName ?? id.ToString();
-        }
+            _sourceNameCache[id] = detail?.FileName ?? id.ToString();
+            _sourcePathCache[id] = detail?.SourcePath ?? id.ToString();
+        }));
 
-        // Source is always first column
         if (!ResultColumns.Contains(SourceColumn))
             ResultColumns.Insert(0, SourceColumn);
 
-        // Merge any new data columns
         var newCols = SearchableItems
             .Select(i => i.ToString())
             .Where(name => docs.Any(d => d.Contains(name)) && !ResultColumns.Contains(name));
@@ -206,12 +204,16 @@ public class SearchIdentityBase : ComponentBase
 
             if (doc.TryGetValue("ParseId", out var parseIdVal))
             {
-                var pid = parseIdVal.AsObjectId;
-                row[SourceColumn] = _sourceCache.TryGetValue(pid, out var name) ? name : pid.ToString();
+                var parseId = parseIdVal.AsObjectId;
+                row[SourceColumn]            = _sourceNameCache.TryGetValue(parseId, out var name) ? name : parseId.ToString();
+                row[SourceColumn + "_path"]  = _sourcePathCache.TryGetValue(parseId, out var path) ? path : parseId.ToString();
+                row[SourceColumn + "_navid"] = parseId.ToString();
             }
             else
             {
-                row[SourceColumn] = "-";
+                row[SourceColumn]            = "-";
+                row[SourceColumn + "_path"]  = null;
+                row[SourceColumn + "_navid"] = null;
             }
 
             foreach (var col in ResultColumns)
