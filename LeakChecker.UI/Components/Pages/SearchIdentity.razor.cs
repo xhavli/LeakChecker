@@ -14,7 +14,7 @@ public class SearchIdentityBase : ComponentBase
 
     protected static readonly ItemEnum[] SearchableItems =
         Enum.GetValues<ItemEnum>()
-            .Where(i => i is >= ItemEnum.Mac and <= ItemEnum.Other)
+            .Where(i => i is >= ItemEnum.MacAddress and <= ItemEnum.Other)
             .Where(i => i is not ItemEnum.NetTicks
                 and not ItemEnum.FileTime
                 and not ItemEnum.UnixSeconds
@@ -37,7 +37,7 @@ public class SearchIdentityBase : ComponentBase
     private const string SourceColumn = "Source";
     private ObjectId? _lastId;
 
-    // Cache: ParseId → FileName, shared across searches for the lifetime of the component
+    // Cache: ParseId -> FileName, shared across searches for the lifetime of the component
     private readonly Dictionary<ObjectId, string> _sourceCache = [];
 
     protected List<Dictionary<string, string?>> Results { get; set; } = [];
