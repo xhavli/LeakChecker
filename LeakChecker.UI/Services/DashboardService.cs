@@ -36,10 +36,10 @@ public class DashboardService(IDatabase database, IMongoDatabase db) : IDashboar
         return docs.Select(MapList).ToList();
     }
 
-    public async Task<ParseDetailModel?> GetParseByIdAsync(string mongoId)
+    public async Task<ParseDetailModel?> GetParseByIdAsync(string parseId)
     {
         var filter = Builders<BsonDocument>.Filter.Eq(
-            "_id", ObjectId.Parse(mongoId));
+            "_id", ObjectId.Parse(parseId));
 
         var doc = await _parses.Find(filter).FirstOrDefaultAsync();
         return doc is null ? null : MapDetail(doc);
