@@ -2,7 +2,7 @@ using MongoDB.Bson;
 
 namespace LeakChecker.UI.Helpers;
 
-public static class Formatter
+public static class StringFormatter
 {
     public static string Number(long n) => n.ToString("N0");
     

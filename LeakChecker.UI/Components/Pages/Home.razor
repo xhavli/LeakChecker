@@ -71,34 +71,30 @@ else if (!Loaded)
 else
 {
 <div class="dash-grid">
-    <MetricCard Label="Identities"      Value="@Formatter.Number(Stats.TotalRecords)" Sub="total records"  />
-    <MetricCard Label="Files"           Value="@Formatter.Number(Stats.TotalParses)"  Sub="total parsed"    />
-    <MetricCard Label="Avg accuracy"    Value="@Formatter.Percent(Stats.Accuracy)"    Sub="weighted across all parses" />
-    <MetricCard Label="Data size"       Value="@Formatter.Bytes(Stats.TotalBytes)"    Sub="all raw files"  />
+    <MetricCard Label="Identities"      Value="@StringFormatter.Number(Stats.TotalRecords)" Sub="total records"  />
+    <MetricCard Label="Files"           Value="@StringFormatter.Number(Stats.TotalParses)"  Sub="total parsed"    />
+    <MetricCard Label="Avg accuracy"    Value="@StringFormatter.Percent(Stats.Accuracy)"    Sub="weighted across all parses" />
+    <MetricCard Label="Data size"       Value="@StringFormatter.Bytes(Stats.TotalBytes)"    Sub="all files"  />
 </div>
 
 <div class="section-title">Recent parses</div>
 <table class="parse-table">
     <thead>
     <tr>
-        <th>File Name</th>
-        <th>Records</th>
-        <th>Accuracy</th>
-        <th>File Size</th>
-        <th>Duration</th>
-        <th>Finished</th>
+        @foreach (var col in Columns)
+        {
+            <th>@col.Header</th>
+        }
     </tr>
     </thead>
     <tbody>
     @foreach (var p in RecentParses)
     {
         <tr @onclick='() => Nav.NavigateTo($"/parse/{p.ParseId}")'>
-            <td>@Formatter.Truncate(p.FileName, 28)</td>
-            <td>@Formatter.Number(p.RecordsRead)</td>
-            <td><span class="badge @AccuracyClass(p.Accuracy)">@p.Accuracy.ToString("F2")%</span></td>
-            <td>@Formatter.Bytes(p.BytesRead)</td>
-            <td>@Formatter.Duration(p.Duration)</td>
-            <td>@p.ParseEnd.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+            @foreach (var col in Columns)
+            {
+                <td title="@col.Header">@col.Value(p)</td>
+            }
         </tr>
     }
     </tbody>

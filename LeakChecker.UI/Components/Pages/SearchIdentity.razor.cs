@@ -224,7 +224,7 @@ public class SearchIdentityBase : ComponentBase
                 if (!doc.TryGetValue(col, out var bVal)) continue;
 
                 row[col] = col == nameof(ItemEnum.Hash)
-                    ? Formatter.FormatHashes(bVal.AsBsonArray)
+                    ? StringFormatter.FormatHashes(bVal.AsBsonArray)
                     : bVal switch
                     {
                         BsonArray arr => string.Join(", ", arr.Select(v => v.ToString())),

@@ -68,14 +68,14 @@ else
     </div>
 
     <div class="detail-grid" style="grid-template-columns: repeat(4, 1fr);">
-        <MetricCard Label="Lines"       Value="@Formatter.Number(Detail.LinesRead)"     Sub="total read" />
-        <MetricCard Label="Records"     Value="@Formatter.Number(Detail.RecordsRead)"   Sub="total parsed" />
-        <MetricCard Label="Malformed"   Value="@Formatter.Number(Detail.MalformedRead)" Sub="skipped" />
-        <MetricCard Label="Accuracy"    Value="@Formatter.Percent(Detail.Accuracy)"     Sub="parse quality" />
-        <MetricCard Label="File size"   Value="@Formatter.Bytes(Detail.FileSize)"       Sub="on disk" />
-        <MetricCard Label="Speed"       Value="@($"{Formatter.Bytes((long)Detail.ByteSpeed)}/s")"    Sub="physical throughput" />
+        <MetricCard Label="Lines"       Value="@StringFormatter.Number(Detail.LinesRead)"     Sub="total read" />
+        <MetricCard Label="Records"     Value="@StringFormatter.Number(Detail.RecordsRead)"   Sub="total parsed" />
+        <MetricCard Label="Malformed"   Value="@StringFormatter.Number(Detail.MalformedRead)" Sub="skipped" />
+        <MetricCard Label="Accuracy"    Value="@StringFormatter.Percent(Detail.Accuracy)"     Sub="parse quality" />
+        <MetricCard Label="File size"   Value="@StringFormatter.Bytes(Detail.FileSize)"       Sub="on disk" />
+        <MetricCard Label="Speed"       Value="@($"{StringFormatter.Bytes((long)Detail.ByteSpeed)}/s")"    Sub="physical throughput" />
         <MetricCard Label="Line speed"  Value="@($"{Detail.LineSpeed:F2} ln/s")"        Sub="logical throughput" />
-        <MetricCard Label="Duration"    Value="@Formatter.Duration(Detail.Duration)"    />
+        <MetricCard Label="Duration"    Value="@StringFormatter.Duration(Detail.Duration)"    />
     </div>
 
     <div class="section-title">Identifiers</div>
@@ -235,7 +235,7 @@ else
                     {
                         <tr>
                             <td>@g.Key</td>
-                            <td style="text-align:right;">@Formatter.Bytes(g.Sum(x => x.Length))</td>
+                            <td style="text-align:right;">@StringFormatter.Bytes(g.Sum(x => x.Length))</td>
                         </tr>
                     }
                     </tbody>
@@ -259,8 +259,8 @@ else
                     @foreach (var s in Detail.EncodingSegments)
                     {
                         <tr>
-                            <td>@Formatter.Number(s.Start) B</td>
-                            <td>@Formatter.Number(s.EndOffset) B</td>
+                            <td>@StringFormatter.Number(s.Start) B</td>
+                            <td>@StringFormatter.Number(s.EndOffset) B</td>
                             <td>@s.DisplayEncoding</td>
                         </tr>
                     }
