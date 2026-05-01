@@ -52,10 +52,27 @@ public class SearchIdentityBase : ComponentBase
     {
         var raw = SearchValue.Trim();
 
-        
-        if (SelectedItem == ItemEnum.Domain && SelectedCondition == ConditionType.EndsWith)
+        if (SelectedItem == ItemEnum.Domain)
         {
-            var reversed = Reverse(raw.ToLowerInvariant());
+            string reversed = Reverse(raw.ToLowerInvariant());
+
+            return SelectedCondition switch
+            {
+                ConditionType.StartsWith =>
+                    (nameof(ItemEnum.DomainReversedLowercase), reversed, ConditionType.EndsWith),
+                ConditionType.Contains =>
+                    (nameof(ItemEnum.DomainReversedLowercase), reversed, ConditionType.Contains),
+                ConditionType.EndsWith =>
+                    (nameof(ItemEnum.DomainReversedLowercase), reversed, ConditionType.StartsWith),
+                ConditionType.ExactMatch =>
+                    (nameof(ItemEnum.DomainReversedLowercase), reversed, ConditionType.ExactMatch),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+            
+        if (SelectedItem == ItemEnum.Email && SelectedCondition == ConditionType.EndsWith && !raw.Contains('@'))
+        {
+            string reversed = Reverse(raw.ToLowerInvariant());
             return (nameof(ItemEnum.DomainReversedLowercase), reversed, ConditionType.StartsWith);
         }
 
@@ -200,14 +217,14 @@ public class SearchIdentityBase : ComponentBase
             foreach (var col in ResultColumns)
             {
                 if (col == SourceColumn) continue;
-                if (!doc.TryGetValue(col, out var bval)) continue;
+                if (!doc.TryGetValue(col, out var bsonValue)) continue;
 
                 row[col] = col == nameof(ItemEnum.Hash)
-                    ? Formatter.FormatHashes(bval.AsBsonArray)
-                    : bval switch
+                    ? Formatter.FormatHashes(bsonValue.AsBsonArray)
+                    : bsonValue switch
                     {
                         BsonArray arr => string.Join(", ", arr.Select(v => v.ToString())),
-                        _             => bval.ToString()
+                        _             => bsonValue.ToString()
                     };
             }
 
