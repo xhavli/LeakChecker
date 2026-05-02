@@ -10,10 +10,10 @@ public static class MongoDbRepository
 {
     private static readonly MongoClient Client = new("mongodb://localhost:27017");
     private static readonly IMongoDatabase Database = Client.GetDatabase("LeakCheckerDb");
-    private static readonly IMongoCollection<BsonDocument> ParseCollection = Database.GetCollection<BsonDocument>(nameof(CollectionTypeEnum.Parsings));
-    private static readonly IMongoCollection<BsonDocument> StatsCollection = Database.GetCollection<BsonDocument>(nameof(CollectionTypeEnum.Dashboard));
-    private static readonly IMongoCollection<BsonDocument> ExecutionCollection = Database.GetCollection<BsonDocument>(nameof(CollectionTypeEnum.Executions));
-    private static readonly IMongoCollection<BsonDocument> IdentitiesCollection = Database.GetCollection<BsonDocument>(nameof(CollectionTypeEnum.Identities));
+    private static readonly IMongoCollection<BsonDocument> ParseCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Parsings));
+    private static readonly IMongoCollection<BsonDocument> StatsCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Dashboard));
+    private static readonly IMongoCollection<BsonDocument> ExecutionCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Executions));
+    private static readonly IMongoCollection<BsonDocument> IdentitiesCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Identities));
     private static readonly InsertManyOptions UnorderedOptions = new() { IsOrdered = false };
     
     private const string DashboardId = "dashboard";

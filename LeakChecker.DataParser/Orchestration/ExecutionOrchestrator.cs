@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Channels;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Content.Detection.RecognitionService;
 using LeakChecker.DataParser.Data;
 using LeakChecker.DataParser.Helpers.FileHelp;
@@ -83,7 +84,7 @@ public sealed class ExecutionOrchestrator(
             logger.Log($"Execution finished successfully. Parsed {paths.Count()} files. Current DateTime is " + 
                        $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Execution);
 
-            logger.Log("Creating MongoDB indexes for Users collection...");
+            logger.Log($"Creating MongoDB indexes for {CollectionType.Identities} collection.");
             Stopwatch sw = Stopwatch.StartNew();
             await settings.Database.CreateIndexes();
             logger.Log($"MongoDB indexes created in {sw.Elapsed}.", LogLevel.Success, LogContext.Execution);
