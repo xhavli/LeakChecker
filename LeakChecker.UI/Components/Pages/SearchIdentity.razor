@@ -180,135 +180,155 @@
 
 <div class="search-card">
     <div class="search-row">
-        <input class="search-input"
-               type="text"
-               placeholder="Enter search value…"
-               @bind="SearchValue"
-               @bind:event="oninput"
-               @onkeydown="OnKeyDown" />
 
-        <select class="search-select" @bind="SelectedCondition">
-            @foreach (var c in Enum.GetValues<ConditionType>())
-            {
-            <option value="@c">@c</option>
-            }
-        </select>
+        @if (SelectedItem == ItemEnum.Timestamp)
+        {
+            <input class="search-input"
+                   style="flex:unset;width:150px;"
+                   type="date"
+                   @bind="DatePart" />
+            <input class="search-input"
+                   style="flex:unset;width:150px;"
+                   type="time"
+                   step="1"
+                   placeholder="HH:MM:SS"
+                   @bind="TimePart" />
+            <div style="flex:1;"></div>
+        }
+        else
+        {
+            <input class="search-input"
+                   type="text"
+                   placeholder="Enter search value…"
+                   @bind="SearchValue"
+                   @bind:event="oninput"
+                   @onkeydown="OnKeyDown" />
+
+            <select class="search-select" @bind="SelectedCondition">
+                @foreach (var c in Enum.GetValues<ConditionType>())
+                {
+                    <option value="@c">@c</option>
+                }
+            </select>
+        }
 
         <select class="search-select" @bind="SelectedItem">
             @foreach (var item in SearchableItems)
             {
-            <option value="@item">@item</option>
+                <option value="@item">@item</option>
             }
         </select>
 
-        <button class="search-btn" @onclick="RunSearch" disabled="@(IsSearching || string.IsNullOrWhiteSpace(SearchValue))">
+        <button class="search-btn"
+                @onclick="RunSearch"
+                disabled="@(IsSearching || !IsSearchReady)">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
             </svg>
             @if (IsSearching)
             {
-            <span>Searching…</span>
+                <span>Searching…</span>
             }
             else
             {
-            <span>Search</span>
+                <span>Search</span>
             }
         </button>
     </div>
 
     @if (ErrorMessage is not null)
     {
-    <div class="error-msg">@ErrorMessage</div>
+        <div class="error-msg">@ErrorMessage</div>
     }
 </div>
 
 @if (IsSearching)
 {
-<div class="search-card">
-    <div style="display:flex;align-items:baseline;gap:12px;">
-        <div class="section-title" style="margin-bottom:0;">Searching…</div>
-        <div style="font-size:15px;color:#868e96;font-family:monospace;">
-            @Elapsed.ToString(@"hh\:mm\:ss")
+    <div class="search-card">
+        <div style="display:flex;align-items:baseline;gap:12px;">
+            <div class="section-title" style="margin-bottom:0;">Searching…</div>
+            <div style="font-size:15px;color:#868e96;font-family:monospace;">
+                @Elapsed.ToString(@"hh\:mm\:ss")
+            </div>
         </div>
     </div>
-</div>
 }
 
 @if (HasSearched)
 {
-<div class="search-card">
-    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:1rem;">
-        <div class="section-title" style="margin-bottom:0;">Results in</div>
-        <div style="font-size:15px;color:#868e96;font-family:monospace;">
-            @Elapsed.ToString(@"hh\:mm\:ss")
+    <div class="search-card">
+        <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:1rem;">
+            <div class="section-title" style="margin-bottom:0;">Results in</div>
+            <div style="font-size:15px;color:#868e96;font-family:monospace;">
+                @Elapsed.ToString(@"hh\:mm\:ss")
+            </div>
         </div>
-    </div>
 
-    @if (Results.Count == 0)
-    {
-    <div class="empty-state">No records found.</div>
-    }
-    else
-    {
-    <div class="result-count">
-        Showing <strong>@TotalLoaded</strong> of <strong>@(TotalMatched?.ToString("N0") ?? "…")</strong> records found
-    </div>
-    <div style="overflow-x:auto;">
-        <table class="results-table">
-            <thead>
-            <tr>
-                @foreach (var col in ResultColumns)
-                {
-                <th>@col</th>
-                }
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var row in Results)
-            {
-            <tr>
-                @foreach (var col in ResultColumns)
-                {
-                @if (col == "Source")
-                {
-                    <td class="col-source">
-                        @{
-                            var sourceName = row.GetValueOrDefault("Source", "-");
-                            var sourcePath = row.GetValueOrDefault("Source_path", null);
-                            var navId      = row.GetValueOrDefault("Source_navid", null);
-                        }
-                        <span class="source-badge"
-                              title="@(sourcePath ?? sourceName)"
-                              @onclick="@(() => OpenParse(row.GetValueOrDefault("Source_navid", null)))">
-                            @sourceName
-                        </span>
-                    </td>
-                }
-                else
-                {
-                    <td title="@col">@row.GetValueOrDefault(col, "-")</td>
-                }
-                }
-            </tr>
-            }
-            </tbody>
-        </table>
-        @if (HasMore)
+        @if (Results.Count == 0)
         {
-        <div style="margin-top:1rem;text-align:center;">
-            <button class="search-btn" style="margin:0 auto;" @onclick="LoadMore" disabled="@IsLoadingMore">
-                @if (IsLoadingMore)
+            <div class="empty-state">No records found.</div>
+        }
+        else
+        {
+            <div class="result-count">
+                Showing <strong>@TotalLoaded</strong> of <strong>@(TotalMatched?.ToString("N0") ?? "…")</strong> records found
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            @foreach (var col in ResultColumns)
+                            {
+                                <th>@col</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Results)
+                        {
+                            <tr>
+                                @foreach (var col in ResultColumns)
+                                {
+                                    @if (col == "Source")
+                                    {
+                                        <td class="col-source">
+                                            @{
+                                                var sourceName = row.GetValueOrDefault("Source", "-");
+                                                var sourcePath = row.GetValueOrDefault("Source_path", null);
+                                                var navId      = row.GetValueOrDefault("Source_navid", null);
+                                            }
+                                            <span class="source-badge"
+                                                  title="@(sourcePath ?? sourceName)"
+                                                  @onclick="@(() => OpenParse(row.GetValueOrDefault("Source_navid", null)))">
+                                                @sourceName
+                                            </span>
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td title="@col">@row.GetValueOrDefault(col, "-")</td>
+                                    }
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                @if (HasMore)
                 {
-                <span>Loading…</span>
+                    <div style="margin-top:1rem;text-align:center;">
+                        <button class="search-btn" style="margin:0 auto;" @onclick="LoadMore" disabled="@IsLoadingMore">
+                            @if (IsLoadingMore)
+                            {
+                                <span>Loading…</span>
+                            }
+                            else
+                            {
+                                <span>Load more</span>
+                            }
+                        </button>
+                    </div>
                 }
-                else
-                {
-                <span>Load more</span>
-                }
-            </button>
-        </div>
+            </div>
         }
     </div>
-    }
-</div>
 }

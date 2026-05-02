@@ -10,10 +10,10 @@ public static class MongoDbRepository
 {
     private static readonly MongoClient Client = new("mongodb://localhost:27017");
     private static readonly IMongoDatabase Database = Client.GetDatabase("LeakCheckerDb");
-    private static readonly IMongoCollection<BsonDocument> ParseCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Parsings));
-    private static readonly IMongoCollection<BsonDocument> StatsCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Dashboard));
-    private static readonly IMongoCollection<BsonDocument> ExecutionCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Executions));
-    private static readonly IMongoCollection<BsonDocument> IdentitiesCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Identities));
+    private static readonly IMongoCollection<BsonDocument> ParseCollection = Database.GetCollection<BsonDocument>(nameof(CollectionTypeEnum.Parsings));
+    private static readonly IMongoCollection<BsonDocument> StatsCollection = Database.GetCollection<BsonDocument>(nameof(CollectionTypeEnum.Dashboard));
+    private static readonly IMongoCollection<BsonDocument> ExecutionCollection = Database.GetCollection<BsonDocument>(nameof(CollectionTypeEnum.Executions));
+    private static readonly IMongoCollection<BsonDocument> IdentitiesCollection = Database.GetCollection<BsonDocument>(nameof(CollectionTypeEnum.Identities));
     private static readonly InsertManyOptions UnorderedOptions = new() { IsOrdered = false };
     
     private const string DashboardId = "dashboard";
@@ -87,9 +87,16 @@ public static class MongoDbRepository
             
             //
             
+            // Special case for low cardinality field performance
             new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Gender)),
-                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Gender)}_Asc_Sparse", Sparse = true }
+                Builders<BsonDocument>.IndexKeys
+                    .Ascending(nameof(ItemEnum.Gender))
+                    .Ascending("_id"),
+                new CreateIndexOptions 
+                { 
+                    Name = $"IDX_{nameof(ItemEnum.Gender)}_Id_Compound_Sparse", 
+                    Sparse = true 
+                }
             ),
             
             new CreateIndexModel<BsonDocument>(
@@ -187,6 +194,74 @@ public static class MongoDbRepository
             _ => throw new ArgumentOutOfRangeException(nameof(condition))
         };
 
+        return await IdentitiesCollection.CountDocumentsAsync(filter);
+    }
+    
+    public static async Task<List<BsonDocument>> SearchIdentityByDateTime(
+        string field,
+        DateTime utcValue,
+        ObjectId? afterId = null,
+        int limit = 50)
+    {
+        var matchFilter = Builders<BsonDocument>.Filter.AnyEq(field, utcValue);
+
+        var cursorFilter = afterId.HasValue
+            ? Builders<BsonDocument>.Filter.And(matchFilter,
+                Builders<BsonDocument>.Filter.Gt("_id", afterId.Value))
+            : matchFilter;
+
+        return await IdentitiesCollection
+            .Find(cursorFilter)
+            .Sort(Builders<BsonDocument>.Sort.Ascending("_id"))
+            .Limit(limit)
+            .ToListAsync();
+    }
+
+    public static async Task<long> CountIdentitiesByDateTime(string field, DateTime utcValue)
+    {
+        var filter = Builders<BsonDocument>.Filter.AnyEq(field, utcValue);
+        return await IdentitiesCollection.CountDocumentsAsync(filter);
+    }
+
+    public static async Task<List<BsonDocument>> SearchIdentityByDateRange(
+        string field,
+        DateTime utcFrom,
+        DateTime utcTo,
+        ObjectId? afterId = null,
+        int limit = 50)
+    {
+        var rangeFilter = Builders<BsonDocument>.Filter.ElemMatch<BsonValue>(
+            field,
+            new BsonDocumentFilterDefinition<BsonValue>(new BsonDocument
+            {
+                { "$gte", utcFrom },
+                { "$lt", utcTo }
+            })
+        );
+
+        var cursorFilter = afterId.HasValue
+            ? Builders<BsonDocument>.Filter.And(rangeFilter, 
+                Builders<BsonDocument>.Filter.Gt("_id", afterId.Value))
+            : rangeFilter;
+
+        return await IdentitiesCollection
+            .Find(cursorFilter)
+            .Sort(Builders<BsonDocument>.Sort.Ascending("_id"))
+            .Limit(limit)
+            .ToListAsync();
+    }
+
+    public static async Task<long> CountIdentitiesByDateRange(string field, DateTime utcFrom, DateTime utcTo)
+    {
+        var filter = Builders<BsonDocument>.Filter.ElemMatch<BsonValue>(
+            field,
+            new BsonDocumentFilterDefinition<BsonValue>(new BsonDocument
+            {
+                { "$gte", utcFrom },
+                { "$lt", utcTo }
+            })
+        );
+        
         return await IdentitiesCollection.CountDocumentsAsync(filter);
     }
 }
