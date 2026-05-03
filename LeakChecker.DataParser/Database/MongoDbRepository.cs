@@ -65,84 +65,58 @@ public static class MongoDbRepository
     {
         var indexModels = new List<CreateIndexModel<BsonDocument>>
         {
-            new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.NameLowercase)),
-                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.NameLowercase)}_Asc_Sparse", Sparse = true }
-            ),
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.NameLowercase)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.NameLowercase)}_Asc_Sparse", Sparse = true }),
             
-            new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.UsernameLowercase)),
-                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.UsernameLowercase)}_Asc_Sparse", Sparse = true }
-            ),
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.UsernameLowercase)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.UsernameLowercase)}_Asc_Sparse", Sparse = true }),
             
-            new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.EmailLowercase)),
-                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.EmailLowercase)}_Asc_Sparse", Sparse = true }
-            ),
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.EmailLowercase)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.EmailLowercase)}_Asc_Sparse", Sparse = true }),
             
-            new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.DomainReversedLowercase)),
-                new CreateIndexOptions { Name = $"IDX_{ItemEnum.DomainReversedLowercase}_Asc_Sparse", Sparse = true }
-            ),
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.DomainReversedLowercase)),
+                new CreateIndexOptions { Name = $"IDX_{ItemEnum.DomainReversedLowercase}_Asc_Sparse", Sparse = true }),
             
-            //
+            //TODO organization
+            //TODO location
             
             // Special case for low cardinality field performance
-            new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys
+            new(Builders<BsonDocument>.IndexKeys
                     .Ascending(nameof(ItemEnum.Gender))
                     .Ascending("_id"),
                 new CreateIndexOptions 
                 { 
-                    Name = $"IDX_{nameof(ItemEnum.Gender)}_Id_Compound_Sparse", 
+                    Name = $"IDX_{nameof(ItemEnum.Gender)}_{nameof(ItemEnum.Id)}_Compound_Sparse", 
                     Sparse = true 
                 }
             ),
             
-            new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Iban)),
-                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Iban)}_Asc_Sparse", Sparse = true }
-            ),
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Iban)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Iban)}_Asc_Sparse", Sparse = true }),
             
-            new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Id)),
-                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Id)}_Asc_Sparse", Sparse = true }
-            ),
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Id)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Id)}_Asc_Sparse", Sparse = true }),
             
-            new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Ipv4)),
-                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Ipv4)}_Asc_Sparse", Sparse = true }
-            ),
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Ipv4)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Ipv4)}_Asc_Sparse", Sparse = true }),
             
-            new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Ipv6)),
-                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Ipv6)}_Asc_Sparse", Sparse = true }
-            ),
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Ipv6)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Ipv6)}_Asc_Sparse", Sparse = true }),
             
-            new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.MacAddress)),
-                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.MacAddress)}_Asc_Sparse", Sparse = true }
-            ),
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.MacAddress)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.MacAddress)}_Asc_Sparse", Sparse = true }),
             
-            new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.MaritalStatus)),
-                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.MaritalStatus)}_Asc_Sparse", Sparse = true }
-            ),
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.MaritalStatus)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.MaritalStatus)}_Asc_Sparse", Sparse = true }),
             
-            new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.PhoneNumber)),
-                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.PhoneNumber)}_Asc_Sparse", Sparse = true }
-            ),
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.PhoneNumber)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.PhoneNumber)}_Asc_Sparse", Sparse = true }),
             
-            new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Timestamp)),
-                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Timestamp)}_Asc_Sparse", Sparse = true }
-            ),
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Timestamp)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Timestamp)}_Asc_Sparse", Sparse = true }),
             
-            new CreateIndexModel<BsonDocument>(
-                Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Other)),
-                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Other)}_Asc_Sparse", Sparse = true }
-            ),
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Other)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Other)}_Asc_Sparse", Sparse = true }),
         };
 
         await IdentitiesCollection.Indexes.CreateManyAsync(indexModels);
@@ -230,7 +204,7 @@ public static class MongoDbRepository
         ObjectId? afterId = null,
         int limit = 50)
     {
-        var rangeFilter = Builders<BsonDocument>.Filter.ElemMatch<BsonValue>(
+        var rangeFilter = Builders<BsonDocument>.Filter.ElemMatch(
             field,
             new BsonDocumentFilterDefinition<BsonValue>(new BsonDocument
             {
@@ -253,7 +227,7 @@ public static class MongoDbRepository
 
     public static async Task<long> CountIdentitiesByDateRange(string field, DateTime utcFrom, DateTime utcTo)
     {
-        var filter = Builders<BsonDocument>.Filter.ElemMatch<BsonValue>(
+        var filter = Builders<BsonDocument>.Filter.ElemMatch(
             field,
             new BsonDocumentFilterDefinition<BsonValue>(new BsonDocument
             {
