@@ -35,11 +35,29 @@ public class SearchIdentityBase : ComponentBase
     private DateTime? _tsFrom;
     private DateTime? _tsTo;
 
+    protected bool IsSearching { get; set; }
     protected bool IsSearchReady => SelectedItem == ItemEnum.Timestamp
         ? DatePart.HasValue
         : !string.IsNullOrWhiteSpace(SearchValue);
+    protected bool ShowPerformanceWarning
+    {
+        get
+        {
+            if (SelectedItem == ItemEnum.Timestamp) return false;
 
-    protected bool IsSearching { get; set; }
+            if (SelectedCondition == ConditionType.Contains)
+                return true;
+
+            if (SelectedCondition == ConditionType.EndsWith)
+            {
+                if (SelectedItem == ItemEnum.Domain) return false;
+                if (SelectedItem == ItemEnum.Email && !SearchValue.Contains('@')) return false;
+                return true;
+            }
+
+            return false;
+        }
+    }
     protected bool HasSearched { get; set; }
     protected bool IsLoadingMore { get; set; }
     protected bool HasMore { get; set; }
