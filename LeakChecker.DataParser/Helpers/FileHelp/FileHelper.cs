@@ -143,10 +143,13 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
             int malformed = 0;
             int sampled = 0;
             
-            while (!reader.EndOfStream && sampled < sampleLimit)
+            while (sampled < sampleLimit)
             {
                 string? line = await reader.ReadLineAsync();
-                if (line == null || line.Contains('�'))
+                if (line is null)
+                    break; // End of stream
+
+                if (line.Contains('�'))
                     malformed++;
 
                 sampled++;

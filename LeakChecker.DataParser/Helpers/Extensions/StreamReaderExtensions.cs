@@ -12,9 +12,6 @@ public static class StreamReaderExtensions
     {
         ArgumentNullException.ThrowIfNull(reader);
 
-        if (reader.EndOfStream)
-            return null;
-
         char[]? rentedBuffer = null;
         int rentedPos = 0;
 
