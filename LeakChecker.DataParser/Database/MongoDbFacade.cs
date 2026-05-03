@@ -50,8 +50,19 @@ public class MongoDbFacade : IDatabase
         return await MongoDbRepository.GetDashboardStats();
     }
 
+    public async Task CreateIdentityIndexes()
+    {
+        await MongoDbRepository.CreateIdentityIndexes();
+    }
+    
+    public async Task CreateParseIndexes()
+    {
+        await MongoDbRepository.CreateParseIndexes();
+    }
+
     public async Task CreateIndexes()
     {
-        await MongoDbRepository.CreateIndexes();
+        await CreateParseIndexes();
+        await CreateIdentityIndexes();
     }
 }

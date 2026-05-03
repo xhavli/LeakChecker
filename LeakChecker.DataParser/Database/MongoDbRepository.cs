@@ -8,8 +8,9 @@ namespace LeakChecker.DataParser.Database;
 
 public static class MongoDbRepository
 {
+    private const string DbName = "LeakCheckerDb";
     private static readonly MongoClient Client = new("mongodb://localhost:27017");
-    private static readonly IMongoDatabase Database = Client.GetDatabase("LeakCheckerDb");
+    private static readonly IMongoDatabase Database = Client.GetDatabase(DbName);
     private static readonly IMongoCollection<BsonDocument> ParseCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Parsings));
     private static readonly IMongoCollection<BsonDocument> StatsCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Dashboard));
     private static readonly IMongoCollection<BsonDocument> ExecutionCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Executions));
@@ -61,7 +62,7 @@ public static class MongoDbRepository
             .FirstOrDefaultAsync();
     }
     
-    public static async Task CreateIndexes()
+    public static async Task CreateIdentityIndexes()
     {
         var indexModels = new List<CreateIndexModel<BsonDocument>>
         {
@@ -120,6 +121,17 @@ public static class MongoDbRepository
         };
 
         await IdentitiesCollection.Indexes.CreateManyAsync(indexModels);
+    }
+
+    public static async Task CreateParseIndexes()
+    {
+         var indexModels = new List<CreateIndexModel<BsonDocument>>
+        {
+            new(Builders<BsonDocument>.IndexKeys.Descending("ParseEnded"), 
+                new CreateIndexOptions { Name = "IDX_ParseEnded_Desc"}),
+        };
+
+        await ParseCollection.Indexes.CreateManyAsync(indexModels);
     }
     
     public static async Task<List<BsonDocument>> SearchIdentity(
