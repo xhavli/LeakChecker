@@ -30,7 +30,6 @@ public class Settings : ISettings
         ArgumentNullException.ThrowIfNull(jsonSettings);
 
         jsonSettings.Validate();
-        IDatabase database = ResolveDatabase(jsonSettings.DbProvider);
         
         return new Settings
         {
@@ -38,7 +37,7 @@ public class Settings : ISettings
             LogDirectory = Path.GetFullPath(jsonSettings.LogDirectory!),
             TmpDirectory = Path.GetFullPath(jsonSettings.TmpDirectory!),
             ProjectDirectory = Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.Parent?.Parent?.FullName!,
-            PythonVenvPath = jsonSettings.PythonVenvPath!,
+            PythonVenvPath = ResolvePythonVenvPath(jsonSettings),
             PythonScriptName = jsonSettings.PythonScriptName!,
             CsharpPort = jsonSettings.CsharpPort,
             PythonPort = jsonSettings.PythonPort,
@@ -52,7 +51,7 @@ public class Settings : ISettings
             DefaultUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
             Environment = jsonSettings.Environment!,
             Verbose = jsonSettings.Verbose,
-            Database = database
+            Database = ResolveDatabase(jsonSettings.DbProvider)
         };
     }
 
@@ -66,5 +65,16 @@ public class Settings : ISettings
             "mongodb" => new MongoDbFacade(),
             _ => throw new NotSupportedException($"Unsupported database provider '{dbProvider}'.")
         };
+    }
+    
+    private static string ResolvePythonVenvPath(JsonSettings jsonSettings)
+    {
+        if (OperatingSystem.IsWindows())
+            return jsonSettings.PythonVenvWindowsPath!;
+    
+        if (OperatingSystem.IsLinux())
+            return jsonSettings.PythonVenvLinuxPath!;
+    
+        throw new PlatformNotSupportedException("Unsupported OS");
     }
 }

@@ -5,7 +5,8 @@ public class JsonSettings
     public string? InputDirectory { get; set; }
     public string? LogDirectory { get; set; }
     public string? TmpDirectory { get; set; }
-    public string? PythonVenvPath { get; set; }
+    public string? PythonVenvLinuxPath { get; set; }
+    public string? PythonVenvWindowsPath { get; set; }
     public string? PythonScriptName { get; set; }
     public int CsharpPort { get; set; }
     public int PythonPort { get; set; }
