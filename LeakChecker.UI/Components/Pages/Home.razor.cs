@@ -13,7 +13,7 @@ public class HomeBase : ComponentBase
     protected record ParseColumn(string Header, Func<ParseListModel, string> Value);
 
     protected List<ParseColumn> Columns => [
-        new("File Name",  p => StringFormatter.Truncate(p.FileName, 28)),
+        new("File Name",  p => StringFormatter.Truncate(Path.GetFileName(p.SourcePath), 28)),
         new("Records",    p => StringFormatter.Number(p.RecordsRead)),
         new("Accuracy",   p => p.Accuracy.ToString("F2") + "%"),
         new("File Size",  p => StringFormatter.Bytes(p.BytesRead)),

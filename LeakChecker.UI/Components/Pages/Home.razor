@@ -50,6 +50,24 @@
     .refresh-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #868e96; background: none; border: 1px solid #dee2e6; border-radius: 6px; padding: 4px 12px; cursor: pointer; }
     .refresh-btn:hover { background: #f8f9fa; }
     .error-box { padding: 1rem; border-radius: 8px; background: #fff5f5; border: 1px solid #ffc9c9; color: #c92a2a; font-size: 13px; }
+    .source-badge {
+        display: inline-block;
+        font-family: sans-serif;
+        font-size: 11px;
+        font-weight: 500;
+        color: #5f3dc4;
+        background: #f3f0ff;
+        border: 1px solid #d0bfff;
+        border-radius: 4px;
+        padding: 1px 7px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 220px;
+        vertical-align: middle;
+        cursor: pointer;
+    }
+    .source-badge:hover { background: #ece9ff; }
 </style>
 
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
@@ -90,10 +108,23 @@ else
     <tbody>
     @foreach (var p in RecentParses)
     {
-        <tr @onclick='() => Nav.NavigateTo($"/parse/{p.ParseId}")'>
+        <tr>
             @foreach (var col in Columns)
             {
-                <td title="@col.Header">@col.Value(p)</td>
+                @if (col.Header == "File Name")
+                {
+                    <td>
+                        <span class="source-badge"
+                              title="@p.SourcePath"
+                              @onclick='() => Nav.NavigateTo($"/parse/{p.ParseId}")'>
+                            @col.Value(p)
+                        </span>
+                    </td>
+                }
+                else
+                {
+                    <td title="@col.Header">@col.Value(p)</td>
+                }
             }
         </tr>
     }
