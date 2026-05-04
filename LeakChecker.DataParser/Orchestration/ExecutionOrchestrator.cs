@@ -38,7 +38,17 @@ public sealed class ExecutionOrchestrator(
 
         try
         {
-            IEnumerable<string> paths = await fileHelper.GetPathsFromInputDirectory();
+            IEnumerable<string> paths;
+            if (settings.Environment.StartsWith("Development", StringComparison.OrdinalIgnoreCase))
+            {
+                logger.Log($"Paths loaded from {nameof(FilePaths.Utf8)} in {settings.Environment} environment", LogLevel.Info, LogContext.Parsing);
+                paths = FilePaths.Utf8;
+            }
+            else
+            {
+                paths = await fileHelper.GetPathsFromInputDirectory();
+            }
+
             
             var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(settings.ChannelCapacity)
             {

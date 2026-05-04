@@ -43,12 +43,20 @@ public class ParsingOrchestrator(
             }
             else
             {
-                // EncodingDetector encodingDetector = new(filePath, parseLogger, parseStats);
-                // List<EncodingSegment> encodingSegments = await encodingDetector.DetectEncodingSegments();
-                //
-                // string parsePath = await EncodingConverter.ConvertFileToUtf8(encodingSegments, parseLogger);
-                string parsePath = parseLogger.SubjectFilePath;
-                
+                string parsePath;
+                if (settings.Environment.StartsWith("Development", StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.Log($"Skipping encoding detection and conversion in {settings.Environment} environment", LogLevel.Info, LogContext.Parsing);
+                    EncodingDetector encodingDetector = new(filePath, parseLogger, parseStats);
+                    List<EncodingSegment> encodingSegments = await encodingDetector.DetectEncodingSegments();
+                    
+                    parsePath = await EncodingConverter.ConvertFileToUtf8(encodingSegments, parseLogger);
+                }
+                else
+                {
+                    parsePath = parseLogger.SubjectFilePath;
+                }
+
                 await fileHelper.IsReadable(parsePath);
 
                 using ContentParser contentParser = new(parsePath, parseLogger, parseStats, settings);
