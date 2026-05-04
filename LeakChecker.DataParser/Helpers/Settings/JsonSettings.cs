@@ -5,6 +5,8 @@ public class JsonSettings
     public string? InputDirectory { get; set; }
     public string? LogDirectory { get; set; }
     public string? TmpDirectory { get; set; }
+    public double? ParseSizeLimitGb { get; set; }
+    public string? ResumeFromPath { get; set; }
     public string? PythonVenvLinuxPath { get; set; }
     public string? PythonVenvWindowsPath { get; set; }
     public string? PythonScriptName { get; set; }

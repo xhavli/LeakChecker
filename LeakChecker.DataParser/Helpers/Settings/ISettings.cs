@@ -1,5 +1,6 @@
 using System.Text;
 using LeakChecker.DataParser.Database;
+using LeakChecker.DataParser.Helpers.Enums;
 
 namespace LeakChecker.DataParser.Helpers.Settings;
 
@@ -9,6 +10,11 @@ public interface ISettings
     public string LogDirectory { get; init; }
     public string TmpDirectory { get; init; }
     public string ProjectDirectory { get; init; }
+    public double? ParseSizeLimitGb { get; init; }
+    public long? ParseSizeLimitBytes => ParseSizeLimitGb is null 
+        ? null 
+        : (long)(ParseSizeLimitGb.Value * SizeEnum.GigaByte);
+    public string? ResumeFromPath { get; init; }
     public string PythonVenvPath { get; init; }
     public string PythonScriptName { get; init; }
     public int CsharpPort { get; init; }

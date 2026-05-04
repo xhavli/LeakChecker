@@ -1,5 +1,6 @@
 using ExcelDataReader;
 using LeakChecker.DataParser.Helpers.ArchiveExtraction;
+using LeakChecker.DataParser.Helpers.Enums;
 using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
@@ -169,8 +170,85 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
     public async Task<IEnumerable<string>> GetPathsFromInputDirectory()
     {
         IEnumerable<string> inputPaths = Directory.EnumerateFiles(settings.InputDirectory, "*", SearchOption.AllDirectories);
-        IEnumerable<string> allPaths = await archiveExtractor.ExtractArchives(inputPaths);
+    
+        List<string> allowedPaths = ApplySizeLimit(inputPaths);
+    
+        if (allowedPaths.Count == 0)
+            return [];
+    
+        IEnumerable<string> allPaths = await archiveExtractor.ExtractArchives(allowedPaths);
         return SelectAccessiblePaths(allPaths);
+    }
+
+    private List<string> ApplySizeLimit(IEnumerable<string> paths)
+    {
+        long? limitBytes = settings.ParseSizeLimitBytes;
+
+        var sorted = paths.OrderBy(p => p, StringComparer.Ordinal).ToList();
+
+        IEnumerable<string> filtered;
+        if (settings.ResumeFromPath is null)
+        {
+            filtered = sorted;
+        }
+        else
+        {
+            // Check if resume point actually exists in the list
+            bool resumeFound = sorted.Any(p => string.Equals(p, settings.ResumeFromPath, StringComparison.Ordinal));
+            if (!resumeFound)
+            {
+                logger.Log($"Resume point '{settings.ResumeFromPath}' was not found in input directory. " +
+                           $"Processing from the beginning.", LogLevel.Warning);
+                filtered = sorted;
+            }
+            else
+            {
+                filtered = sorted
+                    .SkipWhile(p => !string.Equals(p, settings.ResumeFromPath, StringComparison.Ordinal))
+                    .Skip(1);
+            }
+        }
+
+        if (limitBytes is null)
+            return filtered.ToList();
+
+        long totalBytes = 0;
+        string? lastProcessed = null;
+        var accepted = new List<string>();
+
+        foreach (var path in filtered)
+        {
+            long size;
+            try
+            {
+                size = new FileInfo(path).Length;
+            }
+            catch (Exception ex)
+            {
+                logger.Log($"Could not read size of '{path}': {ex.Message}", LogLevel.Warning);
+                continue;
+            }
+
+            if (totalBytes + size > limitBytes)
+            {
+                if (lastProcessed is null)
+                    logger.Log($"Size limit of {settings.ParseSizeLimitGb:N2} GB reached immediately on first file '{path}' " +
+                               $"({new FileInfo(path).Length / (double)SizeEnum.GigaByte:N2} GB). No files were accepted. " +
+                               $"Increase ParseSizeLimitGb above {settings.ParseSizeLimitGb:N2} GB to make progress. " +
+                               $"Resume point unchanged: '{settings.ResumeFromPath}'.", LogLevel.Warning);
+                else
+                    logger.Log($"Size limit of {settings.ParseSizeLimitGb:N2} GB reached. " +
+                               $"Last accepted: '{lastProcessed}' ({new FileInfo(lastProcessed).Length / (double)SizeEnum.GigaByte:N2} GB). " +
+                               $"Resume from: '{path}' ({new FileInfo(path).Length / (double)SizeEnum.GigaByte:N2} GB).", LogLevel.Warning);
+                break;
+            }
+
+            totalBytes += size;
+            lastProcessed = path;
+            accepted.Add(path);
+        }
+
+        return accepted;
     }
     
     public void RemoveEmptyDirectories()
