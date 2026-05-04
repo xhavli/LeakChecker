@@ -121,6 +121,12 @@ else
                         </span>
                     </td>
                 }
+                else if (col.Header == "Accuracy")
+                {
+                    <td title="@col.Header">
+                        <span class="badge @AccuracyClass(p.Accuracy)">@col.Value(p)</span>
+                    </td>
+                }
                 else
                 {
                     <td title="@col.Header">@col.Value(p)</td>

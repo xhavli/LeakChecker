@@ -49,6 +49,6 @@ public class HomeBase : ComponentBase
         }
     }
     
-    protected static string AccuracyClass(double a) =>
-        a >= 99.8 ? "status-ok" : a >= 95 ? "status-warn" : "status-err";
+    protected static string AccuracyClass(double acc) =>
+        acc >= 99.8 ? "status-ok" : acc >= 95 ? "status-warn" : "status-err";
 }
