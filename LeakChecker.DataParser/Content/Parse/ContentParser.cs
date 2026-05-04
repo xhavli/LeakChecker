@@ -129,7 +129,7 @@ public class ContentParser : IDisposable
         };
         SqlInsertParser parser = new(parsingContext);
         ParsingResult result = await parser.Parse();
-        UpdateParsingState(result);
+        await UpdateParsingState(result);
         
         _stats.Formats.Add(FormatEnum.SqlInsert);
         _stats.Delimiters.Add(',');
@@ -185,7 +185,7 @@ public class ContentParser : IDisposable
         };
         CsvParser parser = new(parsingContext);
         ParsingResult result = await parser.Parse();
-        UpdateParsingState(result);
+        await UpdateParsingState(result);
         
         if (_possibleAsciiTable && delimiter == '|')
             _stats.Formats.Add(FormatEnum.AsciiTable);
@@ -252,7 +252,7 @@ public class ContentParser : IDisposable
         }
     }
 
-    private void UpdateParsingState(ParsingResult result)
+    private async Task UpdateParsingState(ParsingResult result)
     {
         _linesRead += result.LinesRead;
         _recordsRead += result.RecordsRead;
@@ -267,8 +267,8 @@ public class ContentParser : IDisposable
         else
         {
             
-            _logger.Log($"UpdateParsingState _readerPosition is greater than file size in bytes. {_readerPosition} - {_reader.BaseStream.Length} " +
-                        $"= {_readerPosition - _reader.BaseStream.Length} bytes. Setting BaseStream.Length", LogLevel.Warning, LogContext.Parsing);
+            await _logger.Log($"UpdateParsingState _readerPosition is greater than file size in bytes. {_readerPosition} - {_reader.BaseStream.Length} " +
+                              $"= {_readerPosition - _reader.BaseStream.Length} bytes. Setting BaseStream.Length", LogLevel.Warning, LogContext.Parsing);
             _readerPosition = _reader.BaseStream.Length;
         }
     }
