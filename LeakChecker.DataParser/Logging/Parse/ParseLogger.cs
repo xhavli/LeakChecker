@@ -49,8 +49,7 @@ public class ParseLogger : IParseLogger
         string logFileName = $"{parseTimeStamp}_[{parseId}]_{fileName}.txt";
         string logFilePath = Path.Combine(settings.LogDirectory, logFileName);
         string tmpFileName = $"TMP_{logFileName}";
-        string convDir = Path.Combine(settings.TmpDirectory, "Converted");
-        string tmpFilePath = Path.Combine(convDir, tmpFileName);
+        string tmpFilePath = Path.Combine(settings.TmpDirectory, tmpFileName);
 
         bool isDevelopment = string.Equals(settings.Environment.Trim(), "Development", StringComparison.OrdinalIgnoreCase);
         var writer = new StreamWriter(logFilePath, append: true, encoding: settings.DefaultUtf8)
