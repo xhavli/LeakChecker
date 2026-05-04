@@ -22,7 +22,7 @@ public static class EncodingConverter
             return logger.SubjectFilePath;
         }
 
-        await logger.LogEncodingConversion();
+        logger.LogEncodingConversion();
         Stopwatch sw = Stopwatch.StartNew();
         Encoding utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false); // no BOM
 
@@ -33,7 +33,7 @@ public static class EncodingConverter
         {
             if (segment.Encoding == null)
             {
-                await logger.Log($"Encoding missing for encoding segment [{segment.ToByteString()}]. Set UTF-8 as default.");
+                logger.Log($"Encoding missing for encoding segment [{segment.ToByteString()}]. Set UTF-8 as default.");
                 segment.Encoding = utf8;
             }
 
@@ -59,7 +59,7 @@ public static class EncodingConverter
 
         await outStream.FlushAsync();
         
-        await logger.Log($"Encoding conversion of {encodingSegments.Count}. Time taken: {sw.Elapsed}");
+        logger.Log($"Encoding conversion of {encodingSegments.Count}. Time taken: {sw.Elapsed}");
         
         return logger.SubjectTmpFilePath;
     }

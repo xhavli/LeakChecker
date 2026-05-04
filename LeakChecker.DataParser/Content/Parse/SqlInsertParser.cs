@@ -113,16 +113,14 @@ public class SqlInsertParser(ParsingContext parsingContext)
                             // Console.WriteLine($"\nSQL insert parsing line {startLine + linesRead}: {line}");
                             if (row.Length != expectedFields)
                             {
-                                await _logger.Log($"Bad row length on line {startLine + linesRead}: expected {expectedFields}, " +
-                                                  $"got {row.Length} content: {line}", LogLevel.Warning);
+                                _logger.Log($"Bad row length on line {startLine + linesRead}: expected {expectedFields}, got {row.Length} content: {line}", LogLevel.Warning);
                                 
                                 malformedRead++;
                                 malformedReadSequence++;
 
                                 if (malformedReadSequence >= malformedLimit)
                                 {
-                                    await _logger.Log($"Parsing reach malformed limit {malformedLimit}. " +
-                                                      $"Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
+                                    _logger.Log($"Parsing reach malformed limit {malformedLimit}. Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
                                     break;
                                 }
                                 
@@ -259,7 +257,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
             
             if (!_schema.TryGetValue(i, out var itemType))
             {
-                await _logger.Log($"Unmapped field[{i}] = {value}", LogLevel.Warning, LogContext.Parsing);
+                _logger.Log($"Unmapped field[{i}] = {value}", LogLevel.Warning, LogContext.Parsing);
                 continue;
             }
             

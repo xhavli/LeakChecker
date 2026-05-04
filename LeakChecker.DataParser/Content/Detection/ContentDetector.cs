@@ -66,7 +66,7 @@ public static class ContentDetector
         catch (Exception e)
         {
             // throw new NotImplementedException($"Communication with PythonNerService failed. {e.Message}");
-            await logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Failure,LogContext.Content);
+            logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Failure,LogContext.Content);
         }
         
         if (GuidRecognizer.TryRecognize(line, out List<string> stringGuids, out _))
@@ -141,7 +141,7 @@ public static class ContentDetector
         catch (Exception e)
         {
             // throw new NotImplementedException($"Communication with PythonNerService failed. {e.Message}");
-            await logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Failure, LogContext.PythonNerService);
+            logger.Log($"Communication with PythonNerService failed. {e.Message}", LogLevel.Failure, LogContext.PythonNerService);
         }
         
         if (GuidRecognizer.TryRecognize(token, out _, out _))
@@ -177,7 +177,7 @@ public static class ContentDetector
         catch (Exception e)
         {
             // throw new NotImplementedException($"Communication with www.hashes.com failed. {e.Message}");
-            await logger.Log($"Communication with www.hashes.com failed. {e.Message}", LogLevel.Failure, LogContext.ExternalService);
+            logger.Log($"Communication with www.hashes.com failed. {e.Message}", LogLevel.Failure, LogContext.ExternalService);
         }
         
         return ItemEnum.Other;

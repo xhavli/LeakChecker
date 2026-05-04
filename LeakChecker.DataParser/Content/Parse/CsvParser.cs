@@ -39,8 +39,8 @@ public class CsvParser(ParsingContext parsingContext)
         {
             if (line.IsSqlInsert())
             {
-                await _logger.Log($"Detected SQL Insert while parsing CSV file on line {startLine + linesRead}: {line}. " +
-                                  $"Returning back to recompute schema.", LogLevel.Warning, LogContext.Parsing);
+                _logger.Log($"Detected SQL Insert while parsing CSV file on line {startLine + linesRead}: {line}. " +
+                            $"Returning back to recompute schema.", LogLevel.Warning, LogContext.Parsing);
                 break;
             }
             
@@ -55,14 +55,12 @@ public class CsvParser(ParsingContext parsingContext)
             
             if (row.Length != expectedFields)
             {
-                await _logger.Log($"Bad row length at line {startLine + linesRead}: expected {expectedFields}, " +
-                                  $"got {row.Length} content: {line}", LogLevel.Warning);
+                _logger.Log($"Bad row length at line {startLine + linesRead}: expected {expectedFields}, got {row.Length} content: {line}", LogLevel.Warning);
 
                 malformedRead++;
                 if (++malformedReadSequence >= malformedLimit)
                 {
-                    await _logger.Log($"Parsing reach malformed limit {malformedLimit}. " +
-                                      $"Returning back to recompute schema.", LogLevel.Warning, LogContext.Parsing);
+                    _logger.Log($"Parsing reach malformed limit {malformedLimit}. Returning back to recompute schema.", LogLevel.Warning, LogContext.Parsing);
                     break;
                 }
                 
@@ -111,7 +109,7 @@ public class CsvParser(ParsingContext parsingContext)
 
             if (!_schema.TryGetValue(i, out ItemEnum itemType))
             {
-                await _logger.Log($"Unmapped CSV field[{i}] = {raw.Trim()}", LogLevel.Warning, LogContext.Parsing);
+                _logger.Log($"Unmapped CSV field[{i}] = {raw.Trim()}", LogLevel.Warning, LogContext.Parsing);
                 i++;
                 continue;
             }

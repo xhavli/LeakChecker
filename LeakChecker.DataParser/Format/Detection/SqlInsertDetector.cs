@@ -32,7 +32,7 @@ public static class SqlInsertDetector
 
         Stopwatch sw = Stopwatch.StartNew();
         var analyzer = new SchemaHeuristic();
-        await logger.LogSchemaDetectionHeader();
+        logger.LogSchemaDetectionHeader();
 
         bool inQuote = false;
         SqlInsertHeader? header = null;
@@ -62,7 +62,7 @@ public static class SqlInsertDetector
                     continue;
                 
                 expectedCols = header.Headers.Count;
-                await logger.LogSqlInsertHeader(header);
+                logger.LogSqlInsertHeader(header);
 
                 if (string.IsNullOrWhiteSpace(header.ValuesTail))
                     continue;
@@ -119,11 +119,10 @@ public static class SqlInsertDetector
                             // Validate column length
                             if (row.Length != expectedCols)
                             {
-                                await logger.Log($"Bad row length on line {linesRead}: expected {expectedCols}, " +
-                                                 $"got {row.Length} content: {tuple}", LogLevel.Warning);
+                                logger.Log($"Bad row length on line {linesRead}: expected {expectedCols}, got {row.Length} content: {tuple}", LogLevel.Warning);
                             }
                             
-                            await logger.LogSample($"SQL insert sample {samplesRead} on line {linesRead}: {tuple}");
+                            logger.LogSample($"SQL insert sample {samplesRead} on line {linesRead}: {tuple}");
 
                             var linePatterns = await AnalyzeRow(row, logger);
 
@@ -150,15 +149,15 @@ public static class SqlInsertDetector
                 break;
         }
 
-        await logger.LogHeuristicData(analyzer);
-        await logger.LogDominantSchema(analyzer, threshold);
+        logger.LogHeuristicData(analyzer);
+        logger.LogDominantSchema(analyzer, threshold);
         
         var original = analyzer.GetDominantSchema(threshold);
         var guessed = HeaderGuesser.GuessColumns(header!.Headers);
         var assigned = HeaderGuesser.BindGuessed(original, guessed);
 
-        await logger.LogFinalSchema(assigned);
-        await logger.Log($"SQL Insert schema created in {sw.Elapsed}\n");
+        logger.LogFinalSchema(assigned);
+        logger.Log($"SQL Insert schema created in {sw.Elapsed}\n");
         
         parsingContext.Stats.Schemas.Add(assigned);
         parsingContext.Stats.Context.Add(header.Subject);

@@ -16,19 +16,19 @@ public sealed class NullParseLogger : IParseLogger
     public string SubjectFilePath => string.Empty;
     public string SubjectTmpFilePath => string.Empty;
 
-    public Task Log(string? message, LogLevel level = LogLevel.Info, LogContext? context = null) => Task.CompletedTask;
-    public Task LogEncodingHeader() => Task.CompletedTask;
-    public Task LogEncodingStats(List<EncodingSegment> segments, int take = 10) => Task.CompletedTask;
-    public Task LogEncodingDetails(List<EncodingSegment> segments) => Task.CompletedTask;
-    public Task LogEncodingConversion() => Task.CompletedTask;
-    public Task LogContentHeader() => Task.CompletedTask;
-    public Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int take = 10) => Task.CompletedTask;
-    public Task LogSchemaDetectionHeader() => Task.CompletedTask;
-    public Task LogSample(string sample) => Task.CompletedTask;
-    public Task LogSqlInsertHeader(SqlInsertHeader insertHeader) => Task.CompletedTask;
-    public Task LogHeuristicData(SchemaHeuristic analyzer) => Task.CompletedTask;
-    public Task LogDominantSchema(SchemaHeuristic analyzer, double threshold) => Task.CompletedTask;
-    public Task LogFinalSchema(Dictionary<int, ItemEnum> schema) => Task.CompletedTask; 
-    public Task LogParseStats(ParseStats stats) => Task.CompletedTask;
+    public void Log(string? message, LogLevel level = LogLevel.Info, LogContext? context = null) {}
+    public void LogEncodingHeader() {}
+    public void LogEncodingStats(List<EncodingSegment> segments, int take = 10) {}
+    public void LogEncodingDetails(List<EncodingSegment> segments) {}
+    public void LogEncodingConversion() {}
+    public void LogContentHeader() {}
+    public void LogDelimiterHeuristic(DelimiterHeuristicResult result, int take = 10) {}
+    public void LogSchemaDetectionHeader() {}
+    public void LogSample(string sample) {}
+    public void LogSqlInsertHeader(SqlInsertHeader insertHeader) {}
+    public void LogHeuristicData(SchemaHeuristic analyzer) {}
+    public void LogDominantSchema(SchemaHeuristic analyzer, double threshold) {}
+    public void LogFinalSchema(Dictionary<int, ItemEnum> schema) {} 
+    public void LogParseStats(ParseStats stats) {}
     public void Dispose() { }
 }

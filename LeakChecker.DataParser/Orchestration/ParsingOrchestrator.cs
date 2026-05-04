@@ -31,7 +31,7 @@ public class ParsingOrchestrator(
         if (!isAccessible || !(isTextual || isExcel))
             return;
         
-        using var parseLogger = await parseLoggerFactory.CreateAsync(filePath);
+        using var parseLogger = parseLoggerFactory.CreateAsync(filePath);
         ParseStats parseStats = new ParseStats(stats.ExecutionId, parseLogger, filePath);
 
         try
@@ -44,9 +44,8 @@ public class ParsingOrchestrator(
             else
             {
                 string parsePath;
-                if (settings.Environment.StartsWith("Development", StringComparison.OrdinalIgnoreCase))
+                if (!settings.Environment.StartsWith("Development", StringComparison.OrdinalIgnoreCase))
                 {
-                    logger.Log($"Skipping encoding detection and conversion in {settings.Environment} environment", LogLevel.Info, LogContext.Parsing);
                     EncodingDetector encodingDetector = new(filePath, parseLogger, parseStats);
                     List<EncodingSegment> encodingSegments = await encodingDetector.DetectEncodingSegments();
                     
@@ -54,6 +53,7 @@ public class ParsingOrchestrator(
                 }
                 else
                 {
+                    logger.Log($"Skipping encoding detection and conversion in {settings.Environment} environment", LogLevel.Info, LogContext.Parsing);
                     parsePath = parseLogger.SubjectFilePath;
                 }
 
@@ -63,7 +63,7 @@ public class ParsingOrchestrator(
                 await contentParser.ParseAsync();
             }
 
-            await parseLogger.LogParseStats(parseStats);
+            parseLogger.LogParseStats(parseStats);
             await settings.Database.SaveParseOne(parseStats);
             await settings.Database.UpsertDashboardStats(parseStats);
 

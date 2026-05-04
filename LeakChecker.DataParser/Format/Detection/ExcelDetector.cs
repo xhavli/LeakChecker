@@ -16,7 +16,7 @@ public static class ExcelDetector
         await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
         using var reader = ExcelReaderFactory.CreateReader(stream);
         
-        await logger.LogSchemaDetectionHeader();
+        logger.LogSchemaDetectionHeader();
         
         int detectSamples = settings.ExcelSamples;
         int thresholdPercent = settings. SchemaThreshold;
@@ -34,7 +34,7 @@ public static class ExcelDetector
             int samplesCount = 0;
             
             SchemaHeuristic analyzer = new();
-            await logger.Log($"Sampling sheet number [{sheetNumber}] with name [{sheetName}].");
+            logger.Log($"Sampling sheet number [{sheetNumber}] with name [{sheetName}].");
     
             while (reader.Read() && samplesCount < detectSamples)
             {
@@ -45,7 +45,7 @@ public static class ExcelDetector
                 
                 samplesCount++;
                 List<SchemaHeuristicRecord> linePatterns = new();
-                await logger.LogSample(""); // Write blank line to make log more readable
+                logger.LogSample(""); // Write blank line to make log more readable
                 
                 int columns = reader.FieldCount;
                 for (int column = 0; column < columns; column++)
@@ -53,7 +53,7 @@ public static class ExcelDetector
                     string value = reader.GetValue(column)?.ToString() ?? string.Empty; // GetValue(i)? is necessary to have wit ? because can be null
                     if (string.IsNullOrWhiteSpace(value))
                     {
-                        await logger.LogSample($"Excel sample {samplesCount}: row [{row}] column [{column}] value: [EMPTY]");
+                        logger.LogSample($"Excel sample {samplesCount}: row [{row}] column [{column}] value: [EMPTY]");
                         linePatterns.Add(new SchemaHeuristicRecord
                         {
                             Attribute = ItemEnum.Empty,
@@ -63,7 +63,7 @@ public static class ExcelDetector
                         continue;
                     }
                     
-                    await logger.LogSample($"Excel sample {samplesCount}: row [{row}] column [{column}] value: {value}");
+                    logger.LogSample($"Excel sample {samplesCount}: row [{row}] column [{column}] value: {value}");
                     ItemEnum item = await ContentDetector.DetectToken(value, logger);
                     linePatterns.Add(new SchemaHeuristicRecord
                     {
@@ -76,13 +76,13 @@ public static class ExcelDetector
                 analyzer.AddLinePatterns(linePatterns, columns - 1);    // -1 because value is exact number of columns, not delimiters between
             }
     
-            await logger.LogHeuristicData(analyzer);
-            await logger.LogDominantSchema(analyzer, thresholdPercent);
+            logger.LogHeuristicData(analyzer);
+            logger.LogDominantSchema(analyzer, thresholdPercent);
         
             var original = analyzer.GetDominantSchema(thresholdPercent);
             var assigned = CredentialAssigner.Assign(original);
             
-            await logger.LogFinalSchema(assigned);
+            logger.LogFinalSchema(assigned);
         
             schemas.Add(sheetNumber, assigned);
         }

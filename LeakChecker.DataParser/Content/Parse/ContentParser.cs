@@ -42,7 +42,7 @@ public class ContentParser : IDisposable
 
     public async Task ParseAsync()
     {
-        await _logger.LogContentHeader();
+        _logger.LogContentHeader();
         Stopwatch sw = Stopwatch.StartNew();
 
         while (await _reader.ReadLineWithEndingAsync() is { } originalLine)
@@ -92,7 +92,7 @@ public class ContentParser : IDisposable
         _stats.BytesRead = _readerPosition;
         _stats.MalformedRead = _malformedRead;
 
-        await _logger.Log($"Content parsing finished successfully. Time taken: {sw.Elapsed}", LogLevel.Success, LogContext.Parsing);
+        _logger.Log($"Content parsing finished successfully. Time taken: {sw.Elapsed}", LogLevel.Success, LogContext.Parsing);
     }
 
     private async Task ParseSqlInsert()
@@ -129,7 +129,7 @@ public class ContentParser : IDisposable
         };
         SqlInsertParser parser = new(parsingContext);
         ParsingResult result = await parser.Parse();
-        await UpdateParsingState(result);
+        UpdateParsingState(result);
         
         _stats.Formats.Add(FormatEnum.SqlInsert);
         _stats.Delimiters.Add(',');
@@ -145,12 +145,12 @@ public class ContentParser : IDisposable
         if (delimiterResult.BestDelimiter.HasValue)
         { 
             delimiter = delimiterResult.BestDelimiter.Value;
-            await _logger.LogDelimiterHeuristic(delimiterResult);
+            _logger.LogDelimiterHeuristic(delimiterResult);
         }
         else
         {
             delimiter = ':';
-            await _logger.Log($"Delimiter detection failed. Setting default delimiter [{delimiter}]", LogLevel.Warning, LogContext.Delimiter);
+            _logger.Log($"Delimiter detection failed. Setting default delimiter [{delimiter}]", LogLevel.Warning, LogContext.Delimiter);
         }
 
         // Reset reader before CSV start
@@ -185,7 +185,7 @@ public class ContentParser : IDisposable
         };
         CsvParser parser = new(parsingContext);
         ParsingResult result = await parser.Parse();
-        await UpdateParsingState(result);
+        UpdateParsingState(result);
         
         if (_possibleAsciiTable && delimiter == '|')
             _stats.Formats.Add(FormatEnum.AsciiTable);
@@ -252,7 +252,7 @@ public class ContentParser : IDisposable
         }
     }
 
-    private async Task UpdateParsingState(ParsingResult result)
+    private void UpdateParsingState(ParsingResult result)
     {
         _linesRead += result.LinesRead;
         _recordsRead += result.RecordsRead;
@@ -267,8 +267,8 @@ public class ContentParser : IDisposable
         else
         {
             
-            await _logger.Log($"UpdateParsingState _readerPosition is greater than file size in bytes. {_readerPosition} - {_reader.BaseStream.Length} " +
-                              $"= {_readerPosition - _reader.BaseStream.Length} bytes. Setting BaseStream.Length", LogLevel.Warning, LogContext.Parsing);
+            _logger.Log($"UpdateParsingState _readerPosition is greater than file size in bytes. {_readerPosition} - {_reader.BaseStream.Length} " +
+                        $"= {_readerPosition - _reader.BaseStream.Length} bytes. Setting BaseStream.Length", LogLevel.Warning, LogContext.Parsing);
             _readerPosition = _reader.BaseStream.Length;
         }
     }

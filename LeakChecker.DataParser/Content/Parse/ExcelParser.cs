@@ -50,8 +50,7 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
                 int fieldsCount = reader.FieldCount;
                 if (fieldsCount != expectedFields)
                 {
-                    await logger.Log($"Bad row length at at sheet [{sheetName}] row [{row}]: expected {expectedFields}, " +
-                                     $"got {fieldsCount}.", LogLevel.Warning);
+                    logger.Log($"Bad row length at at sheet [{sheetName}] row [{row}]: expected {expectedFields}, got {fieldsCount}.", LogLevel.Warning);
                 } 
                 
                 await ParseRow(reader, schema, sheetName, row);
@@ -91,8 +90,7 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
 
             if (!schema.TryGetValue(column, out ItemEnum type))
             {
-                await logger.Log($"Unmapped Excel column[{column}] at sheet [{sheetName}] row [{row}] = {value}",
-                                 LogLevel.Warning, LogContext.Parsing);
+                logger.Log($"Unmapped Excel column[{column}] at sheet [{sheetName}] row [{row}] = {value}", LogLevel.Warning, LogContext.Parsing);
                 continue;
             }
 

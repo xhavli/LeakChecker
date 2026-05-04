@@ -13,7 +13,7 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
 {
     public async Task<List<EncodingSegment>> DetectEncodingSegments()
     {
-        await logger.LogEncodingHeader();
+        logger.LogEncodingHeader();
         Stopwatch sw = Stopwatch.StartNew();
 
         List<EncodingSegment> encSegments = await DetectConsistentEncoding();
@@ -26,8 +26,8 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
         if (encSegments.Count == 1)
         {
             stats.Encoding = encSegments[0].Encoding;
-            await logger.Log($"Encoding detection finished successfully. Detected consistent [{encSegments[0].Encoding?.WebName}] with " +
-                             $"[{encSegments[0].Confidence:F2}] confidence. Time taken: {sw.Elapsed}.", LogLevel.Success, LogContext.Encoding);
+            logger.Log($"Encoding detection finished successfully. Detected consistent [{encSegments[0].Encoding?.WebName}] with " +
+                       $"[{encSegments[0].Confidence:F2}] confidence. Time taken: {sw.Elapsed}.", LogLevel.Success, LogContext.Encoding);
         }
         else if (encSegments.Count > 1)
         {
@@ -36,31 +36,30 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
                 if (segment.Encoding?.WebName is { } name)
                     distinctEncSet.Add(name);
 
-            await logger.Log($"Encoding detection finished successfully. Detected concatenated encoding with {distinctEncSet.Count} " +
-                             $"distinct encodings. Time taken: {sw.Elapsed}.", LogLevel.Success, LogContext.Encoding);
+            logger.Log($"Encoding detection finished successfully. Detected concatenated encoding with {distinctEncSet.Count} " +
+                       $"distinct encodings. Time taken: {sw.Elapsed}.", LogLevel.Success, LogContext.Encoding);
         }
         else
         {
-            await logger.Log($"Encoding detection failed. Detector did not detect any encoding. Time taken: {sw.Elapsed}.",
-                            LogLevel.Warning, LogContext.Encoding);
+            logger.Log($"Encoding detection failed. Detector did not detect any encoding. Time taken: {sw.Elapsed}.", LogLevel.Warning, LogContext.Encoding);
         }
         
         stats.EncodingSegments = encSegments;
-        await logger.LogEncodingStats(encSegments);
-        await logger.LogEncodingDetails(encSegments);
+        logger.LogEncodingStats(encSegments);
+        logger.LogEncodingDetails(encSegments);
         
         return encSegments;
     }
     
     private async Task<List<EncodingSegment>> DetectConsistentEncoding()
     {
-        await logger.Log("Detection of consistent encoding.");
+        logger.Log("Detection of consistent encoding.");
         
         var segments = new List<EncodingSegment>();
         await using var stream = File.OpenRead(filePath);
 
         // Ensure detector will read all stream
-        var result = CharsetDetector.DetectFromStream(stream, stream.Length);
+        var result = await CharsetDetector.DetectFromStreamAsync(stream, stream.Length);
         
         stats.Encoding = result?.Detected?.Encoding;
         if (result?.Detected?.Confidence >= threshold )
@@ -77,17 +76,17 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
         }
 
         if (result?.Detected == null)
-            await logger.Log("Consistent encoding detection failed: returned [NULL].");
+            logger.Log("Consistent encoding detection failed: returned [NULL].");
         else
-            await logger.Log($"Consistent encoding detection not satisfied: detected [{result.Detected?.Encoding?.WebName}] " +
-                             $"with low confidence [{result.Detected?.Confidence:F2}]."); 
+            logger.Log($"Consistent encoding detection not satisfied: detected [{result.Detected?.Encoding?.WebName}] " +
+                       $"with low confidence [{result.Detected?.Confidence:F2}]."); 
 
         return segments;
     }
     
     private async Task<List<EncodingSegment>> DetectConcatenatedEncoding(int sampleSize = SizeEnum.KiloByte * 4)
     {
-        await logger.Log("Detection of concatenated encoding.");
+        logger.Log("Detection of concatenated encoding.");
         int bytesRead;
         long offset = 0;
         var buffer = new byte[sampleSize];

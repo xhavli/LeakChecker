@@ -41,7 +41,7 @@ public sealed class ExecutionOrchestrator(
             IEnumerable<string> paths;
             if (settings.Environment.StartsWith("Development", StringComparison.OrdinalIgnoreCase))
             {
-                logger.Log($"Paths loaded from {nameof(FilePaths.Utf8)} in {settings.Environment} environment", LogLevel.Info, LogContext.Parsing);
+                logger.Log($"Paths loaded from {nameof(FilePaths.Utf8)} in {settings.Environment} environment");
                 paths = FilePaths.Utf8;
             }
             else

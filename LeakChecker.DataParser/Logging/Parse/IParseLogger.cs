@@ -14,18 +14,18 @@ public interface IParseLogger : IDisposable
     string SubjectFilePath { get; }
     string SubjectTmpFilePath { get; }
 
-    Task Log(string? message, LogLevel level = LogLevel.Info, LogContext? context = null);
-    Task LogEncodingHeader();
-    Task LogEncodingStats(List<EncodingSegment> segments, int take = 10);
-    Task LogEncodingDetails(List<EncodingSegment> segments);
-    Task LogEncodingConversion();
-    Task LogContentHeader();
-    Task LogDelimiterHeuristic(DelimiterHeuristicResult result, int take = 10);
-    Task LogSchemaDetectionHeader();
-    Task LogSample(string sample);
-    Task LogSqlInsertHeader(SqlInsertHeader insertHeader);
-    Task LogHeuristicData(SchemaHeuristic analyzer);
-    Task LogDominantSchema(SchemaHeuristic analyzer, double threshold);
-    Task LogFinalSchema(Dictionary<int, ItemEnum> schema);
-    Task LogParseStats(ParseStats stats);
+    void Log(string? message, LogLevel level = LogLevel.Info, LogContext? context = null);
+    void LogEncodingHeader();
+    void LogEncodingStats(List<EncodingSegment> segments, int take = 10);
+    void LogEncodingDetails(List<EncodingSegment> segments);
+    void LogEncodingConversion();
+    void LogContentHeader();
+    void LogDelimiterHeuristic(DelimiterHeuristicResult result, int take = 10);
+    void LogSchemaDetectionHeader();
+    void LogSample(string sample);
+    void LogSqlInsertHeader(SqlInsertHeader insertHeader);
+    void LogHeuristicData(SchemaHeuristic analyzer);
+    void LogDominantSchema(SchemaHeuristic analyzer, double threshold);
+    void LogFinalSchema(Dictionary<int, ItemEnum> schema);
+    void LogParseStats(ParseStats stats);
 }

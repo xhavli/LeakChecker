@@ -23,7 +23,7 @@ public static class CsvDetector
         int linesRead = 0;
         int samplesCount = 0;
         SchemaHeuristic analyzer = new();
-        await logger.LogSchemaDetectionHeader();
+        logger.LogSchemaDetectionHeader();
 
         Stopwatch sw = Stopwatch.StartNew();
         while (await reader.ReadLineAsync() is { } line)
@@ -32,8 +32,8 @@ public static class CsvDetector
             
             if (line.IsSqlInsert())
             {
-                await logger.Log($"Detected SQL Insert while sampling CSV file on line {startLine + linesRead}: {line}. " + 
-                                 $"Returning back to recompute schema.", LogLevel.Warning);
+                logger.Log($"Detected SQL Insert while sampling CSV file on line {startLine + linesRead}: {line}. " + 
+                           $"Returning back to recompute schema.", LogLevel.Warning);
                 break;
             }
             
@@ -48,21 +48,21 @@ public static class CsvDetector
                 .TrimOuterParenthesesWithComma();   // For undetected SQL INSERT
             
             samplesCount++;
-            await logger.LogSample($"CSV file sample {samplesCount} on line {startLine + linesRead}: {line}");
+            logger.LogSample($"CSV file sample {samplesCount} on line {startLine + linesRead}: {line}");
             
             var linePatterns = await ContentDetector.DetectLine(line, delimiter, logger);
             int delimitersCount = line.Count(ch => ch == delimiter);
             analyzer.AddLinePatterns(linePatterns, delimitersCount);
         }
         
-        await logger.LogHeuristicData(analyzer);
-        await logger.LogDominantSchema(analyzer, threshold);
+        logger.LogHeuristicData(analyzer);
+        logger.LogDominantSchema(analyzer, threshold);
         
         var original = analyzer.GetDominantSchema(threshold);
         var assigned = CredentialAssigner.Assign(original);
         
-        await logger.LogFinalSchema(assigned);
-        await logger.Log($"CSV file schema created in {sw.Elapsed}\n");
+        logger.LogFinalSchema(assigned);
+        logger.Log($"CSV file schema created in {sw.Elapsed}\n");
         
         parsingContext.Stats.Schemas.Add(assigned);
         parsingContext.Stats.Context.Add(Path.GetFileNameWithoutExtension(parsingContext.Stats.SourcePath));
