@@ -26,7 +26,7 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
         if (encSegments.Count == 1)
         {
             stats.Encoding = encSegments[0].Encoding;
-            logger.Log($"Encoding detection finished successfully. Detected consistent [{encSegments[0].Encoding?.WebName}] with " +
+            logger.Log($"Encoding detection finished. Detected consistent [{encSegments[0].Encoding?.WebName}] with " +
                        $"[{encSegments[0].Confidence:F2}] confidence. Time taken: {sw.Elapsed}.", LogLevel.Success, LogContext.Encoding);
         }
         else if (encSegments.Count > 1)
@@ -36,7 +36,7 @@ public class EncodingDetector(string filePath, IParseLogger logger, IParseStats 
                 if (segment.Encoding?.WebName is { } name)
                     distinctEncSet.Add(name);
 
-            logger.Log($"Encoding detection finished successfully. Detected concatenated encoding with {distinctEncSet.Count} " +
+            logger.Log($"Encoding detection finished. Detected concatenated encoding with {distinctEncSet.Count} " +
                        $"distinct encodings. Time taken: {sw.Elapsed}.", LogLevel.Success, LogContext.Encoding);
         }
         else

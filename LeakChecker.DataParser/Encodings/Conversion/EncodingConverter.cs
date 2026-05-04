@@ -1,12 +1,18 @@
 using System.Diagnostics;
 using System.Text;
 using LeakChecker.DataParser.Helpers.Enums;
+using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 
 namespace LeakChecker.DataParser.Encodings.Conversion;
 
 public static class EncodingConverter
 {
+    private static readonly string Utf8Name = Encoding.UTF8.WebName;
+    private static readonly string AsciiName = Encoding.ASCII.WebName;
+    private static readonly DecoderReplacementFallback ReplacementFallback = new(string.Empty); // Skip invalid bytes
+    private static readonly Encoding Utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false);
+
     /// <summary>
     /// Converts a file with mixed encodings into a single UTF-8 encoded output file.
     /// </summary>
@@ -15,8 +21,8 @@ public static class EncodingConverter
         // File is already in UTF-8 or US-ASCII as a single segment
         if (encodingSegments is [{ Encoding: not null }] &&
             (
-                Equals(encodingSegments[0].Encoding?.WebName, Encoding.UTF8.WebName) ||
-                Equals(encodingSegments[0].Encoding?.WebName, Encoding.ASCII.WebName)
+                Equals(encodingSegments[0].Encoding?.WebName, Utf8Name) ||
+                Equals(encodingSegments[0].Encoding?.WebName, AsciiName)
             ))
         {
             return logger.SubjectFilePath;
@@ -24,17 +30,16 @@ public static class EncodingConverter
 
         logger.LogEncodingConversion();
         Stopwatch sw = Stopwatch.StartNew();
-        Encoding utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false); // no BOM
 
         await using var inStream = File.OpenRead(logger.SubjectFilePath);
-        await using var outStream = new StreamWriter(logger.SubjectTmpFilePath, false, utf8);
+        await using var outStream = new StreamWriter(logger.SubjectTmpFilePath, false, Utf8);
 
         foreach (var segment in encodingSegments)
         {
             if (segment.Encoding == null)
             {
                 logger.Log($"Encoding missing for encoding segment [{segment.ToByteString()}]. Set UTF-8 as default.");
-                segment.Encoding = utf8;
+                segment.Encoding = Utf8;
             }
 
             inStream.Seek(segment.StartOffset, SeekOrigin.Begin);
@@ -42,6 +47,7 @@ public static class EncodingConverter
             long remaining = segment.Length;
             byte[] buffer = new byte[bufferSize];
             Decoder decoder = segment.Encoding.GetDecoder();
+            decoder.Fallback = ReplacementFallback;
             char[] charBuffer = new char[segment.Encoding.GetMaxCharCount(bufferSize)];
 
             while (remaining > 0)
@@ -59,7 +65,7 @@ public static class EncodingConverter
 
         await outStream.FlushAsync();
         
-        logger.Log($"Encoding conversion of {encodingSegments.Count}. Time taken: {sw.Elapsed}");
+        logger.Log($"Encoding conversion finished. Converted {encodingSegments.Count} segments. Time taken: {sw.Elapsed}", LogLevel.Success, LogContext.Encoding);
         
         return logger.SubjectTmpFilePath;
     }
