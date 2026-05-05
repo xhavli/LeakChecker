@@ -63,11 +63,16 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 220px;
+        max-width: 100%;
         vertical-align: middle;
         cursor: pointer;
     }
     .source-badge:hover { background: #ece9ff; }
+
+    .parse-table th:first-child,
+    .parse-table td:first-child {
+        width: 470px;      /* adjust this one number to taste */
+    }
 </style>
 
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
