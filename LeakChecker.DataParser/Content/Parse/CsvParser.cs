@@ -66,9 +66,9 @@ public class CsvParser(ParsingContext parsingContext)
                 
                 continue;
             }
-
-            await ParseRow(row);
-
+            
+            ParseRow(row);
+            
             if (_cachedRecords.Count > FlushThreshold)
             {
                 await _database.SaveIdentityMany(_cachedRecords, _parseId);
@@ -93,7 +93,7 @@ public class CsvParser(ParsingContext parsingContext)
         };
     }
 
-    private async Task ParseRow(string[] row)
+    private void ParseRow(string[] row)
     {
         Dictionary<ItemEnum, List<string>> record = new();
         
