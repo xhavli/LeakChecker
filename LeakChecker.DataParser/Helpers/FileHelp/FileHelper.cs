@@ -56,8 +56,8 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
         // --- Log ---
         "application/x-log",
     };
-    
-    public bool IsAccessible(string filePath)
+
+    private bool IsAccessible(string filePath)
     {
         try
         {
@@ -100,8 +100,8 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
 
         return parsePaths;
     }
-    
-    public bool IsTextual(string filePath, int reliableThreshold = 4000)
+
+    private bool IsTextual(string filePath, int reliableThreshold = 4000)
     {
         using var stream = File.OpenRead(filePath);
         
@@ -249,6 +249,11 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
         }
 
         return accepted;
+    }
+
+    public bool CanParse(string filePath)
+    {
+        return IsAccessible(filePath) && (IsTextual(filePath) || IsExcel(filePath));
     }
     
     public void RemoveEmptyDirectories()

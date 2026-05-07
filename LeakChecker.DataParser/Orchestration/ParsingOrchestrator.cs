@@ -23,12 +23,8 @@ public class ParsingOrchestrator(
     public async Task RunAsync()
     {
         logger.Log("Started: " + Path.GetFileName(filePath), LogLevel.Info, LogContext.Parsing);
-
-        var isAccessible = fileHelper.IsAccessible(filePath);
-        var isTextual = fileHelper.IsTextual(filePath);
-        var isExcel = FileHelper.IsExcel(filePath);
-
-        if (!isAccessible || !(isTextual || isExcel))
+        
+        if (!fileHelper.CanParse(filePath))
             return;
         
         using var parseLogger = parseLoggerFactory.CreateAsync(filePath);
