@@ -7,13 +7,6 @@ namespace LeakChecker.DataParser.Database;
 
 public class MongoDbFacade : IDatabase
 {
-    public async Task SaveIdentityOne(Dictionary<ItemEnum, List<string>> record, ObjectId parseId)
-    {
-        IdentityDocumentFactory identityDocFactory = new IdentityDocumentFactory(parseId);
-        var document = identityDocFactory.CreateIdentityDocument(record);
-        await MongoDbRepository.SaveIdentityDocument(document);
-    }
-    
     public async Task SaveIdentityMany(List<Dictionary<ItemEnum, List<string>>> records, ObjectId parseId)
     {
         if (records.Count == 0)

@@ -20,11 +20,6 @@ public static class MongoDbRepository
     private const string DashboardId = "dashboard";
     private static readonly FilterDefinition<BsonDocument> DashboardFilter = Builders<BsonDocument>.Filter.Eq("_id", DashboardId);
 
-    public static async Task SaveIdentityDocument(BsonDocument document)
-    {
-        await IdentitiesCollection.InsertOneAsync(document);
-    }
-    
     public static async Task SaveIdentityDocuments(List<BsonDocument> documents)
     {
         if (documents.Count == 0)
