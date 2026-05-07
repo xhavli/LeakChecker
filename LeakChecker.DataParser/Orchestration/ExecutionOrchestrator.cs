@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Channels;
-using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Content.Detection.RecognitionService;
 using LeakChecker.DataParser.Data;
 using LeakChecker.DataParser.Helpers.FileHelp;
@@ -48,7 +47,6 @@ public sealed class ExecutionOrchestrator(
             {
                 paths = await fileHelper.GetPathsFromInputDirectory();
             }
-
             
             var channel = Channel.CreateBounded<string>(new BoundedChannelOptions(settings.ChannelCapacity)
             {
@@ -87,14 +85,14 @@ public sealed class ExecutionOrchestrator(
 
             await Task.WhenAll(consumers.Append(producer));
 
-            _stats.ExecutionEnd = DateTime.Now;
+            _stats.ParseEnd();
             logger.LogExecutionStats(_stats);
             await settings.Database.SaveExecutionOne(_stats);
             
             logger.Log($"Execution finished successfully. Parsed {paths.Count()} files. Current DateTime is " + 
                        $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Execution);
 
-            logger.Log($"Creating MongoDB indexes for {CollectionType.Identities} collection.");
+            logger.Log("Creating MongoDB indexes.");
             Stopwatch sw = Stopwatch.StartNew();
             await settings.Database.CreateIndexes();
             logger.Log($"MongoDB indexes created in {sw.Elapsed}.", LogLevel.Success, LogContext.Execution);

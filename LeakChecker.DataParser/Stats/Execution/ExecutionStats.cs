@@ -19,6 +19,11 @@ public class ExecutionStats(Guid executionId, DateTime startTime)
     public double Accuracy => 
         RecordsRead <= 0 ? 0 : Math.Max(0, (double)(RecordsRead - MalformedRead) / RecordsRead * 100);
     
+    public void ParseEnd()
+    {
+        ExecutionEnd = DateTime.Now;
+    }
+    
     public void Update(ParseStats parseStats)
     {
         lock (this)
