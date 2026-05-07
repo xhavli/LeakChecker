@@ -1,5 +1,7 @@
+using System.Text;
 using System.Text.RegularExpressions;
 using LeakChecker.Common.Enums;
+using LeakChecker.DataParser.Database.Helpers;
 using LeakChecker.DataParser.Stats.Parse;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -25,8 +27,22 @@ public static class MongoDbRepository
     {
         if (documents.Count == 0)
             return;
-        
-        await IdentitiesCollection.InsertManyAsync(documents, UnorderedOptions);
+
+        try
+        {
+            await IdentitiesCollection.InsertManyAsync(documents, UnorderedOptions);
+        }
+        catch (EncoderFallbackException)
+        {
+            var safe = DocumentSanitizer.SanitizeDocumentsEncoding(documents);
+            await IdentitiesCollection.InsertManyAsync(safe, UnorderedOptions);
+        }
+        catch (MongoBulkWriteException ex) when (ex.Message.Contains("larger than MaxDocumentSize"))
+        {
+            var safe = DocumentSanitizer.FilterOversizedDocuments(documents);
+            if (safe.Count > 0)
+                await IdentitiesCollection.InsertManyAsync(safe, UnorderedOptions);
+        }
     }
     
     public static async Task SaveParsingDocument(BsonDocument document)
