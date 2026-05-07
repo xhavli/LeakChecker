@@ -1,9 +1,11 @@
 using LeakChecker.Common.Enums;
+using LeakChecker.DataParser.Database.Helpers;
+using LeakChecker.DataParser.Database.Repository;
 using LeakChecker.DataParser.Stats.Execution;
 using LeakChecker.DataParser.Stats.Parse;
 using MongoDB.Bson;
 
-namespace LeakChecker.DataParser.Database;
+namespace LeakChecker.DataParser.Database.Facade;
 
 public class MongoDbFacade : IDatabase
 {
@@ -43,12 +45,12 @@ public class MongoDbFacade : IDatabase
         return await MongoDbRepository.GetDashboardStats();
     }
 
-    public async Task CreateIdentityIndexes()
+    private async Task CreateIdentityIndexes()
     {
         await MongoDbRepository.CreateIdentityIndexes();
     }
-    
-    public async Task CreateParseIndexes()
+
+    private async Task CreateParseIndexes()
     {
         await MongoDbRepository.CreateParseIndexes();
     }

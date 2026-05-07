@@ -1,5 +1,6 @@
 using System.Text;
 using LeakChecker.DataParser.Database;
+using LeakChecker.DataParser.Database.Facade;
 
 namespace LeakChecker.DataParser.Helpers.Settings;
 

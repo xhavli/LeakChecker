@@ -4,11 +4,13 @@ using LeakChecker.DataParser.Stats.Parse;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace LeakChecker.DataParser.Database;
+namespace LeakChecker.DataParser.Database.Repository;
 
 public static class MongoDbRepository
 {
     private const string DbName = "LeakCheckerDb";
+    private const string DashboardId = "dashboard";
+
     private static readonly MongoClient Client = new("mongodb://localhost:27017");
     private static readonly IMongoDatabase Database = Client.GetDatabase(DbName);
     private static readonly IMongoCollection<BsonDocument> ParseCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Parsings));
@@ -17,7 +19,6 @@ public static class MongoDbRepository
     private static readonly IMongoCollection<BsonDocument> IdentitiesCollection = Database.GetCollection<BsonDocument>(nameof(CollectionType.Identities));
     private static readonly InsertManyOptions UnorderedOptions = new() { IsOrdered = false };
     
-    private const string DashboardId = "dashboard";
     private static readonly FilterDefinition<BsonDocument> DashboardFilter = Builders<BsonDocument>.Filter.Eq("_id", DashboardId);
 
     public static async Task SaveIdentityDocuments(List<BsonDocument> documents)
