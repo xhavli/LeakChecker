@@ -1,3 +1,4 @@
+using LeakChecker.DataParser.Helpers.Extensions;
 using Microsoft.Recognizers.Text.Sequence;
 
 namespace LeakChecker.DataParser.Content.Detection.ItemRecognition;
@@ -30,5 +31,50 @@ public static class WebRecognizer
         }
 
         return found;
+    }
+    
+    public static string? ExtractReversedDomain(string value)
+    {
+        ReadOnlySpan<char> span = value.AsSpan().Trim();
+        if (span.IsEmpty) return null;
+
+        // Strip scheme: http:// https:// ftp:// etc.
+        int schemeEnd = span.IndexOf("://".AsSpan(), StringComparison.Ordinal);
+        if (schemeEnd >= 0)
+            span = span[(schemeEnd + 3)..];
+
+        // Strip leading www. (case-insensitive)
+        if (span.StartsWith("www.".AsSpan(), StringComparison.OrdinalIgnoreCase))
+            span = span[4..];
+
+        if (span.IsEmpty) return null;
+
+        // Strip path/query/fragment — take only up to first / ? # and port :
+        int end = span.Length;
+        for (int i = 0; i < span.Length; i++)
+        {
+            char c = span[i];
+            if (c == '/' || c == '?' || c == '#' || c == ':')
+            {
+                end = i;
+                break;
+            }
+        }
+
+        span = span[..end];
+        if (span.IsEmpty) return null;
+
+        // Must contain a dot and no spaces
+        bool hasDot = false;
+        for (int i = 0; i < span.Length; i++)
+        {
+            char c = span[i];
+            if (c == '.') { hasDot = true; continue; }
+            if (char.IsWhiteSpace(c)) return null;
+        }
+        if (!hasDot) return null;
+
+        // Lowercase + reverse
+        return span.ToString().ToLowerInvariant().ReverseString();
     }
 }
