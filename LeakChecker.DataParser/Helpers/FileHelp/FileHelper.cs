@@ -171,16 +171,17 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
     {
         IEnumerable<string> inputPaths = Directory.EnumerateFiles(settings.InputDirectory, "*", SearchOption.AllDirectories);
     
-        List<string> allowedPaths = ApplySizeLimit(inputPaths);
-    
-        if (allowedPaths.Count == 0)
-            return [];
+        IEnumerable<string> allowedPaths = ApplySizeLimit(inputPaths);
     
         IEnumerable<string> allPaths = await archiveExtractor.ExtractArchives(allowedPaths);
-        return SelectAccessiblePaths(allPaths);
+        
+        var result = SelectAccessiblePaths(allPaths);
+        result.Sort((a, b) => new FileInfo(b).Length.CompareTo(new FileInfo(a).Length));
+        
+        return result;
     }
 
-    private List<string> ApplySizeLimit(IEnumerable<string> paths)
+    private IEnumerable<string> ApplySizeLimit(IEnumerable<string> paths)
     {
         long? limitBytes = settings.ParseSizeLimitBytes;
 
@@ -248,7 +249,7 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
             accepted.Add(path);
         }
 
-        return accepted;
+        return accepted.AsEnumerable();
     }
 
     public bool CanParse(string filePath)
