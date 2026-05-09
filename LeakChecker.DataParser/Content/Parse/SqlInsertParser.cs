@@ -53,7 +53,6 @@ public class SqlInsertParser(ParsingContext parsingContext)
             if (!afterValues)
             {
                 int valuesPos = line.IndexOf(Values, StringComparison.OrdinalIgnoreCase);
-
                 if (valuesPos < 0)    // Wait for VALUES on another line
                     continue;
 
@@ -107,7 +106,6 @@ public class SqlInsertParser(ParsingContext parsingContext)
                         if (parenDepth == 0)
                         {
                             string rawTuple = stringBuilder.ToString().Trim();
-
                             string[] row = TupleToArray(rawTuple);
 
                             // Console.WriteLine($"\nSQL insert parsing line {startLine + linesRead}: {line}");
@@ -127,17 +125,20 @@ public class SqlInsertParser(ParsingContext parsingContext)
                                 continue;
                             }
 
-                            await ParseRow(row);
+                            ParseRow(row);
+                            
                             if (_cachedRecords.Count > 2000)
                             {
                                 await _database.SaveIdentityMany(_cachedRecords, _parseId);
                                 _cachedRecords.Clear();
                             }
+
                             malformedReadSequence = 0;
                             recordsRead++;
 
                             if (recordsRead == parseLimit)
                             {
+                                await _database.SaveIdentityMany(_cachedRecords, _parseId);
                                 return new ParsingResult
                                 {
                                     RecordsRead = recordsRead,
@@ -183,7 +184,6 @@ public class SqlInsertParser(ParsingContext parsingContext)
 
         List<string> fields = new();
         StringBuilder sb = new();
-
         bool inQuote = false;
 
         for (int i = 0; i < tuple.Length; i++)
@@ -244,7 +244,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
         return raw;
     }
 
-    private async Task ParseRow(string[] row)
+    private void ParseRow(string[] row)
     {
         Dictionary<ItemEnum, List<string>> record = new();
         
@@ -262,14 +262,9 @@ public class SqlInsertParser(ParsingContext parsingContext)
             }
             
             if (!record.TryGetValue(itemType, out var list))
-            {
-                list = new List<string>();
-                record[itemType] = list;
-            }
+                record[itemType] = list = new List<string>();
 
             list.Add(value);
-
-            // Console.WriteLine($"[{i}] {schemaEntry} = {row[i]}");
         }
         
         // Forward to content storage
