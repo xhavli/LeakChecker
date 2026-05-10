@@ -37,7 +37,7 @@ public static class MongoDbRepository
             var safe = DocumentSanitizer.SanitizeDocumentsEncoding(documents);
             await IdentitiesCollection.InsertManyAsync(safe, UnorderedOptions);
         }
-        catch (MongoBulkWriteException ex) when (ex.Message.Contains("larger than MaxDocumentSize"))
+        catch (FormatException ex) when (ex.Message.Contains("larger than MaxDocumentSize"))
         {
             var safe = DocumentSanitizer.FilterOversizedDocuments(documents);
             if (safe.Count > 0)
@@ -94,15 +94,17 @@ public static class MongoDbRepository
             //TODO location
             
             // Special case for low cardinality field performance
-            new(Builders<BsonDocument>.IndexKeys
-                    .Ascending(nameof(ItemEnum.Gender))
-                    .Ascending("_id"),
-                new CreateIndexOptions 
-                { 
-                    Name = $"IDX_{nameof(ItemEnum.Gender)}_{nameof(ItemEnum.Id)}_Compound_Sparse", 
-                    Sparse = true 
-                }
-            ),
+            // new(Builders<BsonDocument>.IndexKeys
+            //         .Ascending(nameof(ItemEnum.Gender))
+            //         .Ascending("_id"),
+            //     new CreateIndexOptions 
+            //     { 
+            //         Name = $"IDX_{nameof(ItemEnum.Gender)}_{nameof(ItemEnum.Id)}_Compound_Sparse", 
+            //         Sparse = true 
+            //     }
+            // ),
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Gender)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Gender)}_Asc_Sparse", Sparse = true }),
             
             new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Iban)),
                 new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Iban)}_Asc_Sparse", Sparse = true }),
