@@ -6,9 +6,9 @@ namespace LeakChecker.DataParser.Content.Detection.ItemParsing;
 
 public static class IpAddressParser
 {
-    private const string Localhost = "localhost";
-    private const string IpV4Localhost = "::1";
-    private const string IpV6Localhost = "127.0.0.1";
+    private const string Ipv4Localhost = "::1";
+    private const string Ipv6Localhost = "127.0.0.1";
+    private const string TextLocalhost = "localhost";
 
     public static bool TryParse(string token, out ItemEnum ipAddressType, out IPAddress ipAddress)
     {
@@ -65,17 +65,17 @@ public static class IpAddressParser
                 return false;
         }
 
-        if (ipV6InBrackets && addressPart.Equals(Localhost, StringComparison.OrdinalIgnoreCase))
+        if (ipV6InBrackets && addressPart.Equals(TextLocalhost, StringComparison.OrdinalIgnoreCase))
         {
             ipAddressType = ItemEnum.Ipv6;
-            ipAddress = IPAddress.Parse(IpV6Localhost);
+            ipAddress = IPAddress.Parse(Ipv6Localhost);
             return true;
         }
 
-        if (addressPart.Equals(Localhost, StringComparison.OrdinalIgnoreCase))
+        if (addressPart.Equals(TextLocalhost, StringComparison.OrdinalIgnoreCase))
         {
             ipAddressType = ItemEnum.Ipv4;
-            ipAddress = IPAddress.Parse(IpV4Localhost);
+            ipAddress = IPAddress.Parse(Ipv4Localhost);
             return true;
         }
 
