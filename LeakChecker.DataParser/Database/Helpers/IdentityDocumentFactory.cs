@@ -152,14 +152,17 @@ public class IdentityDocumentFactory(ObjectId parseId)
 
     private static void AddOrMerge(BsonDocument document, string key, BsonArray values)
     {
-        if (document.TryGetValue(key, out var existing) && existing is BsonArray arr)
-        {
-            foreach (var v in values)
-                arr.Add(v);
-        }
-        else
+        if (values.Count == 0)
+            return;
+
+        if (!document.TryGetValue(key, out var existing))
         {
             document.Add(key, values);
+            return;
         }
+
+        var arr = (BsonArray)existing;
+        foreach (var v in values)
+            arr.Add(v);
     }
 }
