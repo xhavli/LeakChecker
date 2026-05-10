@@ -21,22 +21,33 @@ public static class EncodingConverter
     /// </summary>
     public static async Task<string> ConvertFileToUtf8(List<EncodingSegment> encodingSegments, IParseLogger logger, int bufferSize = SizeEnum.MegaByte * 2)
     {
-        // File is already in UTF-8 or US-ASCII as a single segment
-        if (encodingSegments is [{ Encoding: not null }] &&
-            (
-                Equals(encodingSegments[0].Encoding?.WebName, Utf8Name) ||
-                Equals(encodingSegments[0].Encoding?.WebName, AsciiName)
-            ))
-        {
+        if (IsFileInUtf8(encodingSegments))
             return logger.SubjectFilePath;
-        }
 
         logger.LogEncodingConversion();
         Stopwatch sw = Stopwatch.StartNew();
+        
+        await ConvertFile(encodingSegments, bufferSize, logger);
+        
+        logger.Log($"Encoding conversion finished. Converted {encodingSegments.Count} segments. Time taken: {sw.Elapsed}", LogLevel.Success, LogContext.Encoding);
+        return logger.SubjectTmpFilePath;
+    }
 
+    private static bool IsFileInUtf8(List<EncodingSegment> encodingSegments)
+    {
+        // File is already in UTF-8 or US-ASCII as a single segment
+        return encodingSegments is [{ Encoding: not null }] &&
+               (
+                   Equals(encodingSegments[0].Encoding?.WebName, Utf8Name) ||
+                   Equals(encodingSegments[0].Encoding?.WebName, AsciiName)
+               );
+    }
+
+    private static async Task ConvertFile(List<EncodingSegment> encodingSegments, int bufferSize, IParseLogger logger)
+    {
         await using var inStream = File.OpenRead(logger.SubjectFilePath);
         await using var outStream = new StreamWriter(logger.SubjectTmpFilePath, false, Utf8);
-
+        
         foreach (var segment in encodingSegments)
         {
             if (segment.Encoding == null)
@@ -65,11 +76,7 @@ public static class EncodingConverter
                 await outStream.WriteAsync(charBuffer, 0, charsDecoded);
             }
         }
-
+        
         await outStream.FlushAsync();
-        
-        logger.Log($"Encoding conversion finished. Converted {encodingSegments.Count} segments. Time taken: {sw.Elapsed}", LogLevel.Success, LogContext.Encoding);
-        
-        return logger.SubjectTmpFilePath;
     }
 }
