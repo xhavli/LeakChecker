@@ -68,7 +68,8 @@ public static class EncodingConverter
             {
                 int toRead = remaining > bufferSize ? bufferSize : (int)remaining;
                 int bytesRead = await inStream.ReadAsync(buffer.AsMemory(0, toRead));
-                if (bytesRead == 0) break;
+                if (bytesRead == 0)
+                    break;
 
                 remaining -= bytesRead;
 
