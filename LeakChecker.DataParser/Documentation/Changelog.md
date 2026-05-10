@@ -19,7 +19,7 @@ Author: Adam Havlík
   - [Module Tests](#module-tests)
   - [Integration Tests](#integration-tests)
 - [Diagrams](#diagrams)
-  - [Data Flow](#data-flow)
+  - [Content Parsing](#content-parsing)
 - [Test Dataset](#test-dataset)
 - [Database](#database)
   - [MongoDB Community Server](#mongodb-community-server)
@@ -43,12 +43,19 @@ Author: Adam Havlík
 - `15.4.2026` - Merge Chinese subset chain  
   x-cp20936 subset of superset gb2312 subset of superset GB18030
 
+![EncodingDetection](Diagrams/EncodingDetector.png)
+
+Picture of Encoding Detection of segments in file with different encodings.
+
 ### Encoding Conversion
 
 - `3.10.2025` - Encoding Conversion  
   EncodingConverter converting file to UTF-8 in stream according to given EncodingSegments.
 - `15.4.2026` - Encoding Converter do not convert file if is UTF-8 or ASCII encoded which is fully compatible subset.
 
+![Encodingconversion](Diagrams/EncodingConverter.png)
+
+Picture of Encoding Converter converting file to UTF-8 in stream according to given EncodingSegments.
 ## Format
 
 ### Delimiter Detection
@@ -240,17 +247,13 @@ Author: Adam Havlík
 
 ## Diagrams
 
-### Data Flow
+### Content Parsing
 
-![EncodingDetectionConversion](Diagrams/DataFlow/EncodingDetectionConversion.png)
-
-Picture: Encoding Detector of segments and Encoding Conversion to UTF-8
-
-![ContenParserCsv](Diagrams/DataFlow/ContentParserCsv.png)
+![ContenParserCsv](Diagrams/ContentParserCsv.png)
 
 Picture: Csv Detector of format and Csv Parser of content
 
-![ContenParserCsv](Diagrams/DataFlow/ContentParsingSql.png)
+![ContenParserCsv](Diagrams/ContentParsingSql.png)
 
 Picture: SQL Detector of format and SQL Parser of content
 
@@ -284,11 +287,13 @@ Picture: SQL Detector of format and SQL Parser of content
 - Default index `_id` size 2.38 Gb
 - `Username_Lowercase` sparse ascending index 175.1 Mb
 - `Email_Lowercase` sparse ascending index 5.3 Gb
+- Creating indexes on almost 10 billion records from around 290gb raw data takes 39.5 hours.
 
 #### Speed
 
 - Write done after 1 hour
 - Writing speed is good
+- Parsing and insert of 10 billion records take about 30 hours
 - Reading is good
 - `Email` exact match 0 ms
 - `Email` starts with 'joh' returned 328 751 records in 1222 ms
