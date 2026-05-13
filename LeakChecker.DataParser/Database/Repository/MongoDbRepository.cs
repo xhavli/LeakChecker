@@ -91,18 +91,17 @@ public static class MongoDbRepository
                 new CreateIndexOptions { Name = $"IDX_{ItemEnum.DomainReversedLowercase}_Asc_Sparse", Sparse = true }),
             
             //TODO organization
-            //TODO location
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Organization)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Organization)}_Asc_Sparse", Sparse = true }),
             
-            // Special case for low cardinality field performance
-            // new(Builders<BsonDocument>.IndexKeys
-            //         .Ascending(nameof(ItemEnum.Gender))
-            //         .Ascending("_id"),
-            //     new CreateIndexOptions 
-            //     { 
-            //         Name = $"IDX_{nameof(ItemEnum.Gender)}_{nameof(ItemEnum.Id)}_Compound_Sparse", 
-            //         Sparse = true 
-            //     }
-            // ),
+            //TODO location
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Location)),
+                new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Location)}_Asc_Sparse", Sparse = true }),
+            
+            //TODO passswd
+            new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Password)),
+                new CreateIndexOptions { Name = $"IDX_{ItemEnum.Password}_Asc_Sparse", Sparse = true }),
+            
             new(Builders<BsonDocument>.IndexKeys.Ascending(nameof(ItemEnum.Gender)),
                 new CreateIndexOptions { Name = $"IDX_{nameof(ItemEnum.Gender)}_Asc_Sparse", Sparse = true }),
             
