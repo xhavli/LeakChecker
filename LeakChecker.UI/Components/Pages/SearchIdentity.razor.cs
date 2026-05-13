@@ -43,8 +43,12 @@ public class SearchIdentityBase : ComponentBase
     {
         get
         {
-            if (SelectedItem == ItemEnum.Timestamp) return false;
+            if (SelectedItem == ItemEnum.Timestamp)
+                return false;
 
+            if (SelectedItem is ItemEnum.Hash)
+                return true;
+            
             if (SelectedCondition == ConditionType.Contains)
                 return true;
 
