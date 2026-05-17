@@ -1,4 +1,5 @@
 using System.Text;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Helpers.Enums;
 
@@ -27,7 +28,7 @@ public interface ISettings
     public int SqlSamples { get; init; }
     public int ExcelSamples { get; init; }
     public Encoding DefaultUtf8 { get; init; }
-    public string Environment { get; init; }
+    public EnvironmentType Environment { get; init; }
     public bool Verbose { get; init; }
     public IDatabase Database { get; init; }
     
@@ -35,7 +36,7 @@ public interface ISettings
     {
         ApplyEncodingSettings();
         
-        if (Environment == "Test")
+        if (Environment == EnvironmentType.Test)
             System.Environment.SetEnvironmentVariable("LeakCheckerRunningTest", "true");
         else
             System.Environment.SetEnvironmentVariable("LeakCheckerRunningTest", null);

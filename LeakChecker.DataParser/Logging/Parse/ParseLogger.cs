@@ -51,7 +51,7 @@ public class ParseLogger : IParseLogger
         string tmpFileName = $"TMP_{logFileName}";
         string tmpFilePath = Path.Combine(settings.TmpDirectory, tmpFileName);
 
-        bool isDevelopment = string.Equals(settings.Environment.Trim(), "Development", StringComparison.OrdinalIgnoreCase);
+        bool isDevelopment = settings.Environment == EnvironmentType.Development;
         var writer = new StreamWriter(logFilePath, append: true, encoding: settings.DefaultUtf8)
         {
             AutoFlush = isDevelopment

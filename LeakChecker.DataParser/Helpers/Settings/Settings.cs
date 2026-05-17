@@ -1,4 +1,5 @@
 using System.Text;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Database.Facade;
 
@@ -24,7 +25,7 @@ public class Settings : ISettings
     public required int SqlSamples { get; init; }
     public required int ExcelSamples { get; init; }
     public required Encoding DefaultUtf8 { get; init; }
-    public required string Environment { get; init; }
+    public required EnvironmentType Environment { get; init; }
     public required bool Verbose { get; init; }
     public required IDatabase Database { get; init; }
 
@@ -56,7 +57,7 @@ public class Settings : ISettings
             SqlSamples = jsonSettings.SqlSamples,
             ExcelSamples = jsonSettings.ExcelSamples,
             DefaultUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
-            Environment = jsonSettings.Environment!,
+            Environment = ResolveEnvironment(jsonSettings.Environment!),
             Verbose = jsonSettings.Verbose,
             Database = ResolveDatabase(jsonSettings.DbProvider)
         };
@@ -83,5 +84,16 @@ public class Settings : ISettings
             return jsonSettings.PythonVenvLinuxPath!;
     
         throw new PlatformNotSupportedException("Unsupported OS");
+    }
+    
+    private static EnvironmentType ResolveEnvironment(string envName)
+    {
+        return envName.Trim().ToLowerInvariant() switch
+        {
+            "test" => EnvironmentType.Test,
+            "production" => EnvironmentType.Production,
+            "development" => EnvironmentType.Development,
+            _ => throw new NotSupportedException($"Unsupported environment '{envName}'.")
+        };
     }
 }

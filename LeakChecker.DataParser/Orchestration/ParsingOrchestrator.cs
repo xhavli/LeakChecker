@@ -1,3 +1,4 @@
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Content.Parse;
 using LeakChecker.DataParser.Encodings;
 using LeakChecker.DataParser.Encodings.Conversion;
@@ -40,7 +41,7 @@ public class ParsingOrchestrator(
             else
             {
                 string parsePath;
-                if (!settings.Environment.StartsWith("Development", StringComparison.OrdinalIgnoreCase))
+                if (settings.Environment != EnvironmentType.Development)
                 {
                     EncodingDetector encodingDetector = new(filePath, parseLogger, parseStats);
                     List<EncodingSegment> encodingSegments = await encodingDetector.DetectEncodingSegments();

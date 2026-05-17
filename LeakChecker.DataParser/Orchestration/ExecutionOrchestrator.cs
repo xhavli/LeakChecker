@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Channels;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Content.Detection.RecognitionService;
 using LeakChecker.DataParser.Data;
 using LeakChecker.DataParser.Helpers.FileHelp;
@@ -38,7 +39,7 @@ public sealed class ExecutionOrchestrator(
         try
         {
             IEnumerable<string> paths;
-            if (settings.Environment.StartsWith("Development", StringComparison.OrdinalIgnoreCase))
+            if (settings.Environment == EnvironmentType.Development)
             {
                 logger.Log($"Paths loaded from {nameof(FilePaths.Utf8)} in {settings.Environment} environment");
                 paths = FilePaths.Utf8;
