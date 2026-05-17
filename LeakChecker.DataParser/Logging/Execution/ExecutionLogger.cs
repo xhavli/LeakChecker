@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Helpers.Enums;
 using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Stats.Execution;
@@ -90,7 +91,7 @@ public class ExecutionLogger : IDisposable
         _writer.WriteLine();
         _writer.WriteLine($"Schema accuracy: {settings.SchemaThreshold}");
         _writer.WriteLine();
-        _writer.WriteLine(string.Equals(settings.Environment.Trim(), "Development", StringComparison.OrdinalIgnoreCase)
+        _writer.WriteLine(settings.Environment == EnvironmentType.Development
                           ? $"Environment: {settings.Environment} - AutoFlush = ON"
                           : $"Environment: {settings.Environment} - AutoFlush = OFF");
         _writer.WriteLine($"Verbose: {settings.Verbose}");
