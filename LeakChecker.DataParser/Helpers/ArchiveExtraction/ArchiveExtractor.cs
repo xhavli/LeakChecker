@@ -37,7 +37,7 @@ public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
         {
             await Parallel.ForEachAsync(inputPaths, _parallelOptions, async (inputPath, ct) =>
                 {
-                    if (!ArchiveDetector.IsPossibleArchive(inputPath))
+                    if (FileHelper.IsExcel(inputPath) || !ArchiveDetector.IsPossibleArchive(inputPath))
                     {
                         pathsToParse.TryAdd(inputPath, 0);
                         return;
