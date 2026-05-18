@@ -30,7 +30,7 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
         do
         {
             string sheetName = reader.Name;
-            stats.Context.Add(GetContext(sheetName, filePath));
+            stats.Context.Add(sheetName);
             stats.Formats.Add(FormatEnum.Excel);
             
             sheetNumber++;
@@ -119,17 +119,5 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
         }
 
         return true;
-    }
-
-    private static string GetContext(string sheetName, string path)
-    {
-        if (sheetName.StartsWith("Sheet"))
-        { 
-            string suffix = sheetName.Substring(5); // get part after "Sheet"
-            if (!int.TryParse(suffix, out _))
-                return sheetName;
-        }
-        
-        return Path.GetFileNameWithoutExtension(path);
     }
 }
