@@ -37,7 +37,7 @@ public static class SqlInsertDetector
         bool inQuote = false;
         SqlInsertHeader? header = null;
         string tempLine = string.Empty;
-        while (await reader.ReadLineAsync() is { } line)
+        while (await reader.ReadLineWithEndingAsync() is { } line)
         {
             linesRead++;
             

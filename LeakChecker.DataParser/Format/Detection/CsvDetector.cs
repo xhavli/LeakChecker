@@ -26,7 +26,7 @@ public static class CsvDetector
         logger.LogSchemaDetectionHeader();
 
         Stopwatch sw = Stopwatch.StartNew();
-        while (await reader.ReadLineAsync() is { } line)
+        while (await reader.ReadLineWithEndingAsync() is { } line)
         {
             linesRead++;
             

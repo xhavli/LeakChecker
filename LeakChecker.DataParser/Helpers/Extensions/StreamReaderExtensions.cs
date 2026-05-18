@@ -4,6 +4,8 @@ namespace LeakChecker.DataParser.Helpers.Extensions;
 
 public static class StreamReaderExtensions
 {
+    private const int LineMaxLength = 100_000;
+    
     /// <summary>
     /// Reads a line from the current stream asynchronously, 
     /// including the newline characters (\r, \n, or \r\n) if present.
@@ -39,6 +41,12 @@ public static class StreamReaderExtensions
             }
 
             rentedBuffer[rentedPos++] = ch;
+            
+            if (rentedPos > LineMaxLength)
+            {
+                ArrayPool<char>.Shared.Return(rentedBuffer);
+                throw new InvalidOperationException($"Line too big, exceed limit {LineMaxLength} characters. File size {reader.BaseStream.Length} bytes.");
+            }
 
             // Detect newline
             if (ch == '\n')
