@@ -1,4 +1,6 @@
 using ExcelDataReader;
+using LeakChecker.Common.Enums;
+using LeakChecker.DataParser.Data;
 using LeakChecker.DataParser.Helpers.ArchiveExtraction;
 using LeakChecker.DataParser.Helpers.Enums;
 using LeakChecker.DataParser.Helpers.Settings;
@@ -160,19 +162,35 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
             if (successRate < threshold)
             {
                 logger.Log($"File in path: '{filePath}' readability success rate is {successRate:N2} " +
-                           $"which can't be analysed via {ApplicationName}.", LogLevel.Warning);
+                           $"which can't be properly analysed via {ApplicationName}.", LogLevel.Warning);
                 return false;
             }
 
             return true;
     }
-    
-    public async Task<IEnumerable<string>> GetPathsFromInputDirectory()
+
+    public async Task<IEnumerable<string>> GetAllPaths()
+    {
+        switch (settings.Environment)
+        {
+            case EnvironmentType.Production:
+                logger.Log($"Paths loaded from InputDirectory: {settings.InputDirectory} in {settings.Environment} environment");
+                return await GetPathsFromInputDirectory();
+            case EnvironmentType.Development:
+                logger.Log($"Paths loaded from {nameof(FilePaths.Utf8)} in {settings.Environment} environment");
+                return FilePaths.Utf8;
+            case EnvironmentType.Test:
+                logger.Log($"Paths loaded from {nameof(FilePaths.Test)} in {settings.Environment} environment");
+                return FilePaths.Test;
+            default:
+                throw new InvalidOperationException($"Unsupported environment type: {settings.Environment}");
+        }
+    }
+
+    private async Task<IEnumerable<string>> GetPathsFromInputDirectory()
     {
         IEnumerable<string> inputPaths = Directory.EnumerateFiles(settings.InputDirectory, "*", SearchOption.AllDirectories);
-    
         IEnumerable<string> allowedPaths = ApplySizeLimit(inputPaths);
-    
         IEnumerable<string> allPaths = await archiveExtractor.ExtractArchives(allowedPaths);
         
         var result = SelectAccessiblePaths(allPaths);
@@ -254,7 +272,7 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
 
     public bool CanParse(string filePath)
     {
-        return IsAccessible(filePath) && (IsTextual(filePath) || IsExcel(filePath));
+        return IsAccessible(filePath) && (IsExcel(filePath) || IsTextual(filePath));
     }
     
     public void RemoveEmptyDirectories()
