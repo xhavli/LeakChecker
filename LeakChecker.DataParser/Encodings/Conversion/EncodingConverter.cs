@@ -11,10 +11,7 @@ public static class EncodingConverter
     private static readonly string Utf8Name = Encoding.UTF8.WebName;
     private static readonly string AsciiName = Encoding.ASCII.WebName;
     private static readonly DecoderReplacementFallback FallbackDrop = new(string.Empty); // Drop invalid bytes
-    
-    public static readonly Encoding Utf8 = Encoding.GetEncoding(Utf8Name, 
-        encoderFallback: new EncoderReplacementFallback(string.Empty),  // Drop unencodable chars
-        decoderFallback: new DecoderReplacementFallback(string.Empty)); // Drop invalid bytes
+    private static readonly Encoding Utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false);
 
     /// <summary>
     /// Converts a file with mixed encodings into a single UTF-8 encoded output file.

@@ -1,4 +1,4 @@
-using LeakChecker.DataParser.Encodings.Conversion;
+using System.Text;
 using LeakChecker.DataParser.Helpers.Enums;
 using MongoDB.Bson;
 
@@ -7,6 +7,9 @@ namespace LeakChecker.DataParser.Database.Helpers;
 public static class DocumentSanitizer
 {
     private const int MaxDocumentSize = 16 * SizeEnum.MegaByte;
+    private static readonly Encoding Utf8 = Encoding.GetEncoding(Encoding.UTF8.WebName, 
+        encoderFallback: new EncoderReplacementFallback(string.Empty),  // Drop unencodable chars
+        decoderFallback: new DecoderReplacementFallback(string.Empty)); // Drop invalid bytes
     
     public static List<BsonDocument> SanitizeDocumentsEncoding(List<BsonDocument> documents)
     {
@@ -27,7 +30,7 @@ public static class DocumentSanitizer
     private static BsonValue SanitizeValueEncoding(BsonValue value)
     {
         if (value is BsonString s)
-            return new BsonString(EncodingConverter.Utf8.GetString(EncodingConverter.Utf8.GetBytes(s.Value)));
+            return new BsonString(Utf8.GetString(Utf8.GetBytes(s.Value)));
 
         if (value is BsonArray arr)
         {
