@@ -11,9 +11,8 @@ namespace LeakChecker.UI.Components;
 
 public class SearchIdentityBase : ComponentBase
 {
-    [Inject] private IJSRuntime Js { get; set; } = default!;
-    [Inject] protected NavigationManager Nav { get; set; } = default!;
-    [Inject] private IDashboardService DashboardService { get; set; } = default!;
+    [Inject] private IJSRuntime Js { get; set; } = null!;
+    [Inject] private IDashboardService DashboardService { get; set; } = null!;
 
     protected static readonly ItemEnum[] SearchableItems =
         Enum.GetValues<ItemEnum>()
@@ -35,7 +34,7 @@ public class SearchIdentityBase : ComponentBase
     private DateTime? _tsFrom;
     private DateTime? _tsTo;
 
-    protected bool IsSearching { get; set; }
+    protected bool IsSearching { get; private set; }
     protected bool IsSearchReady => SelectedItem == ItemEnum.Timestamp
         ? DatePart.HasValue
         : !string.IsNullOrWhiteSpace(SearchValue);
@@ -46,7 +45,7 @@ public class SearchIdentityBase : ComponentBase
             if (SelectedItem == ItemEnum.Timestamp)
                 return false;
 
-            if (SelectedItem is ItemEnum.Hash)
+            if (SelectedItem == ItemEnum.Hash)
                 return true;
             
             if (SelectedCondition == ConditionType.Contains)
@@ -58,14 +57,17 @@ public class SearchIdentityBase : ComponentBase
                 if (SelectedItem == ItemEnum.Email && !SearchValue.Contains('@')) return false;
                 return true;
             }
+            
+            if (SelectedItem == ItemEnum.Domain && SelectedCondition == ConditionType.StartsWith)
+                return true;
 
             return false;
         }
     }
-    protected bool HasSearched { get; set; }
-    protected bool IsLoadingMore { get; set; }
-    protected bool HasMore { get; set; }
-    protected string? ErrorMessage { get; set; }
+    protected bool HasSearched { get; private set; }
+    protected bool IsLoadingMore { get; private set; }
+    protected bool HasMore { get; private set; }
+    protected string? ErrorMessage { get; private set; }
     
     private const string SourceColumn = "Source";
     private const int PageSize = 50;
@@ -74,11 +76,11 @@ public class SearchIdentityBase : ComponentBase
     private readonly Dictionary<ObjectId, string> _sourceNameCache = [];
     private readonly Dictionary<ObjectId, string> _sourcePathCache = [];
     
-    protected List<Dictionary<string, string?>> Results { get; set; } = [];
-    protected List<string> ResultColumns { get; set; } = [];
+    protected List<Dictionary<string, string?>> Results { get; private set; } = [];
+    protected List<string> ResultColumns { get; private set; } = [];
     protected int TotalLoaded => Results.Count;
-    protected long? TotalMatched { get; set; }
-    protected TimeSpan Elapsed { get; set; }
+    protected long? TotalMatched { get; private set; }
+    protected TimeSpan Elapsed { get; private set; }
     private DateTime _searchStart;
     private Timer? _timer;
     
