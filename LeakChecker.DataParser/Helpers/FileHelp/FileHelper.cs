@@ -168,22 +168,26 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
 
             return true;
     }
+    
+    public bool CanParse(string filePath)
+    {
+        return IsAccessible(filePath) && (IsExcel(filePath) || IsTextual(filePath));
+    }
 
     public async Task<IEnumerable<string>> GetAllPaths()
     {
         switch (settings.Environment)
         {
             case EnvironmentType.Production:
-                logger.Log($"Paths loaded from InputDirectory: {settings.InputDirectory} in {settings.Environment} environment");
                 return await GetPathsFromInputDirectory();
             case EnvironmentType.Development:
-                logger.Log($"Paths loaded from {nameof(FilePaths.Utf8)} in {settings.Environment} environment");
+                logger.Log($"Loaded {FilePaths.Utf8.Length} paths from {nameof(FilePaths.Utf8)}.");
                 return FilePaths.Utf8;
             case EnvironmentType.Test:
-                logger.Log($"Paths loaded from {nameof(FilePaths.Test)} in {settings.Environment} environment");
+                logger.Log($"Loaded {FilePaths.Test.Length} paths from {nameof(FilePaths.Test)}.");
                 return FilePaths.Test;
             default:
-                throw new InvalidOperationException($"Unsupported environment type: {settings.Environment}");
+                throw new InvalidOperationException($"Can't load paths. Unsupported environment: {settings.Environment}.");
         }
     }
 
@@ -196,6 +200,7 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
         var result = SelectAccessiblePaths(allPaths);
         result.Sort((a, b) => new FileInfo(b).Length.CompareTo(new FileInfo(a).Length));
         
+        logger.Log($"Loaded {result.Count} paths from {nameof(settings.InputDirectory)}: {settings.InputDirectory}.");
         return result;
     }
 
@@ -216,8 +221,7 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
             bool resumeFound = sorted.Any(p => string.Equals(p, settings.ResumeFromPath, StringComparison.Ordinal));
             if (!resumeFound)
             {
-                logger.Log($"Resume point '{settings.ResumeFromPath}' was not found in input directory. " +
-                           $"Processing from the beginning.", LogLevel.Warning);
+                logger.Log($"Resume point '{settings.ResumeFromPath}' was not found in input directory. Processing from the beginning.");
                 filtered = sorted;
             }
             else
@@ -254,11 +258,11 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
                     logger.Log($"Size limit of {settings.ParseSizeLimitGb:N2} GB reached immediately on first file '{path}' " +
                                $"({new FileInfo(path).Length / (double)SizeEnum.GigaByte:N2} GB). No files were accepted. " +
                                $"Increase ParseSizeLimitGb above {settings.ParseSizeLimitGb:N2} GB to make progress. " +
-                               $"Resume point unchanged: '{settings.ResumeFromPath}'.", LogLevel.Warning);
+                               $"Resume point unchanged: '{settings.ResumeFromPath}'.");
                 else
                     logger.Log($"Size limit of {settings.ParseSizeLimitGb:N2} GB reached. " +
                                $"Last accepted: '{lastProcessed}' ({new FileInfo(lastProcessed).Length / (double)SizeEnum.GigaByte:N2} GB). " +
-                               $"Resume from: '{path}' ({new FileInfo(path).Length / (double)SizeEnum.GigaByte:N2} GB).", LogLevel.Warning);
+                               $"Resume from: '{path}' ({new FileInfo(path).Length / (double)SizeEnum.GigaByte:N2} GB).");
                 break;
             }
 
@@ -268,11 +272,6 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
         }
 
         return accepted.AsEnumerable();
-    }
-
-    public bool CanParse(string filePath)
-    {
-        return IsAccessible(filePath) && (IsExcel(filePath) || IsTextual(filePath));
     }
     
     public void RemoveEmptyDirectories()
@@ -296,13 +295,5 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
                 logger.Log($"Could not delete directory '{dir}': {ex.Message}", LogLevel.Warning);
             }
         }
-    }
-    
-    public static void EnsureDirectoryExists(string directory)
-    {
-        string? directoryPath = Path.GetDirectoryName(directory);
-
-        if (!string.IsNullOrWhiteSpace(directoryPath))
-            Directory.CreateDirectory(directoryPath);
     }
 }
