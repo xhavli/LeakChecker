@@ -83,7 +83,7 @@ public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
             return null;
         }
 
-        FileHelper.EnsureDirectoryExists(extractionPath);
+        EnsureDirectoryExists(extractionPath);
 
         var writeLock = writeLocks.GetOrAdd(extractionPath, _ => new SemaphoreSlim(1, 1));
         await writeLock.WaitAsync(ct);
@@ -121,5 +121,13 @@ public sealed class ArchiveExtractor(ISettings settings, ExecutionLogger logger)
         return startIndex < 0
             ? Path.GetFileName(entryFullPath)
             : Path.Combine(segments[startIndex..]);
+    }
+
+    private static void EnsureDirectoryExists(string directory)
+    {
+        string? directoryPath = Path.GetDirectoryName(directory);
+
+        if (!string.IsNullOrWhiteSpace(directoryPath))
+            Directory.CreateDirectory(directoryPath);
     }
 }
