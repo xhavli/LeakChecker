@@ -75,7 +75,6 @@ public sealed class ExecutionOrchestrator(
 
             await Task.WhenAll(consumers.Append(producer));
 
-            _stats.ParseEnd();
             logger.LogExecutionStats(_stats);
             await settings.Database.SaveExecutionOne(_stats);
             

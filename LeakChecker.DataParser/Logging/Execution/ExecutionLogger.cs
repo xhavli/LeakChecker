@@ -100,6 +100,8 @@ public class ExecutionLogger : IDisposable
     
     public void LogExecutionStats(ExecutionStats stats)
     {
+        stats.ParseEnd();
+        
         LogInternal();
 
         LogInternal($"Execution ID: {stats.ExecutionId}");
