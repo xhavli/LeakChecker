@@ -9,9 +9,9 @@ public class ParseDetailBase : ComponentBase
 {
     [Parameter] public required string ParseId { get; set; }
 
-    [Inject] protected IDashboardService DashboardService { get; set; } = default!;
-    [Inject] protected NavigationManager Nav              { get; set; } = default!;
-    [Inject] protected IJSRuntime Js                      { get; set; } = default!;
+    [Inject] protected IJSRuntime Js { get; set; } = null!;
+    [Inject] protected NavigationManager Nav { get; set; } = null!;
+    [Inject] protected IDashboardService DashboardService { get; set; } = null!;
 
     protected ParseDetailModel? Detail { get; private set; }
     protected bool   Loaded { get; private set; }
