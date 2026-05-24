@@ -65,9 +65,9 @@ public sealed class ExecutionOrchestrator(
 
             var consumers = Enumerable.Range(0, settings.ThreadsCapacity).Select(_ => Task.Run(async () =>
                 {
-                    await foreach (var filePath in channel.Reader.ReadAllAsync())
+                    await foreach (var path in channel.Reader.ReadAllAsync())
                     {
-                        ParsingOrchestrator parser = new ParsingOrchestrator(filePath, settings, fileHelper, _stats, logger, parseLoggerFactory);
+                        ParsingOrchestrator parser = new ParsingOrchestrator(path, settings, fileHelper, _stats, logger, parseLoggerFactory);
                         await parser.RunAsync();
                     }
                 }))
