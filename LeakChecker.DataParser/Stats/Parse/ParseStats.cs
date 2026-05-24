@@ -49,12 +49,15 @@ public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourc
             { nameof(MalformedRead), MalformedRead },
             { nameof(Accuracy), Accuracy },
             { nameof(Encoding), Encoding?.WebName is null ? BsonNull.Value : Encoding.WebName },
-            { nameof(EncodingSegments), new BsonArray(EncodingSegments.Select(segment => new BsonDocument
-                {
-                    { "Start", segment.StartOffset },
-                    { "Length", segment.Length },
-                    { "Encoding", segment.Encoding?.WebName is null ? BsonNull.Value : segment.Encoding.WebName }
-                }))
+            { nameof(EncodingSegments), new BsonArray(
+                EncodingSegments
+                    .Take(14000) // Avg size of EncodingSegment metadata is 70 bytes. 14 000 is almost 1MB
+                    .Select(segment => new BsonDocument
+                    {
+                        { "Start", segment.StartOffset },
+                        { "Length", segment.Length },
+                        { "Encoding", segment.Encoding?.WebName is null ? BsonNull.Value : segment.Encoding.WebName }
+                    }))
             },
             { nameof(Delimiters), new BsonArray(Delimiters.Select(d => d.ToString())) },
             { nameof(Formats), new BsonArray(Formats.Select(f => f.ToString())) },
