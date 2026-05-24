@@ -14,12 +14,12 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
 {
     private const long ParseLimit = long.MaxValue;
     private readonly ObjectId _parseId = stats.ParseId;
-    private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new();
     private readonly IDatabase _database = settings.Database;
+    private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new();
 
     public async Task ParseAsync()
     {
-        Dictionary<int, Dictionary<int, ItemEnum>> schemas = await ExcelDetector.DetectFormat(filePath, logger, settings);
+        Dictionary<int, Dictionary<int, ItemEnum>> schemas = await ExcelDetector.DetectFormat(filePath, logger, stats, settings);
 
         await using var stream = File.OpenRead(filePath);
         using var reader = ExcelReaderFactory.CreateReader(stream);
@@ -30,8 +30,6 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
         do
         {
             string sheetName = reader.Name;
-            stats.Context.Add(sheetName);
-            stats.Formats.Add(FormatEnum.Excel);
             
             sheetNumber++;
             Dictionary<int, ItemEnum> schema = schemas[sheetNumber];
@@ -53,7 +51,7 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
                     logger.Log($"Bad row length at at sheet [{sheetName}] row [{row}]: expected {expectedFields}, got {fieldsCount}.", LogLevel.Warning);
                 } 
                 
-                await ParseRow(reader, schema, sheetName, row);
+                ParseRow(reader, schema, sheetName, row);
                 if (_cachedRecords.Count > 2000)
                 {
                     await _database.SaveIdentityMany(_cachedRecords, _parseId);
@@ -76,7 +74,7 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
         stats.BytesRead = new FileInfo(filePath).Length;
     }
 
-    private async Task ParseRow(IExcelDataReader reader, Dictionary<int, ItemEnum> schema, string sheetName, int row)
+    private void ParseRow(IExcelDataReader reader, Dictionary<int, ItemEnum> schema, string sheetName, int row)
     {
         Dictionary<ItemEnum, List<string>> record = new();
 

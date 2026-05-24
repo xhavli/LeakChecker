@@ -3,6 +3,7 @@ using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Tests.Helpers.Logging.Parse;
 using LeakChecker.DataParser.Tests.Helpers.Settings;
+using LeakChecker.DataParser.Tests.Helpers.Stats;
 
 namespace LeakChecker.DataParser.Tests.Format.Detection;
 
@@ -36,15 +37,17 @@ public class ExcelDetectorTests
             { 6, ItemEnum.Email },
             { 7, ItemEnum.Password },
         };
+        
         Dictionary<int, Dictionary<int, ItemEnum>> expectedSchema = new()
         {
             { 1, schema }
         };
         
+        NullParseStats stats = new NullParseStats();
         string filePath = Path.Combine(_testDataDirectory, fileName);
         
         // Act
-        Dictionary<int, Dictionary<int, ItemEnum>> result = await ExcelDetector.DetectFormat(filePath, _logger, _settings);
+        Dictionary<int, Dictionary<int, ItemEnum>> result = await ExcelDetector.DetectFormat(filePath, _logger, stats, _settings);
 
         // Assert
         Assert.Equal(expectedSchema, result);
@@ -62,6 +65,7 @@ public class ExcelDetectorTests
             { 2, ItemEnum.Password },
             { 3, ItemEnum.Name },
         };
+        
         Dictionary<int, ItemEnum> secondSheet = new()
         {
             { 0, ItemEnum.Empty },
@@ -69,15 +73,18 @@ public class ExcelDetectorTests
             { 2, ItemEnum.Ipv4 },
             { 3, ItemEnum.Password },
         };
+        
         Dictionary<int, Dictionary<int, ItemEnum>> expectedSchema = new()
         {
             { 1, firstSheet },
             { 2, secondSheet }
         };
+        
+        NullParseStats stats = new NullParseStats();
         string filePath = Path.Combine(_testDataDirectory, fileName);
         
         // Act
-        Dictionary<int, Dictionary<int, ItemEnum>> result = await ExcelDetector.DetectFormat(filePath, _logger, _settings);
+        Dictionary<int, Dictionary<int, ItemEnum>> result = await ExcelDetector.DetectFormat(filePath, _logger, stats, _settings);
 
         // Assert
         Assert.Equal(expectedSchema, result);

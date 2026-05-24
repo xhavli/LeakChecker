@@ -5,13 +5,14 @@ using LeakChecker.DataParser.Content.Parse;
 using LeakChecker.DataParser.Format.Schema;
 using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Stats.Parse;
 
 namespace LeakChecker.DataParser.Format.Detection;
 
 public static class ExcelDetector
 {
     public static async Task<Dictionary<int, Dictionary<int, ItemEnum>>> DetectFormat(
-        string filePath, IParseLogger logger, ISettings settings)
+        string filePath, IParseLogger logger, IParseStats stats, ISettings settings)
     {
         await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
         using var reader = ExcelReaderFactory.CreateReader(stream);
@@ -83,6 +84,10 @@ public static class ExcelDetector
             var assigned = CredentialAssigner.Assign(original);
             
             logger.LogFinalSchema(assigned);
+            
+            stats.Schemas.Add(assigned);
+            stats.Context.Add(sheetName);
+            stats.Formats.Add(FormatEnum.Excel);
         
             schemas.Add(sheetNumber, assigned);
         }
