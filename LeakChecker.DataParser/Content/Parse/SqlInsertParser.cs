@@ -119,7 +119,15 @@ public class SqlInsertParser(ParsingContext parsingContext)
                                 if (malformedReadSequence >= malformedLimit)
                                 {
                                     _logger.Log($"Parsing reach malformed limit {malformedLimit}. Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
-                                    break;
+                                    await _database.SaveIdentityMany(_cachedRecords, _parseId);
+        
+                                    return new ParsingResult
+                                    {
+                                        LinesRead = linesRead,
+                                        BytesRead = bytesRead,
+                                        RecordsRead = recordsRead,
+                                        MalformedRead = malformedRead,
+                                    };
                                 }
                                 
                                 continue;
