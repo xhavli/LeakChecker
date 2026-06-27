@@ -58,7 +58,7 @@ public class DashboardService(IDatabase database, IMongoDatabase db) : IDashboar
             SourcePath  = p.GetValue("SourcePath", "?").AsString,
             RecordsRead = records,
             BytesRead   = p.GetValue("BytesRead", 0L).ToInt64(),
-            Accuracy    = records <= 0 ? 0 : Math.Max(0, (double)(records - malformed) / records * 100),
+            Acceptance    = records <= 0 ? 0 : Math.Max(0, (double)(records - malformed) / records * 100),
             Duration    = end > start ? end - start : TimeSpan.Zero,
             ParseEnd    = end,
         };
@@ -98,7 +98,7 @@ public class DashboardService(IDatabase database, IMongoDatabase db) : IDashboar
             LineSpeed    = p.GetValue("LineSpeed",   0.0).ToDouble(),
             RecordsRead  = p.GetValue("RecordsRead", 0L).ToInt64(),
             MalformedRead = p.GetValue("MalformedRead", 0L).ToInt64(),
-            Accuracy     = p.GetValue("Accuracy",   0.0).ToDouble(),
+            Acceptance   = p.GetValue("Accuracy",   0.0).ToDouble(),
             ParseStart   = start,
             ParseEnd     = end,
             Duration     = end > start ? end - start : TimeSpan.Zero,

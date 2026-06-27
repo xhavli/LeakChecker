@@ -9,7 +9,7 @@ public class ParseListModel
     public string   FileName    => Path.GetFileName(SourcePath);
     public long     RecordsRead { get; init; }
     public long     BytesRead   { get; init; }
-    public double   Accuracy    { get; init; }
+    public double   Acceptance   { get; init; }
     public TimeSpan Duration    { get; init; }
     public DateTime ParseEnd    { get; init; }
 }

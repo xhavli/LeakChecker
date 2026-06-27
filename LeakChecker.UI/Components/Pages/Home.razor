@@ -71,7 +71,7 @@
 
     .parse-table th:first-child,
     .parse-table td:first-child {
-        width: 470px;      /* adjust this one number to taste */
+        width: 470px;
     }
 </style>
 
@@ -85,60 +85,60 @@
 
 @if (Error is not null)
 {
-<div class="error-box">Could not connect to MongoDB: @Error</div>
+    <div class="error-box">Could not connect to MongoDB: @Error</div>
 }
 else if (!Loaded)
 {
-<p style="color:#adb5bd;font-size:13px;">Loading...</p>
+    <p style="color:#adb5bd;font-size:13px;">Loading...</p>
 }
 else
 {
-<div class="dash-grid">
-    <MetricCard Label="Identities"      Value="@StringFormatter.Number(Stats.TotalRecords)" Sub="total records"  />
-    <MetricCard Label="Files"           Value="@StringFormatter.Number(Stats.TotalParses)"  Sub="total parsed"    />
-    <MetricCard Label="Avg accuracy"    Value="@StringFormatter.Percent(Stats.Accuracy)"    Sub="weighted across all parses" />
-    <MetricCard Label="Data size"       Value="@StringFormatter.Bytes(Stats.TotalBytes)"    Sub="all files"  />
-</div>
+    <div class="dash-grid">
+        <MetricCard Label="Identities"      Value="@StringFormatter.Number(Stats.TotalRecords)" Sub="total records"  />
+        <MetricCard Label="Files"           Value="@StringFormatter.Number(Stats.TotalParses)"  Sub="total parsed"    />
+        <MetricCard Label="Ingestion acceptance"   Value="@StringFormatter.Percent(Stats.IngestionAcceptance)"    Sub="weighted across all parses" />
+        <MetricCard Label="Dataset size"    Value="@StringFormatter.Bytes(Stats.TotalBytes)"    Sub="all raw files"  />
+    </div>
 
-<div class="section-title">Recent parses</div>
-<table class="parse-table">
-    <thead>
-    <tr>
-        @foreach (var col in Columns)
-        {
-            <th>@col.Header</th>
-        }
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var p in RecentParses)
-    {
+    <div class="section-title">Recent parses</div>
+    <table class="parse-table">
+        <thead>
         <tr>
             @foreach (var col in Columns)
             {
-                @if (col.Header == "File Name")
-                {
-                    <td>
-                        <span class="source-badge"
-                              title="@p.SourcePath"
-                              @onclick='() => Nav.NavigateTo($"/parse/{p.ParseId}")'>
-                            @col.Value(p)
-                        </span>
-                    </td>
-                }
-                else if (col.Header == "Accuracy")
-                {
-                    <td title="@col.Header">
-                        <span class="badge @AccuracyClass(p.Accuracy)">@col.Value(p)</span>
-                    </td>
-                }
-                else
-                {
-                    <td title="@col.Header">@col.Value(p)</td>
-                }
+                <th>@col.Header</th>
             }
         </tr>
-    }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+        @foreach (var p in RecentParses)
+        {
+            <tr>
+                @foreach (var col in Columns)
+                {
+                    @if (col.Header == "File Name")
+                    {
+                        <td>
+                            <span class="source-badge"
+                                title="@p.SourcePath"
+                                @onclick='() => Nav.NavigateTo($"/parse/{p.ParseId}")'>
+                                @col.Value(p)
+                            </span>
+                        </td>
+                    }
+                    else if (col.Header == "Acceptance")
+                    {
+                        <td title="@col.Header">
+                            <span class="badge @AcceptanceClass(p.Acceptance)">@col.Value(p)</span>
+                        </td>
+                    }
+                    else
+                    {
+                        <td title="@col.Header">@col.Value(p)</td>
+                    }
+                }
+            </tr>
+        }
+        </tbody>
+    </table>
 }

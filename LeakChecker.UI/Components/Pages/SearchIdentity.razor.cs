@@ -26,8 +26,8 @@ public class SearchIdentityBase : ComponentBase
             .ToArray();
 
     protected string SearchValue { get; set; } = string.Empty;
-    protected ConditionType SelectedCondition { get; set; } = ConditionType.StartsWith;
     protected ItemEnum SelectedItem { get; set; } = ItemEnum.Email;
+    protected ConditionType SelectedCondition { get; set; } = ConditionType.StartsWith;
 
     protected DateTime? DatePart { get; set; }
     protected TimeOnly? TimePart { get; set; }
@@ -65,8 +65,8 @@ public class SearchIdentityBase : ComponentBase
         }
     }
     protected bool HasSearched { get; private set; }
-    protected bool IsLoadingMore { get; private set; }
     protected bool HasMore { get; private set; }
+    protected bool IsLoadingMore { get; private set; }
     protected string? ErrorMessage { get; private set; }
     
     private const string SourceColumn = "Source";

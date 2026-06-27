@@ -6,7 +6,7 @@ public class DashboardStats
     public long   TotalBytes    { get; init; }
     public long   TotalRecords  { get; init; }
     public long   TotalMalformed { get; init; }
-    public double Accuracy => TotalRecords > 0
+    public double IngestionAcceptance => TotalRecords > 0
         ? Math.Max(0, (double)(TotalRecords - TotalMalformed) / TotalRecords * 100)
         : 0;
 }

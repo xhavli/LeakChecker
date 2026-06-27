@@ -68,23 +68,23 @@ else
     </div>
 
     <div class="detail-grid" style="grid-template-columns: repeat(4, 1fr);">
-        <MetricCard Label="Lines"       Value="@StringFormatter.Number(Detail.LinesRead)"     Sub="total read" />
-        <MetricCard Label="Records"     Value="@StringFormatter.Number(Detail.RecordsRead)"   Sub="total parsed" />
-        <MetricCard Label="Malformed"   Value="@StringFormatter.Number(Detail.MalformedRead)" Sub="skipped" />
-        <MetricCard Label="Accuracy"    Value="@StringFormatter.Percent(Detail.Accuracy)"     Sub="parse quality" />
-        <MetricCard Label="File size"   Value="@StringFormatter.Bytes(Detail.FileSize)"       Sub="on disk" />
-        <MetricCard Label="Speed"       Value="@($"{StringFormatter.Bytes((long)Detail.ByteSpeed)}/s")"    Sub="physical throughput" />
-        <MetricCard Label="Line speed"  Value="@($"{Detail.LineSpeed:F2} ln/s")"        Sub="logical throughput" />
-        <MetricCard Label="Duration"    Value="@StringFormatter.Duration(Detail.Duration)"    />
+        <MetricCard Label="Lines"       Value="@StringFormatter.Number(Detail.LinesRead)"       Sub="total read" />
+        <MetricCard Label="Records"     Value="@StringFormatter.Number(Detail.RecordsRead)"     Sub="total parsed" />
+        <MetricCard Label="Malformed"   Value="@StringFormatter.Number(Detail.MalformedRead)"   Sub="skipped" />
+        <MetricCard Label="Acceptance"  Value="@StringFormatter.Percent(Detail.Acceptance)"     Sub="parsed" />
+        <MetricCard Label="File size"   Value="@StringFormatter.Bytes(Detail.FileSize)"         Sub="on disk" />
+        <MetricCard Label="Speed"       Value="@($"{StringFormatter.Bytes((long)Detail.ByteSpeed)}/s")"     Sub="physical throughput" />
+        <MetricCard Label="Line speed"  Value="@($"{Detail.LineSpeed:F2} ln/s")"                Sub="logical throughput" />
+        <MetricCard Label="Duration"    Value="@StringFormatter.Duration(Detail.Duration)"      Sub="of parsing" />
     </div>
 
     <div class="section-title">Identifiers</div>
     <table class="detail-table" style="padding-left:1.25rem;">
         <tr><td style="color:#868e96;width:140px;">Execution ID</td>    <td>@Detail.ExecutionId</td></tr>
-        <tr><td style="color:#868e96;">Parse ID</td>                    <td>@Detail.ParseId</td></tr>
-        <tr><td style="color:#868e96;">Source path</td>                 <td>@Detail.SourcePath</td></tr>
-        <tr><td style="color:#868e96;">Started</td>                     <td>@Detail.ParseStart.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td></tr>
-        <tr><td style="color:#868e96;">Finished</td>                    <td>@Detail.ParseEnd.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td></tr>
+        <tr><td style="color:#868e96;">Parse ID</td>        <td>@Detail.ParseId</td></tr>
+        <tr><td style="color:#868e96;">Source path</td>     <td>@Detail.SourcePath</td></tr>
+        <tr><td style="color:#868e96;">Started</td>         <td>@Detail.ParseStart.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td></tr>
+        <tr><td style="color:#868e96;">Finished</td>        <td>@Detail.ParseEnd.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td></tr>
     </table>
     
     <div class="section-title">Context (@Detail.Context.Count)</div>
@@ -199,7 +199,6 @@ else
     
     @if (Detail.EncodingSegments.Any())
     {
-        // GroupBy keys (two places)
         var byCount = Detail.EncodingSegments
             .GroupBy(s => s.DisplayEncoding)
             .OrderByDescending(g => g.Count())

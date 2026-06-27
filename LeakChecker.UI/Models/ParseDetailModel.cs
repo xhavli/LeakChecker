@@ -15,7 +15,7 @@ public class ParseDetailModel
     public double   LineSpeed         { get; init; }
     public long     RecordsRead       { get; init; }
     public long     MalformedRead     { get; init; }
-    public double   Accuracy          { get; init; }
+    public double   Acceptance        { get; init; }
     public TimeSpan Duration          { get; init; }
     public DateTime ParseStart        { get; init; }
     public DateTime ParseEnd          { get; init; }
