@@ -131,7 +131,7 @@ public class ContentParser : IDisposable
         ParsingResult result = await parser.Parse();
         UpdateParsingState(result);
         
-        _stats.Formats.Add(FormatEnum.SqlInsert);
+        _stats.Formats.Add(FormatType.SqlInsert);
         _stats.Delimiters.Add(',');
     }
 
@@ -188,9 +188,9 @@ public class ContentParser : IDisposable
         UpdateParsingState(result);
         
         if (_possibleAsciiTable && delimiter == '|')
-            _stats.Formats.Add(FormatEnum.AsciiTable);
+            _stats.Formats.Add(FormatType.AsciiTable);
         else
-            _stats.Formats.Add(FormatEnum.Csv);
+            _stats.Formats.Add(FormatType.Csv);
         _stats.Delimiters.Add(delimiter);
     }
 

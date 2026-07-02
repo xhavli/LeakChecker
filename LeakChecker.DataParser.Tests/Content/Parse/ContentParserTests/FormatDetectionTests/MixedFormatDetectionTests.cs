@@ -37,8 +37,8 @@ public class MixedFormatDetectionTests
 
         // Assert
         Assert.Equal(2, stats.Formats.Count);
-        Assert.Equal(FormatEnum.SqlInsert, stats.Formats[0]);
-        Assert.Equal(FormatEnum.Csv, stats.Formats[1]);
+        Assert.Equal(FormatType.SqlInsert, stats.Formats[0]);
+        Assert.Equal(FormatType.Csv, stats.Formats[1]);
     }
     
     [Theory]
@@ -59,8 +59,8 @@ public class MixedFormatDetectionTests
 
         // Assert
         Assert.Equal(2, stats.Formats.Count);
-        Assert.Equal(FormatEnum.Csv, stats.Formats[0]);
-        Assert.Equal(FormatEnum.SqlInsert, stats.Formats[1]);
+        Assert.Equal(FormatType.Csv, stats.Formats[0]);
+        Assert.Equal(FormatType.SqlInsert, stats.Formats[1]);
     }
     
     [Theory]
@@ -81,7 +81,7 @@ public class MixedFormatDetectionTests
 
         // Assert
         Assert.Equal(2, stats.Formats.Count);
-        Assert.Equal(FormatEnum.SqlInsert, stats.Formats[0]);
-        Assert.Equal(FormatEnum.SqlInsert, stats.Formats[1]);
+        Assert.Equal(FormatType.SqlInsert, stats.Formats[0]);
+        Assert.Equal(FormatType.SqlInsert, stats.Formats[1]);
     }
 }

@@ -1,6 +1,6 @@
 namespace LeakChecker.Common.Enums;
 
-public enum FormatEnum
+public enum FormatType
 {
     Csv,
     Json,

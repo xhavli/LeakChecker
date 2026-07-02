@@ -50,7 +50,7 @@ public class SingleFormatDetectionTests
         // Assert
         Assert.Single(stats.Formats);
         Assert.Single(stats.Delimiters);
-        Assert.Equal(FormatEnum.Csv, stats.Formats.First());
+        Assert.Equal(FormatType.Csv, stats.Formats.First());
     }
     
     [Theory]
@@ -75,7 +75,7 @@ public class SingleFormatDetectionTests
         // Assert
         Assert.Single(stats.Formats);
         Assert.Single(stats.Delimiters);
-        Assert.Equal(FormatEnum.SqlInsert, stats.Formats.First());
+        Assert.Equal(FormatType.SqlInsert, stats.Formats.First());
     }
     
     [Theory]
@@ -94,7 +94,7 @@ public class SingleFormatDetectionTests
 
         // Assert
         Assert.Single(stats.Formats);
-        Assert.Equal(FormatEnum.Excel, stats.Formats.First());
+        Assert.Equal(FormatType.Excel, stats.Formats.First());
     }
     
     [Theory]
@@ -114,6 +114,6 @@ public class SingleFormatDetectionTests
         // Assert
         Assert.Single(stats.Formats);
         Assert.Single(stats.Delimiters);
-        Assert.Equal(FormatEnum.AsciiTable, stats.Formats.First());
+        Assert.Equal(FormatType.AsciiTable, stats.Formats.First());
     }
 }

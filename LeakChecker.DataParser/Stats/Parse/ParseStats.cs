@@ -21,7 +21,7 @@ public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourc
     public Encoding? Encoding { get; set; }
     public List<EncodingSegment> EncodingSegments { get; set; } = new();
     public List<char> Delimiters { get; init; } = new();
-    public List<FormatEnum> Formats { get; init; } = new();
+    public List<FormatType> Formats { get; init; } = new();
     public List<string> Context { get; init; } = new();
     public List<Dictionary<int, ItemEnum>> Schemas { get; init; } = new();
     public DateTime ParseStart { get; init; } = DateTime.Now;

@@ -87,7 +87,7 @@ public static class ExcelDetector
             
             stats.Schemas.Add(assigned);
             stats.Context.Add(sheetName);
-            stats.Formats.Add(FormatEnum.Excel);
+            stats.Formats.Add(FormatType.Excel);
         
             schemas.Add(sheetNumber, assigned);
         }
