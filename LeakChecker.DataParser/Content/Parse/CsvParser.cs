@@ -13,8 +13,8 @@ public class CsvParser(ParsingContext parsingContext)
     private readonly char _delimiter = parsingContext.Delimiter;
     private readonly ObjectId _parseId = parsingContext.Stats.ParseId;
     private readonly IParseLogger _logger = parsingContext.Logger;
-    private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
-    private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new(2001);
+    private readonly Dictionary<int, ItemType> _schema = parsingContext.Schema;
+    private readonly List<Dictionary<ItemType, List<string>>> _cachedRecords = new(2001);
     private readonly IDatabase _database = parsingContext.Settings.Database;
 
     private const int FlushThreshold = 2000;
@@ -95,7 +95,7 @@ public class CsvParser(ParsingContext parsingContext)
 
     private void ParseRow(string[] row)
     {
-        Dictionary<ItemEnum, List<string>> record = new();
+        Dictionary<ItemType, List<string>> record = new();
         
         int i = 0;
         while (i < row.Length)
@@ -107,7 +107,7 @@ public class CsvParser(ParsingContext parsingContext)
                 continue;
             }
 
-            if (!_schema.TryGetValue(i, out ItemEnum itemType))
+            if (!_schema.TryGetValue(i, out ItemType itemType))
             {
                 _logger.Log($"Unmapped CSV field[{i}] = {raw.Trim()}", LogLevel.Warning, LogContext.Parsing);
                 i++;
@@ -134,8 +134,8 @@ public class CsvParser(ParsingContext parsingContext)
 
         nextIndex = startIndex + 1;
         while (nextIndex < row.Length &&
-               _schema.TryGetValue(nextIndex, out ItemEnum nextType) &&
-               nextType == ItemEnum.Previous)
+               _schema.TryGetValue(nextIndex, out ItemType nextType) &&
+               nextType == ItemType.Previous)
         {
             string nextValue = row[nextIndex].Trim();
             if (!string.IsNullOrWhiteSpace(nextValue))

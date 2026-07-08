@@ -10,9 +10,9 @@ public static class IpAddressParser
     private const string Ipv6Localhost = "127.0.0.1";
     private const string TextLocalhost = "localhost";
 
-    public static bool TryParse(string token, out ItemEnum ipAddressType, out IPAddress ipAddress)
+    public static bool TryParse(string token, out ItemType ipAddressType, out IPAddress ipAddress)
     {
-        ipAddressType = ItemEnum.Other;
+        ipAddressType = ItemType.Other;
         ipAddress = IPAddress.None;
         
         string addressPart = token;
@@ -67,14 +67,14 @@ public static class IpAddressParser
 
         if (ipV6InBrackets && addressPart.Equals(TextLocalhost, StringComparison.OrdinalIgnoreCase))
         {
-            ipAddressType = ItemEnum.Ipv6;
+            ipAddressType = ItemType.Ipv6;
             ipAddress = IPAddress.Parse(Ipv6Localhost);
             return true;
         }
 
         if (addressPart.Equals(TextLocalhost, StringComparison.OrdinalIgnoreCase))
         {
-            ipAddressType = ItemEnum.Ipv4;
+            ipAddressType = ItemType.Ipv4;
             ipAddress = IPAddress.Parse(Ipv4Localhost);
             return true;
         }
@@ -83,14 +83,14 @@ public static class IpAddressParser
         {
             if (ipAddr.AddressFamily == AddressFamily.InterNetwork && addressPart.Count(ch => ch == '.') == 3)
             {
-                ipAddressType = ItemEnum.Ipv4;
+                ipAddressType = ItemType.Ipv4;
                 ipAddress = ipAddr;
                 return true;
             }
 
             if (ipAddr.AddressFamily == AddressFamily.InterNetworkV6)
             {
-                ipAddressType = ItemEnum.Ipv6;
+                ipAddressType = ItemType.Ipv6;
                 ipAddress = ipAddr;
                 return true;
             }

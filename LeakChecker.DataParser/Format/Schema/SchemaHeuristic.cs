@@ -5,10 +5,10 @@ namespace LeakChecker.DataParser.Format.Schema;
 public class SchemaHeuristic
 {
     public readonly Dictionary<int, int[]> AttributeCountsPerPosition = new();
-    private readonly int _attributeCount = Enum.GetValues(typeof(ItemEnum)).Length;
+    private readonly int _attributeCount = Enum.GetValues(typeof(ItemType)).Length;
     private readonly Dictionary<int, int> _delimiterCountsPerLine = new();
     private readonly Dictionary<int, List<int>> _delimiterCountsPerPosition = new();
-    private Dictionary<int, (ItemEnum attr, double percent)>? _cachedDominant;
+    private Dictionary<int, (ItemType attr, double percent)>? _cachedDominant;
 
     public void AddLinePatterns(List<SchemaHeuristicRecord> linePatterns, int lineDelimiterCount)
     {
@@ -38,18 +38,18 @@ public class SchemaHeuristic
         _cachedDominant = null;
     }
     
-    public Dictionary<int, ItemEnum> GetDominantSchema(double threshold)
+    public Dictionary<int, ItemType> GetDominantSchema(double threshold)
     {
         var rawSchema = BuildRawSchema(threshold);
         return NormalizeSchemaLength(rawSchema);
     }
 
-    private Dictionary<int, ItemEnum> BuildRawSchema(double threshold)
+    private Dictionary<int, ItemType> BuildRawSchema(double threshold)
     {
         var dominantByPos = GetDominantStats(threshold);
         var sortedPositions = dominantByPos.Keys.OrderBy(p => p).ToArray();
 
-        var schemaByPos = new Dictionary<int, ItemEnum>();
+        var schemaByPos = new Dictionary<int, ItemType>();
 
         for (int i = 0; i < sortedPositions.Length; i++)
         {
@@ -57,7 +57,7 @@ public class SchemaHeuristic
             if (schemaByPos.ContainsKey(fieldStartPos))
                 continue;
 
-            ItemEnum fieldAttr = dominantByPos[fieldStartPos].attr;
+            ItemType fieldAttr = dominantByPos[fieldStartPos].attr;
 
             int fieldWidth = InferFieldWidth(fieldStartPos, i, sortedPositions);
 
@@ -69,21 +69,21 @@ public class SchemaHeuristic
                 if (dominantByPos.ContainsKey(pos))
                     break;
 
-                schemaByPos[pos] = ItemEnum.Previous;
+                schemaByPos[pos] = ItemType.Previous;
             }
         }
 
         return schemaByPos;
     }
     
-    public Dictionary<int, (ItemEnum attr, double percent)> GetDominantStats(double threshold)
+    public Dictionary<int, (ItemType attr, double percent)> GetDominantStats(double threshold)
     {
         return _cachedDominant ??= CalculateDominant(threshold);
     }
     
-    private Dictionary<int, (ItemEnum attr, double percent)> CalculateDominant(double threshold)
+    private Dictionary<int, (ItemType attr, double percent)> CalculateDominant(double threshold)
     {
-        var result = new Dictionary<int, (ItemEnum, double)>();
+        var result = new Dictionary<int, (ItemType, double)>();
 
         foreach (var kvp in AttributeCountsPerPosition)
         {
@@ -95,14 +95,14 @@ public class SchemaHeuristic
             int maxIndex = Array.IndexOf(array, maxCount);
             double percent = Math.Round((double)maxCount / total * 100.0, 2);
 
-            (ItemEnum attr, double percent) dominant = 
-                percent >= threshold ? ((ItemEnum)maxIndex, percent) : (ItemEnum.Other, 0);
+            (ItemType attr, double percent) dominant = 
+                percent >= threshold ? ((ItemType)maxIndex, percent) : (ItemType.Other, 0);
 
             // if Empty is dominant but not 100% it will be something else
-            if (dominant is { attr: ItemEnum.Empty, percent: < 100 })
+            if (dominant is { attr: ItemType.Empty, percent: < 100 })
             {
                 // Remove Empty entries and recompute
-                int emptyIndex = (int)ItemEnum.Empty;
+                int emptyIndex = (int)ItemType.Empty;
                 array[emptyIndex] = 0;
 
                 total = array.Sum();
@@ -112,11 +112,11 @@ public class SchemaHeuristic
                     maxIndex = Array.IndexOf(array, maxCount);
                     percent = Math.Round((double)maxCount / total * 100.0, 2);
 
-                    dominant = percent >= threshold ? ((ItemEnum)maxIndex, percent) : (ItemEnum.Other, 0);
+                    dominant = percent >= threshold ? ((ItemType)maxIndex, percent) : (ItemType.Other, 0);
                 }
                 else
                 {
-                    dominant = (ItemEnum.Other, 0);
+                    dominant = (ItemType.Other, 0);
                 }
             }
 
@@ -151,14 +151,14 @@ public class SchemaHeuristic
         return 1;
     }
 
-    private Dictionary<int, ItemEnum> NormalizeSchemaLength(Dictionary<int, ItemEnum> rawSchema)
+    private Dictionary<int, ItemType> NormalizeSchemaLength(Dictionary<int, ItemType> rawSchema)
     {
         int targetLength = GetTargetLength();
-        var normalized = new Dictionary<int, ItemEnum>(targetLength);
+        var normalized = new Dictionary<int, ItemType>(targetLength);
 
         for (int pos = 0; pos < targetLength; pos++)
         {
-            normalized[pos] = rawSchema.GetValueOrDefault(pos, ItemEnum.Other);
+            normalized[pos] = rawSchema.GetValueOrDefault(pos, ItemType.Other);
         }
 
         return normalized;

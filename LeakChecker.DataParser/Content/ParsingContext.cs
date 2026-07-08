@@ -9,7 +9,7 @@ public class ParsingContext
 {
     public char Delimiter;
     public required StreamReader Reader;
-    public Dictionary<int, ItemEnum> Schema = new();
+    public Dictionary<int, ItemType> Schema = new();
 
     public required IParseStats Stats;
     public required IParseLogger Logger;

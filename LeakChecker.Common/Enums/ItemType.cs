@@ -1,6 +1,6 @@
 namespace LeakChecker.Common.Enums;
 
-public enum ItemEnum
+public enum ItemType
 {
     // Control
     Null,

@@ -13,8 +13,8 @@ public class SqlInsertParser(ParsingContext parsingContext)
     private const string Values = "VALUES";
     private readonly ObjectId _parseId = parsingContext.Stats.ParseId;
     private readonly IParseLogger _logger = parsingContext.Logger;
-    private readonly Dictionary<int, ItemEnum> _schema = parsingContext.Schema;
-    private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new();
+    private readonly Dictionary<int, ItemType> _schema = parsingContext.Schema;
+    private readonly List<Dictionary<ItemType, List<string>>> _cachedRecords = new();
     private readonly IDatabase _database = parsingContext.Settings.Database;
     
     public async Task<ParsingResult> Parse()
@@ -254,7 +254,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
 
     private void ParseRow(string[] row)
     {
-        Dictionary<ItemEnum, List<string>> record = new();
+        Dictionary<ItemType, List<string>> record = new();
         
         for (int i = 0; i < row.Length; i++)
         {

@@ -260,7 +260,7 @@ public class ParseLogger : IParseLogger
             LogInternal($"   Position {position}: total {total}");
 
             var stats =
-                counts.Select((count, index) => new { Attribute = (ItemEnum)index, Count = count })
+                counts.Select((count, index) => new { Attribute = (ItemType)index, Count = count })
                     .Where(x => x.Count > 0)
                     .OrderByDescending(x => x.Count);
 
@@ -288,7 +288,7 @@ public class ParseLogger : IParseLogger
             int position = kvp.Key;
             var attribute = kvp.Value;
 
-            if (attribute == ItemEnum.Previous)
+            if (attribute == ItemType.Previous)
             {
                 LogInternal($"   Position {position} = ({attribute})");
                 continue;
@@ -302,7 +302,7 @@ public class ParseLogger : IParseLogger
         LogInternal();
     }
     
-    public void LogFinalSchema(Dictionary<int, ItemEnum> schema)
+    public void LogFinalSchema(Dictionary<int, ItemType> schema)
     {
         LogInternal("Final schema = Dominant + (Assigned or Guessed):");
 

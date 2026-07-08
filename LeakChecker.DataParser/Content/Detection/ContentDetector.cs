@@ -22,7 +22,7 @@ public static class ContentDetector
             foreach (var uri in uris.OrderByDescending(s => s.Length))
             {
                 int position = CountDelimitersBefore(originalLine, uri, delimiter);
-                AddLinePatterns(linePatterns, position, ItemEnum.Web, uri, delimiter);
+                AddLinePatterns(linePatterns, position, ItemType.Web, uri, delimiter);
                 line = line.Replace(uri, "");
             }
         }
@@ -32,7 +32,7 @@ public static class ContentDetector
             foreach (var email in emails)
             {
                 int position = CountDelimitersBefore(originalLine, email, delimiter);
-                AddLinePatterns(linePatterns, position, ItemEnum.Email, email, delimiter);
+                AddLinePatterns(linePatterns, position, ItemType.Email, email, delimiter);
                 line = line.Replace(email, "", StringComparison.InvariantCultureIgnoreCase);
             }
         }
@@ -42,7 +42,7 @@ public static class ContentDetector
             foreach (var timeStamp in timeStamps.OrderByDescending(ts => ts.Length))
             {
                 int position = CountDelimitersBefore(originalLine, timeStamp, delimiter);
-                AddLinePatterns(linePatterns, position, ItemEnum.Timestamp, timeStamp, delimiter);
+                AddLinePatterns(linePatterns, position, ItemType.Timestamp, timeStamp, delimiter);
                 line = line.Replace(timeStamp, "", StringComparison.InvariantCultureIgnoreCase);
             }
         }
@@ -52,7 +52,7 @@ public static class ContentDetector
             List<PresidioEntity> analyzeResults = await PythonNerServiceRecognizer.TryRecognize(line);
             foreach (var entity in analyzeResults.OrderBy(e => e.Start))
             {
-                ItemEnum itemType = PythonNerServiceRecognizer.MapEntityType(entity.Type);
+                ItemType itemType = PythonNerServiceRecognizer.MapEntityType(entity.Type);
                 string item = line.Substring(entity.Start, entity.End - entity.Start);
                 int position = CountDelimitersBefore(originalLine, item, delimiter);
                 AddLinePatterns(linePatterns, position, itemType, item, delimiter);
@@ -74,7 +74,7 @@ public static class ContentDetector
             foreach (var guid in stringGuids)
             {
                 int position = CountDelimitersBefore(originalLine, guid, delimiter);
-                AddLinePatterns(linePatterns, position, ItemEnum.Id, guid, delimiter);
+                AddLinePatterns(linePatterns, position, ItemType.Id, guid, delimiter);
                 line = line.Replace(guid, "");
             }
         }
@@ -91,7 +91,7 @@ public static class ContentDetector
             if (string.IsNullOrWhiteSpace(token))
                 continue;
 
-            ItemEnum itemType = await DetectToken(token, logger);
+            ItemType itemType = await DetectToken(token, logger);
             
             //TODO test hashes with salt and ip with ports
             if (false)
@@ -100,8 +100,8 @@ public static class ContentDetector
                 //if (itemType > ItemEnum.Other); //then try to add salt
                 if (i + 1 < tokens.Length)
                 {
-                    ItemEnum nextType = await DetectToken(tokens[i].Trim().TrimEnclosingChars(), logger);
-                    if (nextType != ItemEnum.Other) continue;
+                    ItemType nextType = await DetectToken(tokens[i].Trim().TrimEnclosingChars(), logger);
+                    if (nextType != ItemType.Other) continue;
                     
                     string concatenated = token + delimiter + tokens[i].Trim().TrimEnclosingChars();
                     itemType = await DetectToken(concatenated, logger);
@@ -121,16 +121,16 @@ public static class ContentDetector
         return linePatterns;
     }
     
-    public static async Task<ItemEnum> DetectToken(string token, IParseLogger logger)
+    public static async Task<ItemType> DetectToken(string token, IParseLogger logger)
     {
         if (WebRecognizer.TryRecognize(token, out _, out _))
-            return ItemEnum.Web;
+            return ItemType.Web;
         
         if (EmailRecognizer.TryRecognize(token, out _, out _))
-            return ItemEnum.Email;
+            return ItemType.Email;
         
         if (TimestampRecognizer.TryRecognize(token, out _, out _))
-            return ItemEnum.Timestamp;
+            return ItemType.Timestamp;
         
         try
         {
@@ -145,27 +145,27 @@ public static class ContentDetector
         }
         
         if (GuidRecognizer.TryRecognize(token, out _, out _))
-            return ItemEnum.Id;
+            return ItemType.Id;
         
         if (GenderParser.TryParse(token, out _))
-            return ItemEnum.Gender;
+            return ItemType.Gender;
         
         if (MaritalStatusParser.TryParse(token, out _))
-            return ItemEnum.MaritalStatus;
+            return ItemType.MaritalStatus;
         
-        if (IpAddressParser.TryParse(token, out ItemEnum ipType, out _))
+        if (IpAddressParser.TryParse(token, out ItemType ipType, out _))
             return ipType;
         
         if (PhoneNumberParser.TryParse(token, out _))
-            return ItemEnum.PhoneNumber;
+            return ItemType.PhoneNumber;
         
         if (MacAddressParser.TryParse(token, out _))
-            return ItemEnum.MacAddress;
+            return ItemType.MacAddress;
         
         if (IbanParser.TryParse(token))
-            return ItemEnum.Iban;
+            return ItemType.Iban;
         
-        if (TimestampParser.TryParse(token, out ItemEnum timeType, out _))
+        if (TimestampParser.TryParse(token, out ItemType timeType, out _))
             return timeType;
         
         try
@@ -180,7 +180,7 @@ public static class ContentDetector
             logger.Log($"Communication with www.hashes.com failed. {e.Message}", LogLevel.Failure, LogContext.ExternalService);
         }
         
-        return ItemEnum.Other;
+        return ItemType.Other;
     }
 
     private static int CountDelimitersBefore(string line, string word, char delimiter)
@@ -200,7 +200,7 @@ public static class ContentDetector
         return count;
     }
     
-    private static void AddLinePatterns(List<SchemaHeuristicRecord> linePatterns, int position, ItemEnum itemType, string itemValue, char delimiter)
+    private static void AddLinePatterns(List<SchemaHeuristicRecord> linePatterns, int position, ItemType itemType, string itemValue, char delimiter)
     {
         linePatterns.Add(new SchemaHeuristicRecord
         {

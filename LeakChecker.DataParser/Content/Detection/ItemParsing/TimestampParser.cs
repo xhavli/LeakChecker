@@ -28,9 +28,9 @@ public static class TimestampParser
         DateTimeStyles.AssumeUniversal |
         DateTimeStyles.AdjustToUniversal;
 
-    public static bool TryParse(string token, out ItemEnum itemEnum, out DateTime dateTime)
+    public static bool TryParse(string token, out ItemType itemType, out DateTime dateTime)
     {
-        itemEnum = ItemEnum.Null;
+        itemType = ItemType.Null;
         dateTime = default;
 
         if (!long.TryParse(token, out var raw) || raw < 0)
@@ -39,28 +39,28 @@ public static class TimestampParser
         if (raw >= MinUnixSeconds && raw <= MaxUnixSeconds)
         {
             dateTime = DateTimeOffset.FromUnixTimeSeconds(raw).UtcDateTime;
-            itemEnum = ItemEnum.UnixSeconds;
+            itemType = ItemType.UnixSeconds;
             return true;
         }
 
         if (raw >= MinUnixMilliseconds && raw <= MaxUnixMilliseconds)
         {
             dateTime = DateTimeOffset.FromUnixTimeMilliseconds(raw).UtcDateTime;
-            itemEnum = ItemEnum.UnixMilliseconds;
+            itemType = ItemType.UnixMilliseconds;
             return true;
         }
 
         if (raw >= MinFileTime && raw <= MaxFileTime)
         {
             dateTime = DateTime.FromFileTimeUtc(raw);
-            itemEnum = ItemEnum.FileTime;
+            itemType = ItemType.FileTime;
             return true;
         }
 
         if (raw >= MinTicks && raw <= MaxTicks)
         {
             dateTime = new DateTime(raw, DateTimeKind.Utc);
-            itemEnum = ItemEnum.NetTicks;
+            itemType = ItemType.NetTicks;
             return true;
         }
 
@@ -75,24 +75,24 @@ public static class TimestampParser
     /// <param name="type">ItemEnum</param>
     /// <param name="value">String</param>
     /// <returns>Normalized or original type and value</returns>
-    public static NormalizedData NormalizeTimestamp(ItemEnum type, string value)
+    public static NormalizedData NormalizeTimestamp(ItemType type, string value)
     {
         return type switch
         {
-            ItemEnum.UnixSeconds when long.TryParse(value, out var us) =>
-                new NormalizedData(ItemEnum.Timestamp, DateTimeOffset.FromUnixTimeSeconds(us).UtcDateTime),
+            ItemType.UnixSeconds when long.TryParse(value, out var us) =>
+                new NormalizedData(ItemType.Timestamp, DateTimeOffset.FromUnixTimeSeconds(us).UtcDateTime),
 
-            ItemEnum.UnixMilliseconds when long.TryParse(value, out var ums) =>
-                new NormalizedData(ItemEnum.Timestamp, DateTimeOffset.FromUnixTimeMilliseconds(ums).UtcDateTime),
+            ItemType.UnixMilliseconds when long.TryParse(value, out var ums) =>
+                new NormalizedData(ItemType.Timestamp, DateTimeOffset.FromUnixTimeMilliseconds(ums).UtcDateTime),
 
-            ItemEnum.FileTime when long.TryParse(value, out var ft) =>
-                new NormalizedData(ItemEnum.Timestamp, DateTime.FromFileTimeUtc(ft)),
+            ItemType.FileTime when long.TryParse(value, out var ft) =>
+                new NormalizedData(ItemType.Timestamp, DateTime.FromFileTimeUtc(ft)),
 
-            ItemEnum.NetTicks when long.TryParse(value, out var nt) =>
-                new NormalizedData(ItemEnum.Timestamp, new DateTime(nt, DateTimeKind.Utc)),
+            ItemType.NetTicks when long.TryParse(value, out var nt) =>
+                new NormalizedData(ItemType.Timestamp, new DateTime(nt, DateTimeKind.Utc)),
 
-            ItemEnum.Timestamp when DateTime.TryParse(value, CultureInfo.InvariantCulture, Styles, out var ts) =>
-                new NormalizedData(ItemEnum.Timestamp, ts),
+            ItemType.Timestamp when DateTime.TryParse(value, CultureInfo.InvariantCulture, Styles, out var ts) =>
+                new NormalizedData(ItemType.Timestamp, ts),
 
             _ => new NormalizedData(type, value)
         };

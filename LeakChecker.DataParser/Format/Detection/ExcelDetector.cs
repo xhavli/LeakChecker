@@ -11,7 +11,7 @@ namespace LeakChecker.DataParser.Format.Detection;
 
 public static class ExcelDetector
 {
-    public static async Task<Dictionary<int, Dictionary<int, ItemEnum>>> DetectFormat(
+    public static async Task<Dictionary<int, Dictionary<int, ItemType>>> DetectFormat(
         string filePath, IParseLogger logger, IParseStats stats, ISettings settings)
     {
         await using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
@@ -21,7 +21,7 @@ public static class ExcelDetector
         
         int detectSamples = settings.ExcelSamples;
         int thresholdPercent = settings. SchemaThreshold;
-        Dictionary<int, Dictionary<int, ItemEnum>> schemas = new();
+        Dictionary<int, Dictionary<int, ItemType>> schemas = new();
         
 
         int sheetNumber = 0;
@@ -57,7 +57,7 @@ public static class ExcelDetector
                         logger.LogSample($"Excel sample {samplesCount}: row [{row}] column [{column}] value: [EMPTY]");
                         linePatterns.Add(new SchemaHeuristicRecord
                         {
-                            Attribute = ItemEnum.Empty,
+                            Attribute = ItemType.Empty,
                             Position = column,
                             DelimitersInside = 0
                         });
@@ -65,7 +65,7 @@ public static class ExcelDetector
                     }
                     
                     logger.LogSample($"Excel sample {samplesCount}: row [{row}] column [{column}] value: {value}");
-                    ItemEnum item = await ContentDetector.DetectToken(value, logger);
+                    ItemType item = await ContentDetector.DetectToken(value, logger);
                     linePatterns.Add(new SchemaHeuristicRecord
                     {
                         Attribute = item,

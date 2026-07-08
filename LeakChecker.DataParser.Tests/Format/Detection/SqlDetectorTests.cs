@@ -13,16 +13,16 @@ public class SqlDetectorTests
     private readonly NullSettings _settings = new();
     private readonly NullParseLogger _logger = new();
     
-    private static readonly Dictionary<int, ItemEnum> SqlSchema = new()
+    private static readonly Dictionary<int, ItemType> SqlSchema = new()
     {
-        { 0, ItemEnum.Id },
-        { 1, ItemEnum.Name },
-        { 2, ItemEnum.Gender },
-        { 3, ItemEnum.Timestamp },
-        { 4, ItemEnum.Location },
-        { 5, ItemEnum.Ipv4 },
-        { 6, ItemEnum.Email },
-        { 7, ItemEnum.Password },
+        { 0, ItemType.Id },
+        { 1, ItemType.Name },
+        { 2, ItemType.Gender },
+        { 3, ItemType.Timestamp },
+        { 4, ItemType.Location },
+        { 5, ItemType.Ipv4 },
+        { 6, ItemType.Email },
+        { 7, ItemType.Password },
     };
 
     public SqlDetectorTests()

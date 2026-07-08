@@ -17,7 +17,7 @@ public static class SqlInsertDetector
     private const string Values = "VALUES";
     private const char Delimiter = ',';
 
-    public static async Task<Dictionary<int, ItemEnum>> DetectSchema(ParsingContext parsingContext)
+    public static async Task<Dictionary<int, ItemType>> DetectSchema(ParsingContext parsingContext)
     {
         IParseLogger logger = parsingContext.Logger;
         StreamReader reader = parsingContext.Reader;
@@ -273,7 +273,7 @@ public static class SqlInsertDetector
             if (string.IsNullOrWhiteSpace(value))
                 continue;
                                 
-            ItemEnum item = await ContentDetector.DetectToken(value, logger);
+            ItemType item = await ContentDetector.DetectToken(value, logger);
             // Console.WriteLine($"[{j}] {item} = {value}");
 
             linePatterns.Add(new SchemaHeuristicRecord

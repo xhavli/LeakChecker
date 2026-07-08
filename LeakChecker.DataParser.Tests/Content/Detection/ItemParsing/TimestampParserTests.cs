@@ -7,14 +7,14 @@ public class TimestampParserTests
 {
     // Unix Timestamps (Seconds)
     [Theory]
-    [InlineData("946684800", ItemEnum.UnixSeconds)]          // 2000-01-01
-    [InlineData("1609459200", ItemEnum.UnixSeconds)]         // 2021-01-01
-    [InlineData("1700000000", ItemEnum.UnixSeconds)]         // 2023-11-14
-    [InlineData("1893456000", ItemEnum.UnixSeconds)]         // 2030-01-01
-    public void TryParse_ShouldParseUnixSeconds(string input, ItemEnum expected)
+    [InlineData("946684800", ItemType.UnixSeconds)]          // 2000-01-01
+    [InlineData("1609459200", ItemType.UnixSeconds)]         // 2021-01-01
+    [InlineData("1700000000", ItemType.UnixSeconds)]         // 2023-11-14
+    [InlineData("1893456000", ItemType.UnixSeconds)]         // 2030-01-01
+    public void TryParse_ShouldParseUnixSeconds(string input, ItemType expected)
     {
         // Act
-        _ = TimestampParser.TryParse(input, out ItemEnum result, out _);
+        _ = TimestampParser.TryParse(input, out ItemType result, out _);
 
         // Assert
         Assert.Equal(expected, result);
@@ -22,14 +22,14 @@ public class TimestampParserTests
 
     // Unix Timestamps (Milliseconds)
     [Theory]
-    [InlineData("946684800000", ItemEnum.UnixMilliseconds)]       // 2000-01-01
-    [InlineData("1609459200000", ItemEnum.UnixMilliseconds)]      // 2021-01-01
-    [InlineData("1700000000000", ItemEnum.UnixMilliseconds)]      // 2023-11-14
-    [InlineData("1893456000000", ItemEnum.UnixMilliseconds)]      // 2030-01-01
-    public void TryParse_ShouldParseUnixMilliseconds(string input, ItemEnum expected)
+    [InlineData("946684800000", ItemType.UnixMilliseconds)]       // 2000-01-01
+    [InlineData("1609459200000", ItemType.UnixMilliseconds)]      // 2021-01-01
+    [InlineData("1700000000000", ItemType.UnixMilliseconds)]      // 2023-11-14
+    [InlineData("1893456000000", ItemType.UnixMilliseconds)]      // 2030-01-01
+    public void TryParse_ShouldParseUnixMilliseconds(string input, ItemType expected)
     {
         // Act
-        _ = TimestampParser.TryParse(input, out ItemEnum result, out _);
+        _ = TimestampParser.TryParse(input, out ItemType result, out _);
 
         // Assert
         Assert.Equal(expected, result);
@@ -37,15 +37,15 @@ public class TimestampParserTests
 
     // Windows FILETIME (100-ns since 1601)
     [Theory]
-    [InlineData("125911584000000000", ItemEnum.FileTime)] // 2000-01-01
-    [InlineData("132537600000000000", ItemEnum.FileTime)] // 2021-01-01
-    [InlineData("133401024000000000", ItemEnum.FileTime)] // 2023-11-14
-    [InlineData("134774400000000000", ItemEnum.FileTime)] // 2028-01-01
-    [InlineData("135694656000000000", ItemEnum.FileTime)] // 2030-12-31
-    public void TryParse_ShouldParseFileTime(string input, ItemEnum expected)
+    [InlineData("125911584000000000", ItemType.FileTime)] // 2000-01-01
+    [InlineData("132537600000000000", ItemType.FileTime)] // 2021-01-01
+    [InlineData("133401024000000000", ItemType.FileTime)] // 2023-11-14
+    [InlineData("134774400000000000", ItemType.FileTime)] // 2028-01-01
+    [InlineData("135694656000000000", ItemType.FileTime)] // 2030-12-31
+    public void TryParse_ShouldParseFileTime(string input, ItemType expected)
     {
         // Act
-        _ = TimestampParser.TryParse(input, out ItemEnum result, out _);
+        _ = TimestampParser.TryParse(input, out ItemType result, out _);
 
         // Assert
         Assert.Equal(expected, result);
@@ -53,15 +53,15 @@ public class TimestampParserTests
 
     // .NET Ticks (100-ns since year 1)
     [Theory]
-    [InlineData("630822816000000000", ItemEnum.NetTicks)] // 2000-01-01
-    [InlineData("637450560000000000", ItemEnum.NetTicks)] // 2021-01-01
-    [InlineData("638545344000000000", ItemEnum.NetTicks)] // 2023-11-14
-    [InlineData("639838464000000000", ItemEnum.NetTicks)] // 2028-01-01
-    [InlineData("640883328000000000", ItemEnum.NetTicks)] // 2031-01-01
-    public void TryParse_ShouldParseNetTicks(string input, ItemEnum expected)
+    [InlineData("630822816000000000", ItemType.NetTicks)] // 2000-01-01
+    [InlineData("637450560000000000", ItemType.NetTicks)] // 2021-01-01
+    [InlineData("638545344000000000", ItemType.NetTicks)] // 2023-11-14
+    [InlineData("639838464000000000", ItemType.NetTicks)] // 2028-01-01
+    [InlineData("640883328000000000", ItemType.NetTicks)] // 2031-01-01
+    public void TryParse_ShouldParseNetTicks(string input, ItemType expected)
     {
         // Act
-        _ = TimestampParser.TryParse(input, out ItemEnum result, out _);
+        _ = TimestampParser.TryParse(input, out ItemType result, out _);
 
         // Assert
         Assert.Equal(expected, result);

@@ -13,10 +13,10 @@ public static class HeaderGuesser
 
     private record HeaderKeyword(string Keyword, MatchPolicy Policy);
 
-    private static readonly Dictionary<ItemEnum, List<HeaderKeyword>> Synonyms = new()
+    private static readonly Dictionary<ItemType, List<HeaderKeyword>> Synonyms = new()
     {
         {
-            ItemEnum.Ipv4, [
+            ItemType.Ipv4, [
                 new("ip", MatchPolicy.Token),
                 new("ip4", MatchPolicy.Substring),
                 new("ipv4", MatchPolicy.Substring),
@@ -26,7 +26,7 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.Ipv6, [
+            ItemType.Ipv6, [
                 new("ip6", MatchPolicy.Substring),
                 new("ipv6", MatchPolicy.Substring),
                 new("ipv6addr", MatchPolicy.Substring),
@@ -35,7 +35,7 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.MacAddress, [
+            ItemType.MacAddress, [
                 new("mac", MatchPolicy.Token),
                 new("macaddr", MatchPolicy.Substring),
                 new("macaddress", MatchPolicy.Substring),
@@ -44,7 +44,7 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.Timestamp, [
+            ItemType.Timestamp, [
                 new("at", MatchPolicy.Token),
                 new("ts", MatchPolicy.Token),
                 new("time", MatchPolicy.Substring),
@@ -65,7 +65,7 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.Location, [
+            ItemType.Location, [
                 new("location", MatchPolicy.Token),
                 new("latitude", MatchPolicy.Token),
                 new("longitude", MatchPolicy.Token),
@@ -82,7 +82,7 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.PhoneNumber, [
+            ItemType.PhoneNumber, [
                 new("phno", MatchPolicy.Token),
                 new("phone", MatchPolicy.Token),
                 new("phonenumber", MatchPolicy.Substring),
@@ -103,7 +103,7 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.Email, [
+            ItemType.Email, [
                 new("mail", MatchPolicy.Substring),
                 new("mailaddr", MatchPolicy.Substring),
                 new("mail-addr", MatchPolicy.Substring),
@@ -114,7 +114,7 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.Iban, [
+            ItemType.Iban, [
                 new("iban", MatchPolicy.Token),
                 new("iban", MatchPolicy.Substring),
                 new("bankaccount", MatchPolicy.Substring),
@@ -123,7 +123,7 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.Gender, [
+            ItemType.Gender, [
                 new("gender", MatchPolicy.Substring),
                 new("usergender", MatchPolicy.Exact),
                 new("user-gender", MatchPolicy.Exact),
@@ -135,7 +135,7 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.Name, [
+            ItemType.Name, [
                 new("name", MatchPolicy.Token),
                 new("firstname", MatchPolicy.Token),
                 new("firstname", MatchPolicy.Substring),
@@ -153,7 +153,7 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.Username, [
+            ItemType.Username, [
                 new("username", MatchPolicy.Substring),
                 new("accountname", MatchPolicy.Substring),
                 new("user-login", MatchPolicy.Substring),
@@ -180,7 +180,7 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.Password, [
+            ItemType.Password, [
                 new("pwd", MatchPolicy.Token),
                 new("pass", MatchPolicy.Token),
                 new("passwd", MatchPolicy.Token),
@@ -214,14 +214,14 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.Salt, [
+            ItemType.Salt, [
                 new("salting", MatchPolicy.Substring),
                 new("salt", MatchPolicy.Token),
                 new("saltvalue", MatchPolicy.Substring),
             ]
         },
         {
-            ItemEnum.Token, [
+            ItemType.Token, [
                 new("token", MatchPolicy.Token),
                 new("key", MatchPolicy.Token),
                 new("api_key", MatchPolicy.Exact),
@@ -231,7 +231,7 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.Web, [
+            ItemType.Web, [
                 new("web", MatchPolicy.Token),
                 new("website", MatchPolicy.Token),
                 new("webaddr", MatchPolicy.Substring),
@@ -242,7 +242,7 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.Id, [
+            ItemType.Id, [
                 new("id", MatchPolicy.Token),
                 new("uid", MatchPolicy.Token),
                 new("bhid", MatchPolicy.Token),
@@ -256,34 +256,34 @@ public static class HeaderGuesser
             ]
         },
         {
-            ItemEnum.Other, []
+            ItemType.Other, []
         }
     };
 
     /// <summary>
     /// Attempts to guess ItemEnum types from a list of headers.
     /// </summary>
-    public static Dictionary<int, ItemEnum> GuessColumns(IEnumerable<string> headers)
+    public static Dictionary<int, ItemType> GuessColumns(IEnumerable<string> headers)
     {
-        var result = new Dictionary<int, ItemEnum>();
+        var result = new Dictionary<int, ItemType>();
         int index = 0;
 
         foreach (string rawHeader in headers)
         {
             string header = rawHeader.Trim('`', '"', '[', ']', ' ', '\t');
-            ItemEnum guessed = GuessItem(header);
+            ItemType guessed = GuessItem(header);
             result[index++] = guessed;
         }
 
         return result;
     }
 
-    public static ItemEnum GuessItem(string header)
+    public static ItemType GuessItem(string header)
     {
         if (string.IsNullOrWhiteSpace(header))
         {
             Console.WriteLine("Header have empty label");
-            return ItemEnum.Null;
+            return ItemType.Null;
         }
         
         // FIRST PASS: true semantic exact matches (ignore policy)
@@ -304,7 +304,7 @@ public static class HeaderGuesser
         string lowerHeader = header.ToLowerInvariant();
         int lastIndex = tokens.Length - 1;
 
-        var scores = new Dictionary<ItemEnum, int>();
+        var scores = new Dictionary<ItemType, int>();
 
         foreach (var (itemType, keywords) in Synonyms)
         {
@@ -381,13 +381,13 @@ public static class HeaderGuesser
         }
 
         if (scores.Count == 0)
-            return ItemEnum.Other;
+            return ItemType.Other;
 
         // Pick the item with the highest score
         var results = scores.OrderByDescending(kv => kv.Value).ToList();
         var (bestMatch, bestScore) = results.First();
         
-        return bestScore > 1 ? bestMatch : ItemEnum.Other;
+        return bestScore > 1 ? bestMatch : ItemType.Other;
     }
     
     private static List<string> TokenizeHeader(string header)
@@ -435,12 +435,12 @@ public static class HeaderGuesser
         return parts;
     }
 
-    public static Dictionary<int, ItemEnum> BindGuessed(Dictionary<int, ItemEnum> schema, Dictionary<int, ItemEnum> guessed)
+    public static Dictionary<int, ItemType> BindGuessed(Dictionary<int, ItemType> schema, Dictionary<int, ItemType> guessed)
     {
         foreach (var (index, guess) in guessed)
         {
-            if (!schema.TryGetValue(index, out ItemEnum existing) || 
-                existing == ItemEnum.Other || existing == ItemEnum.Null)
+            if (!schema.TryGetValue(index, out ItemType existing) || 
+                existing == ItemType.Other || existing == ItemType.Null)
             {
                 schema[index] = guess;
             }

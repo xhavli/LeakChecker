@@ -8,10 +8,10 @@ namespace LeakChecker.DataParser.Database.Helpers;
 
 public class IdentityDocumentFactory(ObjectId parseId)
 {
-    private static readonly Dictionary<ItemEnum, string> EnumNames =
-        Enum.GetValues<ItemEnum>().ToDictionary(e => e, e => e.ToString());
+    private static readonly Dictionary<ItemType, string> EnumNames =
+        Enum.GetValues<ItemType>().ToDictionary(e => e, e => e.ToString());
 
-    public BsonDocument CreateIdentityDocument(Dictionary<ItemEnum, List<string>> record)
+    public BsonDocument CreateIdentityDocument(Dictionary<ItemType, List<string>> record)
     {
         BsonArray hashes = new();
         BsonArray others = new();
@@ -24,7 +24,7 @@ public class IdentityDocumentFactory(ObjectId parseId)
             List<string> rawValues = property.Value;
             int count = rawValues.Count;
 
-            ItemEnum type = property.Key;
+            ItemType type = property.Key;
             var values = new BsonArray(count);
 
             for (int i = 0; i < count; i++)
@@ -34,14 +34,14 @@ public class IdentityDocumentFactory(ObjectId parseId)
                 values.Add(BsonValue.Create(normalized.Value));
             }
 
-            if (type == ItemEnum.Other)
+            if (type == ItemType.Other)
             {
                 foreach (var v in values)
                     others.Add(v);
                 continue;
             }
 
-            if (type > ItemEnum.Other)
+            if (type > ItemType.Other)
             {
                 hashes.Add(new BsonDocument
                 {
@@ -51,29 +51,29 @@ public class IdentityDocumentFactory(ObjectId parseId)
                 continue;
             }
             
-            if (type == ItemEnum.Name)
+            if (type == ItemType.Name)
             {
                 var lowercased = new BsonArray(count);
                 for (int i = 0; i < count; i++)
                     lowercased.Add(new BsonString(rawValues[i].ToLowerInvariant()));
 
-                AddOrMerge(document, nameof(ItemEnum.Name), values);
-                AddOrMerge(document, nameof(ItemEnum.NameLowercase), lowercased);
+                AddOrMerge(document, nameof(ItemType.Name), values);
+                AddOrMerge(document, nameof(ItemType.NameLowercase), lowercased);
                 continue;
             }
 
-            if (type == ItemEnum.Username)
+            if (type == ItemType.Username)
             {
                 var lowercased = new BsonArray(count);
                 for (int i = 0; i < count; i++)
                     lowercased.Add(new BsonString(rawValues[i].ToLowerInvariant()));
 
-                AddOrMerge(document, nameof(ItemEnum.Username), values);
-                AddOrMerge(document, nameof(ItemEnum.UsernameLowercase), lowercased);
+                AddOrMerge(document, nameof(ItemType.Username), values);
+                AddOrMerge(document, nameof(ItemType.UsernameLowercase), lowercased);
                 continue;
             }
 
-            if (type == ItemEnum.Email)
+            if (type == ItemType.Email)
             {
                 var emailLowercase = new BsonArray(count);
                 for (int i = 0; i < count; i++)
@@ -107,12 +107,12 @@ public class IdentityDocumentFactory(ObjectId parseId)
                     }
                 }
 
-                AddOrMerge(document, nameof(ItemEnum.Email), values);
-                AddOrMerge(document, nameof(ItemEnum.EmailLowercase), emailLowercase);
+                AddOrMerge(document, nameof(ItemType.Email), values);
+                AddOrMerge(document, nameof(ItemType.EmailLowercase), emailLowercase);
                 continue;
             }
             
-            if (type == ItemEnum.Web)
+            if (type == ItemType.Web)
             {
                 for (int i = 0; i < count; i++)
                 {
@@ -131,7 +131,7 @@ public class IdentityDocumentFactory(ObjectId parseId)
                     }
                 }
 
-                AddOrMerge(document, nameof(ItemEnum.Web), values);
+                AddOrMerge(document, nameof(ItemType.Web), values);
                 continue;
             }
 
@@ -139,13 +139,13 @@ public class IdentityDocumentFactory(ObjectId parseId)
         }
 
         if (hashes.Count > 0)
-            document.Add(nameof(ItemEnum.Hash), hashes);
+            document.Add(nameof(ItemType.Hash), hashes);
 
         if (others.Count > 0)
-            document.Add(nameof(ItemEnum.Other), others);
+            document.Add(nameof(ItemType.Other), others);
 
         if (domains.Count > 0)
-            document.Add(nameof(ItemEnum.DomainReversedLowercase), domains);
+            document.Add(nameof(ItemType.DomainReversedLowercase), domains);
 
         return document;
     }

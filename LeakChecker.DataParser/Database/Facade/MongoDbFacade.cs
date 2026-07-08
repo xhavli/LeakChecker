@@ -9,7 +9,7 @@ namespace LeakChecker.DataParser.Database.Facade;
 
 public class MongoDbFacade : IDatabase
 {
-    public async Task SaveIdentityMany(List<Dictionary<ItemEnum, List<string>>> records, ObjectId parseId)
+    public async Task SaveIdentityMany(List<Dictionary<ItemType, List<string>>> records, ObjectId parseId)
     {
         if (records.Count == 0)
             return;

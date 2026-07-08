@@ -14,19 +14,19 @@ public class SearchIdentityBase : ComponentBase
     [Inject] private IJSRuntime Js { get; set; } = null!;
     [Inject] private IDashboardService DashboardService { get; set; } = null!;
 
-    protected static readonly ItemEnum[] SearchableItems =
-        Enum.GetValues<ItemEnum>()
-            .Where(i => i is >= ItemEnum.MacAddress and <= ItemEnum.Other)
-            .Where(i => i is not ItemEnum.NetTicks
-                and not ItemEnum.FileTime
-                and not ItemEnum.UnixSeconds
-                and not ItemEnum.UnixMilliseconds)
-            .OrderBy(i => i == ItemEnum.Other)
+    protected static readonly ItemType[] SearchableItems =
+        Enum.GetValues<ItemType>()
+            .Where(i => i is >= ItemType.MacAddress and <= ItemType.Other)
+            .Where(i => i is not ItemType.NetTicks
+                and not ItemType.FileTime
+                and not ItemType.UnixSeconds
+                and not ItemType.UnixMilliseconds)
+            .OrderBy(i => i == ItemType.Other)
             .ThenBy(i => i.ToString())
             .ToArray();
 
     protected string SearchValue { get; set; } = string.Empty;
-    protected ItemEnum SelectedItem { get; set; } = ItemEnum.Email;
+    protected ItemType SelectedItem { get; set; } = ItemType.Email;
     protected ConditionType SelectedCondition { get; set; } = ConditionType.StartsWith;
 
     protected DateTime? DatePart { get; set; }
@@ -35,17 +35,17 @@ public class SearchIdentityBase : ComponentBase
     private DateTime? _tsTo;
 
     protected bool IsSearching { get; private set; }
-    protected bool IsSearchReady => SelectedItem == ItemEnum.Timestamp
+    protected bool IsSearchReady => SelectedItem == ItemType.Timestamp
         ? DatePart.HasValue
         : !string.IsNullOrWhiteSpace(SearchValue);
     protected bool ShowPerformanceWarning
     {
         get
         {
-            if (SelectedItem == ItemEnum.Timestamp)
+            if (SelectedItem == ItemType.Timestamp)
                 return false;
 
-            if (SelectedItem == ItemEnum.Hash)
+            if (SelectedItem == ItemType.Hash)
                 return true;
             
             if (SelectedCondition == ConditionType.Contains)
@@ -53,12 +53,12 @@ public class SearchIdentityBase : ComponentBase
 
             if (SelectedCondition == ConditionType.EndsWith)
             {
-                if (SelectedItem == ItemEnum.Domain) return false;
-                if (SelectedItem == ItemEnum.Email && !SearchValue.Contains('@')) return false;
+                if (SelectedItem == ItemType.Domain) return false;
+                if (SelectedItem == ItemType.Email && !SearchValue.Contains('@')) return false;
                 return true;
             }
             
-            if (SelectedItem == ItemEnum.Domain && SelectedCondition == ConditionType.StartsWith)
+            if (SelectedItem == ItemType.Domain && SelectedCondition == ConditionType.StartsWith)
                 return true;
 
             return false;
@@ -88,35 +88,35 @@ public class SearchIdentityBase : ComponentBase
     {
         var raw = SearchValue.Trim();
 
-        if (SelectedItem == ItemEnum.Domain)
+        if (SelectedItem == ItemType.Domain)
         {
             string reversed = Reverse(raw.ToLowerInvariant());
 
             return SelectedCondition switch
             {
                 ConditionType.StartsWith =>
-                    (nameof(ItemEnum.DomainReversedLowercase), reversed, ConditionType.EndsWith),
+                    (nameof(ItemType.DomainReversedLowercase), reversed, ConditionType.EndsWith),
                 ConditionType.Contains =>
-                    (nameof(ItemEnum.DomainReversedLowercase), reversed, ConditionType.Contains),
+                    (nameof(ItemType.DomainReversedLowercase), reversed, ConditionType.Contains),
                 ConditionType.EndsWith =>
-                    (nameof(ItemEnum.DomainReversedLowercase), reversed, ConditionType.StartsWith),
+                    (nameof(ItemType.DomainReversedLowercase), reversed, ConditionType.StartsWith),
                 ConditionType.ExactMatch =>
-                    (nameof(ItemEnum.DomainReversedLowercase), reversed, ConditionType.ExactMatch),
+                    (nameof(ItemType.DomainReversedLowercase), reversed, ConditionType.ExactMatch),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
         
-        if (SelectedItem == ItemEnum.Email && SelectedCondition == ConditionType.EndsWith && !raw.Contains('@'))
+        if (SelectedItem == ItemType.Email && SelectedCondition == ConditionType.EndsWith && !raw.Contains('@'))
         {
             string reversed = Reverse(raw.ToLowerInvariant());
-            return (nameof(ItemEnum.DomainReversedLowercase), reversed, ConditionType.StartsWith);
+            return (nameof(ItemType.DomainReversedLowercase), reversed, ConditionType.StartsWith);
         }
         
         return SelectedItem switch
         {
-            ItemEnum.Name     => (nameof(ItemEnum.NameLowercase),    raw.ToLowerInvariant(), SelectedCondition),
-            ItemEnum.Email    => (nameof(ItemEnum.EmailLowercase),   raw.ToLowerInvariant(), SelectedCondition),
-            ItemEnum.Username => (nameof(ItemEnum.UsernameLowercase),raw.ToLowerInvariant(), SelectedCondition),
+            ItemType.Name     => (nameof(ItemType.NameLowercase),    raw.ToLowerInvariant(), SelectedCondition),
+            ItemType.Email    => (nameof(ItemType.EmailLowercase),   raw.ToLowerInvariant(), SelectedCondition),
+            ItemType.Username => (nameof(ItemType.UsernameLowercase),raw.ToLowerInvariant(), SelectedCondition),
             _                 => (SelectedItem.ToString(),           raw,                    SelectedCondition),
         };
     }
@@ -154,7 +154,7 @@ public class SearchIdentityBase : ComponentBase
 
         try
         {
-            if (SelectedItem == ItemEnum.Timestamp)
+            if (SelectedItem == ItemType.Timestamp)
             {
                 var date = DateTime.SpecifyKind(DatePart!.Value.Date, DateTimeKind.Utc);
                 if (TimePart.HasValue)
@@ -173,24 +173,24 @@ public class SearchIdentityBase : ComponentBase
                 {
                     var utc = date + TimePart.Value.ToTimeSpan();
                     var docs = await MongoDbRepository.SearchIdentityByDateTime(
-                        nameof(ItemEnum.Timestamp), utc, afterId: null, limit: PageSize);
+                        nameof(ItemType.Timestamp), utc, afterId: null, limit: PageSize);
                     await ApplyPageAsync(docs);
                     HasSearched = true;
                     IsSearching = false;
                     await InvokeAsync(StateHasChanged);
                     TotalMatched = await MongoDbRepository.CountIdentitiesByDateTime(
-                        nameof(ItemEnum.Timestamp), utc);
+                        nameof(ItemType.Timestamp), utc);
                 }
                 else
                 {
                     var docs = await MongoDbRepository.SearchIdentityByDateRange(
-                        nameof(ItemEnum.Timestamp), date, date.AddDays(1), afterId: null, limit: PageSize);
+                        nameof(ItemType.Timestamp), date, date.AddDays(1), afterId: null, limit: PageSize);
                     await ApplyPageAsync(docs);
                     HasSearched = true;
                     IsSearching = false;
                     await InvokeAsync(StateHasChanged);
                     TotalMatched = await MongoDbRepository.CountIdentitiesByDateRange(
-                        nameof(ItemEnum.Timestamp), date, date.AddDays(1));
+                        nameof(ItemType.Timestamp), date, date.AddDays(1));
                 }
             }
             else
@@ -228,7 +228,7 @@ public class SearchIdentityBase : ComponentBase
         
         try
         {
-            if (SelectedItem == ItemEnum.Timestamp)
+            if (SelectedItem == ItemType.Timestamp)
             {
                 var date = DateTime.SpecifyKind(DatePart!.Value.Date, DateTimeKind.Utc);
 
@@ -236,13 +236,13 @@ public class SearchIdentityBase : ComponentBase
                 {
                     var utc = date + TimePart.Value.ToTimeSpan();
                     var docs = await MongoDbRepository.SearchIdentityByDateTime(
-                        nameof(ItemEnum.Timestamp), utc, afterId: _lastId, limit: PageSize);
+                        nameof(ItemType.Timestamp), utc, afterId: _lastId, limit: PageSize);
                     await ApplyPageAsync(docs);
                 }
                 else
                 {
                     var docs = await MongoDbRepository.SearchIdentityByDateRange(
-                        nameof(ItemEnum.Timestamp), date, date.AddDays(1), afterId: _lastId, limit: PageSize);
+                        nameof(ItemType.Timestamp), date, date.AddDays(1), afterId: _lastId, limit: PageSize);
                     await ApplyPageAsync(docs);
                 }
             }
@@ -318,9 +318,9 @@ public class SearchIdentityBase : ComponentBase
                 if (col == SourceColumn) continue;
                 if (!doc.TryGetValue(col, out var bVal)) continue;
 
-                row[col] = col == nameof(ItemEnum.Hash)
+                row[col] = col == nameof(ItemType.Hash)
                     ? StringFormatter.FormatHashes(bVal.AsBsonArray)
-                    : col == nameof(ItemEnum.Timestamp)
+                    : col == nameof(ItemType.Timestamp)
                         ? bVal switch
                         {
                             BsonArray arr => string.Join(", ", arr

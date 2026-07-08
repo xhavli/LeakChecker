@@ -11,7 +11,7 @@ namespace LeakChecker.DataParser.Format.Detection;
 
 public static class CsvDetector
 {
-    public static async Task<Dictionary<int, ItemEnum >> DetectSchema(ParsingContext parsingContext)
+    public static async Task<Dictionary<int, ItemType >> DetectSchema(ParsingContext parsingContext)
     {
         IParseLogger logger = parsingContext.Logger;
         StreamReader reader = parsingContext.Reader;

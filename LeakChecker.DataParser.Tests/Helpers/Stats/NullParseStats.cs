@@ -20,5 +20,5 @@ public sealed class NullParseStats(string sourcePath = "") : IParseStats
     public List<char> Delimiters { get; init; } = new();
     public List<FormatType> Formats { get; init; } = new();
     public List<string> Context { get; init; } = new();
-    public List<Dictionary<int, ItemEnum>> Schemas { get; init; } = new();
+    public List<Dictionary<int, ItemType>> Schemas { get; init; } = new();
 }

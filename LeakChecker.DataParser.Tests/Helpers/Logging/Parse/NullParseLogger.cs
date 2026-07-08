@@ -28,7 +28,7 @@ public sealed class NullParseLogger : IParseLogger
     public void LogSqlInsertHeader(SqlInsertHeader insertHeader) {}
     public void LogHeuristicData(SchemaHeuristic analyzer) {}
     public void LogDominantSchema(SchemaHeuristic analyzer, double threshold) {}
-    public void LogFinalSchema(Dictionary<int, ItemEnum> schema) {} 
+    public void LogFinalSchema(Dictionary<int, ItemType> schema) {} 
     public void LogParseStats(ParseStats stats) {}
     public void Dispose() { }
 }

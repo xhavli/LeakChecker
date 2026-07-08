@@ -15,11 +15,11 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
     private const long ParseLimit = long.MaxValue;
     private readonly ObjectId _parseId = stats.ParseId;
     private readonly IDatabase _database = settings.Database;
-    private readonly List<Dictionary<ItemEnum, List<string>>> _cachedRecords = new();
+    private readonly List<Dictionary<ItemType, List<string>>> _cachedRecords = new();
 
     public async Task ParseAsync()
     {
-        Dictionary<int, Dictionary<int, ItemEnum>> schemas = await ExcelDetector.DetectFormat(filePath, logger, stats, settings);
+        Dictionary<int, Dictionary<int, ItemType>> schemas = await ExcelDetector.DetectFormat(filePath, logger, stats, settings);
 
         await using var stream = File.OpenRead(filePath);
         using var reader = ExcelReaderFactory.CreateReader(stream);
@@ -32,7 +32,7 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
             string sheetName = reader.Name;
             
             sheetNumber++;
-            Dictionary<int, ItemEnum> schema = schemas[sheetNumber];
+            Dictionary<int, ItemType> schema = schemas[sheetNumber];
             int expectedFields = schema.Count == 0 ? 0 : schema.Keys.Max() + 1;
     
             int row = 0;
@@ -74,9 +74,9 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
         stats.BytesRead = new FileInfo(filePath).Length;
     }
 
-    private void ParseRow(IExcelDataReader reader, Dictionary<int, ItemEnum> schema, string sheetName, int row)
+    private void ParseRow(IExcelDataReader reader, Dictionary<int, ItemType> schema, string sheetName, int row)
     {
-        Dictionary<ItemEnum, List<string>> record = new();
+        Dictionary<ItemType, List<string>> record = new();
 
         for (int column = 0; column < reader.FieldCount; column++)
         {
@@ -86,14 +86,14 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
             if (string.IsNullOrWhiteSpace(value))
                 continue;
 
-            if (!schema.TryGetValue(column, out ItemEnum type))
+            if (!schema.TryGetValue(column, out ItemType type))
             {
                 logger.Log($"Unmapped Excel column[{column}] at sheet [{sheetName}] row [{row}] = {value}", LogLevel.Warning, LogContext.Parsing);
                 continue;
             }
 
-            if (type == ItemEnum.Empty)
-                type = ItemEnum.Other;
+            if (type == ItemType.Empty)
+                type = ItemType.Other;
 
             if (!record.TryGetValue(type, out List<string>? values))
                 record[type] = values = new List<string>();

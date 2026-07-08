@@ -25,7 +25,7 @@ public static class PythonNerServiceRecognizer
         return result ?? new List<PresidioEntity>();
     }
 
-    public static async Task<ItemEnum?> TryRecognizeToken(string token)
+    public static async Task<ItemType?> TryRecognizeToken(string token)
     {
         string requestUrl = BaseUrl + Uri.EscapeDataString(token);
         
@@ -38,11 +38,11 @@ public static class PythonNerServiceRecognizer
         return result.Count == 0 ? null : MapEntityType(result.First().Type);
     }
 
-    public static ItemEnum MapEntityType(string entityType) => entityType switch
+    public static ItemType MapEntityType(string entityType) => entityType switch
     {
-        Person => ItemEnum.Name,
-        Location => ItemEnum.Location,
-        Organization => ItemEnum.Organization,
+        Person => ItemType.Name,
+        Location => ItemType.Location,
+        Organization => ItemType.Organization,
         _ => throw new Exception($"Unknown entity type: '{entityType}' returned from PythonNerService")
     };
 }

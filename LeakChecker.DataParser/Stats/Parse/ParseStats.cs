@@ -23,7 +23,7 @@ public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourc
     public List<char> Delimiters { get; init; } = new();
     public List<FormatType> Formats { get; init; } = new();
     public List<string> Context { get; init; } = new();
-    public List<Dictionary<int, ItemEnum>> Schemas { get; init; } = new();
+    public List<Dictionary<int, ItemType>> Schemas { get; init; } = new();
     public DateTime ParseStart { get; init; } = DateTime.Now;
     public DateTime ParseEnd { get; set; }
     

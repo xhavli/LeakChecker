@@ -26,6 +26,6 @@ public interface IParseLogger : IDisposable
     void LogSqlInsertHeader(SqlInsertHeader insertHeader);
     void LogHeuristicData(SchemaHeuristic analyzer);
     void LogDominantSchema(SchemaHeuristic analyzer, double threshold);
-    void LogFinalSchema(Dictionary<int, ItemEnum> schema);
+    void LogFinalSchema(Dictionary<int, ItemType> schema);
     void LogParseStats(ParseStats stats);
 }

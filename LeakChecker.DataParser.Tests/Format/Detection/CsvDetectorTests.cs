@@ -29,16 +29,16 @@ public class CsvDetectorTests
     public async Task ShouldDetect_ExpectedCsvSchema(string fileName, char delimiter)
     {
         // Arrange
-        Dictionary<int, ItemEnum> expected = new()
+        Dictionary<int, ItemType> expected = new()
         {
-            { 0, ItemEnum.Username },
-            { 1, ItemEnum.Name },
-            { 2, ItemEnum.Gender },
-            { 3, ItemEnum.Timestamp },
-            { 4, ItemEnum.Location },
-            { 5, ItemEnum.Ipv4 },
-            { 6, ItemEnum.Email },
-            { 7, ItemEnum.Password },
+            { 0, ItemType.Username },
+            { 1, ItemType.Name },
+            { 2, ItemType.Gender },
+            { 3, ItemType.Timestamp },
+            { 4, ItemType.Location },
+            { 5, ItemType.Ipv4 },
+            { 6, ItemType.Email },
+            { 7, ItemType.Password },
         };
         string filePath = Path.Combine(_testDataDirectory, fileName);
         await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
@@ -67,13 +67,13 @@ public class CsvDetectorTests
     public async Task ShouldDetect_ExpectedCsvSchemaWithSpaceDelimiter(string fileName, char delimiter)
     {
         // Arrange
-        Dictionary<int, ItemEnum> expected = new()
+        Dictionary<int, ItemType> expected = new()
         {
-            { 0, ItemEnum.Gender },
-            { 1, ItemEnum.Timestamp },
-            { 2, ItemEnum.Location },
-            { 3, ItemEnum.Ipv4 },
-            { 4, ItemEnum.Email },
+            { 0, ItemType.Gender },
+            { 1, ItemType.Timestamp },
+            { 2, ItemType.Location },
+            { 3, ItemType.Ipv4 },
+            { 4, ItemType.Email },
         };
         string filePath = Path.Combine(_testDataDirectory, fileName);
         await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
@@ -102,10 +102,10 @@ public class CsvDetectorTests
     public async Task ShouldDetect_ExpectedCsvSchemaWithPipeDelimiter(string fileName, char delimiter)
     {
         // Arrange
-        Dictionary<int, ItemEnum> expected = new()
+        Dictionary<int, ItemType> expected = new()
         {
-            { 0, ItemEnum.Gender },
-            { 1, ItemEnum.Ipv4 },
+            { 0, ItemType.Gender },
+            { 1, ItemType.Ipv4 },
         };
         string filePath = Path.Combine(_testDataDirectory, fileName);
         await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
@@ -134,10 +134,10 @@ public class CsvDetectorTests
     public async Task ShouldDetect_ExpectedCsvSchemaWithCommaDelimiter(string fileName, char delimiter)
     {
         // Arrange
-        Dictionary<int, ItemEnum> expected = new()
+        Dictionary<int, ItemType> expected = new()
         {
-            { 0, ItemEnum.PhoneNumber },
-            { 1, ItemEnum.Timestamp },
+            { 0, ItemType.PhoneNumber },
+            { 1, ItemType.Timestamp },
         };
         string filePath = Path.Combine(_testDataDirectory, fileName);
         await using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);

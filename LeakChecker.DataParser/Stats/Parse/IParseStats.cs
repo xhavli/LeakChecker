@@ -19,5 +19,5 @@ public interface IParseStats
     public List<char> Delimiters { get; init; }
     public List<FormatType> Formats { get; init; }
     public List<string> Context { get; init; }
-    public List<Dictionary<int, ItemEnum>> Schemas { get; init; }
+    public List<Dictionary<int, ItemType>> Schemas { get; init; }
 }

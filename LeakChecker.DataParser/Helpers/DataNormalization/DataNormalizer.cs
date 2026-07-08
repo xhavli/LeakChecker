@@ -6,19 +6,19 @@ namespace LeakChecker.DataParser.Helpers.DataNormalization;
 
 public static class DataNormalizer
 {
-    public static NormalizedData NormalizeData(ItemEnum type, string value)
+    public static NormalizedData NormalizeData(ItemType type, string value)
     {
         switch (type)
         {
-            case ItemEnum.FileTime:
-            case ItemEnum.NetTicks:
-            case ItemEnum.Timestamp:
-            case ItemEnum.UnixSeconds:
-            case ItemEnum.UnixMilliseconds:
+            case ItemType.FileTime:
+            case ItemType.NetTicks:
+            case ItemType.Timestamp:
+            case ItemType.UnixSeconds:
+            case ItemType.UnixMilliseconds:
                 return TimestampParser.NormalizeTimestamp(type, value);
             
-            case ItemEnum.Iban:
-            case ItemEnum.PhoneNumber:
+            case ItemType.Iban:
+            case ItemType.PhoneNumber:
                 return KeepTypeRemoveWhitespaces(type, value);
             
             default:
@@ -26,7 +26,7 @@ public static class DataNormalizer
         }
     }
     
-    private static NormalizedData KeepTypeRemoveWhitespaces(ItemEnum type, string value)
+    private static NormalizedData KeepTypeRemoveWhitespaces(ItemType type, string value)
     {
         return new NormalizedData(type, value.RemoveWhitespaces());
     }
