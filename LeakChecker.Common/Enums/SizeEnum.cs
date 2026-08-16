@@ -1,4 +1,4 @@
-namespace LeakChecker.DataParser.Helpers.Enums;
+namespace LeakChecker.Common.Enums;
 
 public static class SizeEnum
 {

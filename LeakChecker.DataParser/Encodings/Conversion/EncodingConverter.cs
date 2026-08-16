@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Text;
-using LeakChecker.DataParser.Helpers.Enums;
-using LeakChecker.DataParser.Logging;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Logging.Parse;
 
 namespace LeakChecker.DataParser.Encodings.Conversion;

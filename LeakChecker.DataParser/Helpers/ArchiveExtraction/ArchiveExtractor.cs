@@ -1,8 +1,7 @@
 using System.Collections.Concurrent;
-using LeakChecker.DataParser.Helpers.Enums;
+using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Helpers.FileHelp;
 using LeakChecker.DataParser.Helpers.Settings;
-using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
 using Microsoft.CST.RecursiveExtractor;
 

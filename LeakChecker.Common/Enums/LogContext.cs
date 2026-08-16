@@ -1,4 +1,4 @@
-namespace LeakChecker.DataParser.Logging;
+namespace LeakChecker.Common.Enums;
 
 public enum LogContext
 {

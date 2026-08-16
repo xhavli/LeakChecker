@@ -1,5 +1,5 @@
 using System.Text;
-using LeakChecker.DataParser.Helpers.Enums;
+using LeakChecker.Common.Enums;
 using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Database.Helpers;
