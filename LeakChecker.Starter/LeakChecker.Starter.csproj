@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\LeakChecker.Database\LeakChecker.Database.csproj" />
+      <ProjectReference Include="..\LeakChecker.DataParser\LeakChecker.DataParser.csproj" />
+    </ItemGroup>
+
+</Project>

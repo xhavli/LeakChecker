@@ -5,6 +5,7 @@ using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Content.Detection.RecognitionService;
 using LeakChecker.DataParser.Helpers.FileHelp;
 using LeakChecker.DataParser.Helpers.Settings;
+using LeakChecker.DataParser.Interfaces;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Execution;
@@ -16,7 +17,9 @@ public sealed class ExecutionOrchestrator(
     FileHelper fileHelper,
     PythonNerService pythonNerService,
     ExecutionLogger logger,
-    IParseLoggerFactory parseLoggerFactory)
+    IParseLoggerFactory parseLoggerFactory,
+    IDatabase database
+    )
 {
     private static readonly Guid ExecutionId = Guid.NewGuid();
     private readonly ExecutionStats _stats = new(ExecutionId, logger.ExecutionStart);
@@ -67,7 +70,7 @@ public sealed class ExecutionOrchestrator(
                 {
                     await foreach (var path in channel.Reader.ReadAllAsync())
                     {
-                        ParsingOrchestrator parser = new ParsingOrchestrator(path, settings, fileHelper, _stats, logger, parseLoggerFactory);
+                        ParsingOrchestrator parser = new ParsingOrchestrator(path, settings, fileHelper, _stats, logger, parseLoggerFactory, database);
                         await parser.RunAsync();
                     }
                 }))
@@ -76,14 +79,14 @@ public sealed class ExecutionOrchestrator(
             await Task.WhenAll(consumers.Append(producer));
 
             logger.LogExecutionStats(_stats);
-            await settings.Database.SaveExecutionOne(_stats);
+            await database.SaveExecutionOne(_stats);
             
             logger.Log($"Execution finished successfully. Parsed {paths.Count()} files. Current DateTime is " + 
                        $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Execution);
 
             logger.Log("Creating MongoDB indexes.");
             Stopwatch sw = Stopwatch.StartNew();
-            await settings.Database.CreateIndexes();
+            await database.CreateIndexes();
             logger.Log($"MongoDB indexes created in {sw.Elapsed}.", LogLevel.Success, LogContext.Execution);
             
             logger.Log("Program will exit with exit code 0");

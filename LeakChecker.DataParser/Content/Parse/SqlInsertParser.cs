@@ -1,21 +1,20 @@
 using System.Text;
 using LeakChecker.Common.Enums;
-using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Helpers.Extensions;
+using LeakChecker.DataParser.Interfaces;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Content.Parse;
 
-public class SqlInsertParser(ParsingContext parsingContext)
+public class SqlInsertParser(ParsingContext parsingContext, IDatabase database)
 {
     private const string Values = "VALUES";
     private readonly ObjectId _parseId = parsingContext.Stats.ParseId;
     private readonly IParseLogger _logger = parsingContext.Logger;
     private readonly Dictionary<int, ItemType> _schema = parsingContext.Schema;
     private readonly List<Dictionary<ItemType, List<string>>> _cachedRecords = new();
-    private readonly IDatabase _database = parsingContext.Settings.Database;
     
     public async Task<ParsingResult> Parse()
     {
@@ -119,7 +118,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
                                 if (malformedReadSequence >= malformedLimit)
                                 {
                                     _logger.Log($"Parsing reach malformed limit {malformedLimit}. Returning back to recompute schema", LogLevel.Warning, LogContext.Parsing);
-                                    await _database.SaveIdentityMany(_cachedRecords, _parseId);
+                                    await database.SaveIdentityMany(_cachedRecords, _parseId);
         
                                     return new ParsingResult
                                     {
@@ -137,7 +136,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
                             
                             if (_cachedRecords.Count > 2000)
                             {
-                                await _database.SaveIdentityMany(_cachedRecords, _parseId);
+                                await database.SaveIdentityMany(_cachedRecords, _parseId);
                                 _cachedRecords.Clear();
                             }
 
@@ -146,7 +145,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
 
                             if (recordsRead == parseLimit)
                             {
-                                await _database.SaveIdentityMany(_cachedRecords, _parseId);
+                                await database.SaveIdentityMany(_cachedRecords, _parseId);
                                 return new ParsingResult
                                 {
                                     RecordsRead = recordsRead,
@@ -171,7 +170,7 @@ public class SqlInsertParser(ParsingContext parsingContext)
                 break;
         }
 
-        await _database.SaveIdentityMany(_cachedRecords, _parseId);
+        await database.SaveIdentityMany(_cachedRecords, _parseId);
         
         return new ParsingResult
         {

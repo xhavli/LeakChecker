@@ -5,6 +5,7 @@ using LeakChecker.DataParser.Encodings.Conversion;
 using LeakChecker.DataParser.Encodings.Detection;
 using LeakChecker.DataParser.Helpers.FileHelp;
 using LeakChecker.DataParser.Helpers.Settings;
+using LeakChecker.DataParser.Interfaces;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
@@ -19,7 +20,8 @@ public class ParsingOrchestrator(
     FileHelper fileHelper,
     ExecutionStats stats,
     ExecutionLogger logger,
-    IParseLoggerFactory parseLoggerFactory)
+    IParseLoggerFactory parseLoggerFactory,
+    IDatabase database)
 {
     public async Task RunAsync()
     {
@@ -35,7 +37,7 @@ public class ParsingOrchestrator(
         {
             if (FileHelper.IsExcel(filePath))
             {
-                ExcelParser excelParser = new(filePath, parseLogger, parseStats, settings);
+                ExcelParser excelParser = new(filePath, parseLogger, parseStats, settings, database);
                 await excelParser.ParseAsync();
             }
             else
@@ -56,13 +58,13 @@ public class ParsingOrchestrator(
 
                 await fileHelper.IsReadable(parsePath);
 
-                using ContentParser contentParser = new(parsePath, parseLogger, parseStats, settings);
+                using ContentParser contentParser = new(parsePath, parseLogger, parseStats, settings, database);
                 await contentParser.ParseAsync();
             }
 
             parseLogger.LogParseStats(parseStats);
-            await settings.Database.SaveParseOne(parseStats);
-            await settings.Database.UpsertDashboardStats(parseStats);
+            await database.SaveParseOne(parseStats);
+            await database.UpsertDashboardStats(parseStats);
 
             stats.Update(parseStats);
         

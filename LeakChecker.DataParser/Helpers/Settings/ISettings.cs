@@ -1,6 +1,6 @@
 using System.Text;
 using LeakChecker.Common.Enums;
-using LeakChecker.DataParser.Database;
+using LeakChecker.DataParser.Interfaces;
 
 namespace LeakChecker.DataParser.Helpers.Settings;
 
@@ -29,7 +29,6 @@ public interface ISettings
     public Encoding DefaultUtf8 { get; init; }
     public EnvironmentType Environment { get; init; }
     public bool Verbose { get; init; }
-    public IDatabase Database { get; init; }
     
     public void ApplyGlobalSettings()
     {

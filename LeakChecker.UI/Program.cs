@@ -1,6 +1,6 @@
+using LeakChecker.Database.Facade;
 using LeakChecker.UI.Services;
-using LeakChecker.DataParser.Database;
-using LeakChecker.DataParser.Database.Facade;
+using LeakChecker.DataParser.Interfaces;
 using LeakChecker.UI.Components;
 using MongoDB.Bson;
 using MongoDB.Driver;

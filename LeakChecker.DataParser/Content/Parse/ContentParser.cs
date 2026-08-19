@@ -4,6 +4,7 @@ using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Helpers.Extensions;
 using LeakChecker.DataParser.Helpers.Settings;
+using LeakChecker.DataParser.Interfaces;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Parse;
@@ -14,6 +15,8 @@ public class ContentParser : IDisposable
 {
     // Settings
     private readonly ISettings _settings;
+    private readonly IDatabase _database;
+    
     // Parsing state
     private long _linesRead;
     private long _recordsRead;
@@ -30,7 +33,7 @@ public class ContentParser : IDisposable
 
     private bool _possibleAsciiTable;
 
-    public ContentParser(string filePath, IParseLogger logger, IParseStats stats, ISettings settings)
+    public ContentParser(string filePath, IParseLogger logger, IParseStats stats, ISettings settings, IDatabase database)
     {
         _encoding = settings.DefaultUtf8;
         var stream = File.OpenRead(filePath);
@@ -38,6 +41,7 @@ public class ContentParser : IDisposable
         _logger = logger;
         _stats = stats;
         _settings = settings;
+        _database = database;
     }
 
     public async Task ParseAsync()
@@ -127,7 +131,7 @@ public class ContentParser : IDisposable
             ParseLimit = ParseLimit,
             MalformedLimit = _settings.SqlSamples,
         };
-        SqlInsertParser parser = new(parsingContext);
+        SqlInsertParser parser = new(parsingContext, _database);
         ParsingResult result = await parser.Parse();
         UpdateParsingState(result);
         
@@ -183,7 +187,7 @@ public class ContentParser : IDisposable
             ParseLimit = ParseLimit,
             MalformedLimit = _settings.CsvSamples,
         };
-        CsvParser parser = new(parsingContext);
+        CsvParser parser = new(parsingContext, _database);
         ParsingResult result = await parser.Parse();
         UpdateParsingState(result);
         

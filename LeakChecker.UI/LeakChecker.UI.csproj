@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\LeakChecker.Common\LeakChecker.Common.csproj" />
+      <ProjectReference Include="..\LeakChecker.Database\LeakChecker.Database.csproj" />
       <ProjectReference Include="..\LeakChecker.DataParser\LeakChecker.DataParser.csproj" />
     </ItemGroup>
 

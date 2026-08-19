@@ -1,8 +1,8 @@
 using ExcelDataReader;
 using LeakChecker.Common.Enums;
-using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Format.Detection;
 using LeakChecker.DataParser.Helpers.Settings;
+using LeakChecker.DataParser.Interfaces;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Parse;
@@ -10,11 +10,10 @@ using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Content.Parse;
 
-public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats, ISettings settings)
+public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats, ISettings settings, IDatabase database)
 {
     private const long ParseLimit = long.MaxValue;
     private readonly ObjectId _parseId = stats.ParseId;
-    private readonly IDatabase _database = settings.Database;
     private readonly List<Dictionary<ItemType, List<string>>> _cachedRecords = new();
 
     public async Task ParseAsync()
@@ -54,7 +53,7 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
                 ParseRow(reader, schema, sheetName, row);
                 if (_cachedRecords.Count > 2000)
                 {
-                    await _database.SaveIdentityMany(_cachedRecords, _parseId);
+                    await database.SaveIdentityMany(_cachedRecords, _parseId);
                     _cachedRecords.Clear();
                 }
                 
@@ -66,7 +65,7 @@ public class ExcelParser(string filePath, IParseLogger logger, IParseStats stats
         }
         while (reader.NextResult());
 
-        await _database.SaveIdentityMany(_cachedRecords, _parseId);
+        await database.SaveIdentityMany(_cachedRecords, _parseId);
         
         stats.MalformedRead = 0; // Cant properly detect
         stats.RecordsRead = recordsRead;

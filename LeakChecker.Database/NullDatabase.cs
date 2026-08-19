@@ -1,9 +1,10 @@
 using LeakChecker.Common.Enums;
+using LeakChecker.DataParser.Interfaces;
 using LeakChecker.DataParser.Stats.Execution;
 using LeakChecker.DataParser.Stats.Parse;
 using MongoDB.Bson;
 
-namespace LeakChecker.DataParser.Database;
+namespace LeakChecker.Database;
 
 public class NullDatabase : IDatabase
 {

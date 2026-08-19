@@ -1,5 +1,5 @@
 using LeakChecker.Common.Enums;
-using LeakChecker.DataParser.Database;
+using LeakChecker.DataParser.Interfaces;
 using LeakChecker.UI.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;

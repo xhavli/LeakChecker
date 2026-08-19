@@ -3,7 +3,7 @@ using LeakChecker.DataParser.Stats.Execution;
 using LeakChecker.DataParser.Stats.Parse;
 using MongoDB.Bson;
 
-namespace LeakChecker.DataParser.Database;
+namespace LeakChecker.DataParser.Interfaces;
 
 public interface IDatabase
 {

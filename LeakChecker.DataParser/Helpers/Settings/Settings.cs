@@ -1,7 +1,6 @@
 using System.Text;
 using LeakChecker.Common.Enums;
-using LeakChecker.DataParser.Database;
-using LeakChecker.DataParser.Database.Facade;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LeakChecker.DataParser.Helpers.Settings;
 
@@ -27,9 +26,8 @@ public class Settings : ISettings
     public required Encoding DefaultUtf8 { get; init; }
     public required EnvironmentType Environment { get; init; }
     public required bool Verbose { get; init; }
-    public required IDatabase Database { get; init; }
 
-    public static Settings FromJson(JsonSettings jsonSettings)
+    public static Settings FromJson(JsonSettings jsonSettings, IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(jsonSettings);
 
@@ -59,21 +57,10 @@ public class Settings : ISettings
             DefaultUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
             Environment = ResolveEnvironment(jsonSettings.Environment!),
             Verbose = jsonSettings.Verbose,
-            Database = ResolveDatabase(jsonSettings.DbProvider)
         };
     }
 
-    private static IDatabase ResolveDatabase(string? dbProvider)
-    {
-        if (string.IsNullOrWhiteSpace(dbProvider))
-            return new NullDatabase();
 
-        return dbProvider.Trim().ToLowerInvariant() switch
-        {
-            "mongodb" => new MongoDbFacade(),
-            _ => throw new NotSupportedException($"Unsupported database provider '{dbProvider}'.")
-        };
-    }
     
     private static string ResolvePythonVenvPath(JsonSettings jsonSettings)
     {

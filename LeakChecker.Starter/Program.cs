@@ -1,8 +1,11 @@
 ﻿using LeakChecker.Common.Enums;
+using LeakChecker.Database;
+using LeakChecker.Database.Facade;
 using LeakChecker.DataParser.Content.Detection.RecognitionService;
 using LeakChecker.DataParser.Helpers.ArchiveExtraction;
 using LeakChecker.DataParser.Helpers.FileHelp;
 using LeakChecker.DataParser.Helpers.Settings;
+using LeakChecker.DataParser.Interfaces;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Orchestration;
@@ -10,7 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace LeakChecker.DataParser;
+namespace LeakChecker.Starter;
 
 public static class Program
 {
@@ -23,11 +26,13 @@ public static class Program
                 IConfiguration configSource = overrideConfig ?? context.Configuration;
                 configSource.GetSection("DataParser").Bind(jsonSettings);
 
-                ISettings settings = Settings.FromJson(jsonSettings);
+                ISettings settings = Settings.FromJson(jsonSettings, services);
                 settings.ApplyGlobalSettings();
 
                 // Settings
                 services.AddSingleton(settings);
+                
+                ResolveDatabase(jsonSettings.DbProvider, services);
 
                 // Loggers
                 services.AddSingleton<ExecutionLogger>();
@@ -59,6 +64,24 @@ public static class Program
             Console.WriteLine("\n[WARNING] Program will terminate with exit code 1.");
             Console.ResetColor();
             return 1;
+        }
+    }
+    
+    private static void ResolveDatabase(string? dbProvider, IServiceCollection services)
+    {
+        if (string.IsNullOrWhiteSpace(dbProvider))
+        {
+            services.AddTransient<IDatabase, NullDatabase>();
+            return;
+        }
+
+        switch (dbProvider.Trim().ToLowerInvariant())
+        {
+            case "mongodb":
+                services.AddTransient<IDatabase, MongoDbFacade>();
+                break;
+            default:
+                throw new NotSupportedException($"Unsupported database provider '{dbProvider}'.");
         }
     }
 }

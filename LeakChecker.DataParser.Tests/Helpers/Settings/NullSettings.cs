@@ -1,7 +1,7 @@
 using System.Text;
 using LeakChecker.Common.Enums;
-using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Helpers.Settings;
+using LeakChecker.DataParser.Interfaces;
 
 namespace LeakChecker.DataParser.Tests.Helpers.Settings;
 

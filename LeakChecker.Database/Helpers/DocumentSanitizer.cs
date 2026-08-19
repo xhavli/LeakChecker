@@ -2,7 +2,7 @@ using System.Text;
 using LeakChecker.Common.Enums;
 using MongoDB.Bson;
 
-namespace LeakChecker.DataParser.Database.Helpers;
+namespace LeakChecker.Database.Helpers;
 
 public static class DocumentSanitizer
 {

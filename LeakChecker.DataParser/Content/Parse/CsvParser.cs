@@ -1,21 +1,20 @@
 using System.Text;
 using LeakChecker.Common.Enums;
-using LeakChecker.DataParser.Database;
 using LeakChecker.DataParser.Helpers.Extensions;
+using LeakChecker.DataParser.Interfaces;
 using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Parse;
 using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Content.Parse;
 
-public class CsvParser(ParsingContext parsingContext)
+public class CsvParser(ParsingContext parsingContext, IDatabase database)
 {
     private readonly char _delimiter = parsingContext.Delimiter;
     private readonly ObjectId _parseId = parsingContext.Stats.ParseId;
     private readonly IParseLogger _logger = parsingContext.Logger;
     private readonly Dictionary<int, ItemType> _schema = parsingContext.Schema;
     private readonly List<Dictionary<ItemType, List<string>>> _cachedRecords = new(2001);
-    private readonly IDatabase _database = parsingContext.Settings.Database;
 
     private const int FlushThreshold = 2000;
 
@@ -71,7 +70,7 @@ public class CsvParser(ParsingContext parsingContext)
             
             if (_cachedRecords.Count > FlushThreshold)
             {
-                await _database.SaveIdentityMany(_cachedRecords, _parseId);
+                await database.SaveIdentityMany(_cachedRecords, _parseId);
                 _cachedRecords.Clear();
             }
             
@@ -82,7 +81,7 @@ public class CsvParser(ParsingContext parsingContext)
                 break;
         }
         
-        await _database.SaveIdentityMany(_cachedRecords, _parseId);
+        await database.SaveIdentityMany(_cachedRecords, _parseId);
         
         return new ParsingResult
         {
