@@ -1,0 +1,59 @@
+using LeakChecker.Db.MongoDb.Helpers;
+using LeakChecker.Db.MongoDb.Repository;
+
+namespace LeakChecker.Db.MongoDb.Facade;
+
+public class MongoDbFacade : IDatabase
+{
+    public async Task SaveIdentityMany(List<Dictionary<ItemType, List<string>>> records, ObjectId parseId)
+    {
+        if (records.Count == 0)
+            return;
+
+        List<BsonDocument> documents = new();
+        IdentityDocumentFactory identityDocFactory = new IdentityDocumentFactory(parseId);
+        
+        foreach (var record in records)
+        {
+            documents.Add(identityDocFactory.CreateIdentityDocument(record));
+        }
+        
+        await MongoDbRepository.SaveIdentityDocuments(documents);
+    }
+    
+    public async Task SaveParseOne(ParseStats stats)
+    {
+        await MongoDbRepository.SaveParsingDocument(stats.ToBsonDocument());
+    }
+    
+    public async Task SaveExecutionOne(ExecutionStats stats)
+    {
+        await MongoDbRepository.SaveExecutionDocument(stats.ToBsonDocument());
+    }
+    
+    public async Task UpsertDashboardStats(ParseStats stats)
+    {
+        await MongoDbRepository.UpsertDashboardFromParse(stats);
+    }
+
+    public async Task<BsonDocument?> GetDashboardStats()
+    {
+        return await MongoDbRepository.GetDashboardStats();
+    }
+
+    private async Task CreateIdentityIndexes()
+    {
+        await MongoDbRepository.CreateIdentityIndexes();
+    }
+
+    private async Task CreateParseIndexes()
+    {
+        await MongoDbRepository.CreateParseIndexes();
+    }
+
+    public async Task CreateIndexes()
+    {
+        await CreateParseIndexes();
+        await CreateIdentityIndexes();
+    }
+}
