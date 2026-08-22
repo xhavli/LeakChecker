@@ -59,8 +59,6 @@ public class Settings : ISettings
             Verbose = jsonSettings.Verbose,
         };
     }
-
-
     
     private static string ResolvePythonVenvPath(JsonSettings jsonSettings)
     {

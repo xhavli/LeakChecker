@@ -1,6 +1,6 @@
 ﻿using LeakChecker.Common.Enums;
-using LeakChecker.Database;
-using LeakChecker.Database.Facade;
+using LeakChecker.Db;
+using LeakChecker.Db.Facade;
 using LeakChecker.DataParser.Content.Detection.RecognitionService;
 using LeakChecker.DataParser.Helpers.ArchiveExtraction;
 using LeakChecker.DataParser.Helpers.FileHelp;
@@ -13,7 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace LeakChecker.Starter;
+namespace LeakChecker.DataParser.Runner;
 
 public static class Program
 {

@@ -25,18 +25,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="appsettings*.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
-
-    <ItemGroup>
       <Folder Include="Content\Detection\RecognitionService\Python\" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\LeakChecker.Common\LeakChecker.Common.csproj" />
-<!--      <ProjectReference Include="..\LeakChecker.Database\LeakChecker.Database.csproj" />-->
     </ItemGroup>
 
 </Project>

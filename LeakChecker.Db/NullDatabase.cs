@@ -4,7 +4,7 @@ using LeakChecker.DataParser.Stats.Execution;
 using LeakChecker.DataParser.Stats.Parse;
 using MongoDB.Bson;
 
-namespace LeakChecker.Database;
+namespace LeakChecker.Db;
 
 public class NullDatabase : IDatabase
 {

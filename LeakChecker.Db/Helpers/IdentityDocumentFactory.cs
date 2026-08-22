@@ -4,7 +4,7 @@ using LeakChecker.DataParser.Helpers.DataNormalization;
 using LeakChecker.DataParser.Helpers.Extensions;
 using MongoDB.Bson;
 
-namespace LeakChecker.Database.Helpers;
+namespace LeakChecker.Db.Helpers;
 
 public class IdentityDocumentFactory(ObjectId parseId)
 {

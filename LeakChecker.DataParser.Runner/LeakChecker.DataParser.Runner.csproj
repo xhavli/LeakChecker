@@ -8,8 +8,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\LeakChecker.Database\LeakChecker.Database.csproj" />
+      <ProjectReference Include="..\LeakChecker.Db\LeakChecker.Db.csproj" />
       <ProjectReference Include="..\LeakChecker.DataParser\LeakChecker.DataParser.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="appsettings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>

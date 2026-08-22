@@ -1,12 +1,12 @@
 using LeakChecker.Common.Enums;
-using LeakChecker.Database.Helpers;
-using LeakChecker.Database.Repository;
 using LeakChecker.DataParser.Interfaces;
 using LeakChecker.DataParser.Stats.Execution;
 using LeakChecker.DataParser.Stats.Parse;
+using LeakChecker.Db.Helpers;
+using LeakChecker.Db.Repository;
 using MongoDB.Bson;
 
-namespace LeakChecker.Database.Facade;
+namespace LeakChecker.Db.Facade;
 
 public class MongoDbFacade : IDatabase
 {

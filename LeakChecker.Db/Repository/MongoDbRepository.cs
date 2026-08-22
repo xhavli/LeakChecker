@@ -1,12 +1,12 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using LeakChecker.Common.Enums;
-using LeakChecker.Database.Helpers;
 using LeakChecker.DataParser.Stats.Parse;
+using LeakChecker.Db.Helpers;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace LeakChecker.Database.Repository;
+namespace LeakChecker.Db.Repository;
 
 public static class MongoDbRepository
 {

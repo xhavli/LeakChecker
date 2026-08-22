@@ -1,5 +1,5 @@
 using LeakChecker.Common.Enums;
-using LeakChecker.Database.Repository;
+using LeakChecker.Db.Repository;
 using LeakChecker.UI.Helpers;
 using LeakChecker.UI.Services;
 using Microsoft.AspNetCore.Components;
