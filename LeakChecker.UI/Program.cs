@@ -7,10 +7,10 @@ using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
-builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient("mongodb://localhost:27017"));
+builder.Services.AddSingleton<IMongoClient>(_ => 
+    new MongoClient("mongodb://localhost:27017"));
 builder.Services.AddSingleton<IMongoDatabase>(sp =>
     sp.GetRequiredService<IMongoClient>().GetDatabase("LeakCheckerDb"));
 builder.Services.AddSingleton<IDatabase, MongoDbFacade>();
