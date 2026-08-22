@@ -3,7 +3,7 @@ using LeakChecker.UI.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
-namespace LeakChecker.UI.Components;
+namespace LeakChecker.UI.Components.Pages;
 
 public class ParseDetailBase : ComponentBase
 {

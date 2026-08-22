@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using MongoDB.Bson;
 
-namespace LeakChecker.UI.Components;
+namespace LeakChecker.UI.Components.Pages;
 
 public class SearchIdentityBase : ComponentBase
 {
