@@ -6,13 +6,12 @@ using LeakChecker.DataParser.Encodings.Detection;
 using LeakChecker.DataParser.Helpers.FileHelp;
 using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Interfaces;
-using LeakChecker.DataParser.Logging;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Stats.Execution;
 using LeakChecker.DataParser.Stats.Parse;
 
-namespace LeakChecker.DataParser.Orchestration;
+namespace LeakChecker.DataParser.Orchestration.Parsing;
 
 public class ParsingOrchestrator(
     string filePath,

@@ -8,7 +8,8 @@ using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Interfaces;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
-using LeakChecker.DataParser.Orchestration;
+using LeakChecker.DataParser.Orchestration.Execution;
+using LeakChecker.DataParser.Orchestration.Parsing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -44,6 +45,7 @@ public static class Program
                 services.AddSingleton<PythonNerService>();
                 
                 // Orchestration
+                services.AddSingleton<IParsingOrchestratorFactory, ParsingOrchestratorFactory>();
                 services.AddSingleton<ExecutionOrchestrator>();
             });
     }

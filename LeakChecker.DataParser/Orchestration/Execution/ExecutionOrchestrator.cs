@@ -8,9 +8,10 @@ using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Interfaces;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
+using LeakChecker.DataParser.Orchestration.Parsing;
 using LeakChecker.DataParser.Stats.Execution;
 
-namespace LeakChecker.DataParser.Orchestration;
+namespace LeakChecker.DataParser.Orchestration.Execution;
 
 public sealed class ExecutionOrchestrator(
     ISettings settings,
@@ -18,6 +19,7 @@ public sealed class ExecutionOrchestrator(
     PythonNerService pythonNerService,
     ExecutionLogger logger,
     IParseLoggerFactory parseLoggerFactory,
+    IParsingOrchestratorFactory parsingOrchestratorFactory,
     IDatabase database
     )
 {
@@ -70,7 +72,7 @@ public sealed class ExecutionOrchestrator(
                 {
                     await foreach (var path in channel.Reader.ReadAllAsync())
                     {
-                        ParsingOrchestrator parser = new ParsingOrchestrator(path, settings, fileHelper, _stats, logger, parseLoggerFactory, database);
+                        ParsingOrchestrator parser = parsingOrchestratorFactory.Create(path, _stats);
                         await parser.RunAsync();
                     }
                 }))
