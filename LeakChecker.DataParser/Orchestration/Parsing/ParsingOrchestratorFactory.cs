@@ -3,7 +3,6 @@ using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Interfaces;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
-using LeakChecker.DataParser.Stats.Execution;
 
 namespace LeakChecker.DataParser.Orchestration.Parsing;
 
@@ -15,13 +14,13 @@ public class ParsingOrchestratorFactory(
     IDatabase database)
     : IParsingOrchestratorFactory
 {
-    public ParsingOrchestrator Create(string filePath, ExecutionStats executionStats)
+    public ParsingOrchestrator Create(string filePath, Guid executionId)
     {
         return new ParsingOrchestrator(
             filePath,
             settings,
             fileHelper,
-            executionStats,
+            executionId,
             logger,
             parseLoggerFactory,
             database);

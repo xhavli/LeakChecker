@@ -10,6 +10,7 @@ using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
 using LeakChecker.DataParser.Orchestration.Parsing;
 using LeakChecker.DataParser.Stats.Execution;
+using LeakChecker.DataParser.Stats.Parse;
 
 namespace LeakChecker.DataParser.Orchestration.Execution;
 
@@ -72,8 +73,9 @@ public sealed class ExecutionOrchestrator(
                 {
                     await foreach (var path in channel.Reader.ReadAllAsync())
                     {
-                        ParsingOrchestrator parser = parsingOrchestratorFactory.Create(path, _stats);
-                        await parser.RunAsync();
+                        ParsingOrchestrator parser = parsingOrchestratorFactory.Create(path, _stats.ExecutionId);
+                        ParseStats parseStats = await parser.RunAsync();
+                        _stats.Update(parseStats);
                     }
                 }))
                 .ToArray();

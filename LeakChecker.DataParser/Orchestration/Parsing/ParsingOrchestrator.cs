@@ -8,7 +8,6 @@ using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Interfaces;
 using LeakChecker.DataParser.Logging.Execution;
 using LeakChecker.DataParser.Logging.Parse;
-using LeakChecker.DataParser.Stats.Execution;
 using LeakChecker.DataParser.Stats.Parse;
 
 namespace LeakChecker.DataParser.Orchestration.Parsing;
@@ -17,20 +16,20 @@ public class ParsingOrchestrator(
     string filePath,
     ISettings settings,
     FileHelper fileHelper,
-    ExecutionStats stats,
+    Guid executionId,
     ExecutionLogger logger,
     IParseLoggerFactory parseLoggerFactory,
     IDatabase database)
 {
-    public async Task RunAsync()
+    public async Task<ParseStats> RunAsync()
     {
-        logger.Log("Started: " + Path.GetFileName(filePath), LogLevel.Info, LogContext.Parsing);
+        using var parseLogger = parseLoggerFactory.Create(filePath);
+        ParseStats parseStats = new ParseStats(executionId, parseLogger.ParseId, filePath);
+        
+        logger.Log($"Started: {parseStats.ParseId} - {Path.GetFileName(filePath)}", LogLevel.Info, LogContext.Parsing);
         
         if (!fileHelper.CanParse(filePath))
-            return;
-        
-        using var parseLogger = parseLoggerFactory.CreateAsync(filePath);
-        ParseStats parseStats = new ParseStats(stats.ExecutionId, parseLogger, filePath);
+            return parseStats;
 
         try
         {
@@ -64,14 +63,14 @@ public class ParsingOrchestrator(
             parseLogger.LogParseStats(parseStats);
             await database.SaveParseOne(parseStats);
             await database.UpsertDashboardStats(parseStats);
-
-            stats.Update(parseStats);
-        
+            
             logger.Log($"Finished: {parseStats.FileName}", LogLevel.Success, LogContext.Parsing);
+            return parseStats;
         }
         catch (Exception e)
         {
             logger.Log($"{parseStats.ParseId} : {parseStats.FileName}: {e}", LogLevel.Failure, LogContext.Parsing);
+            return parseStats;
         }
         finally
         {
