@@ -19,7 +19,7 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
         Definitions = new ExhaustiveBuilder { UsageType = UsageType.PersonalNonCommercial }.Build()
     }.Build();
     
-    private static readonly HashSet<string> TextualMimes = new(StringComparer.InvariantCultureIgnoreCase)
+    private static readonly HashSet<string> TextualMimeTypes = new(StringComparer.InvariantCultureIgnoreCase)
     {
         // --- CSV ---
         "application/csv",
@@ -110,10 +110,10 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
         
         if (best is not null && best.Points > reliableThreshold)
         {
-            if (!(TextualMimes.Contains(best.MimeType) || 
+            if (!(TextualMimeTypes.Contains(best.MimeType) || 
                   best.MimeType.StartsWith("text/", StringComparison.OrdinalIgnoreCase)))
             {
-                logger.Log($"File in path: '{filePath}' have MIME Extension [{best.MimeType.ToLower()}] with [{best.Points}] " +
+                logger.Log($"File in path: '{filePath}' have MIME type [{best.MimeType.ToLower()}] with [{best.Points}] " +
                            $"success points which can't be analysed via {ApplicationName}.", LogLevel.Warning);
                 return false;
             }
