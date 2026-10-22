@@ -2,5 +2,5 @@ namespace LeakChecker.DataParser.Logging.Parse;
 
 public interface IParseLoggerFactory
 {
-    IParseLogger CreateAsync(string filePath);
+    IParseLogger Create(string filePath);
 }

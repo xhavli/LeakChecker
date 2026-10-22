@@ -1,14 +1,13 @@
 using System.Text;
 using LeakChecker.Common.Enums;
 using LeakChecker.DataParser.Encodings;
-using LeakChecker.DataParser.Logging.Parse;
 using MongoDB.Bson;
 
 namespace LeakChecker.DataParser.Stats.Parse;
 
-public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourcePath) : IParseStats
+public class ParseStats(Guid executionId, ObjectId parseId, string sourcePath) : IParseStats
 {
-    public ObjectId ParseId { get; init; } = parseLogger.ParseId;
+    public ObjectId ParseId { get; init; } = parseId;
     public Guid ExecutionId { get; init; } = executionId;
     public string ParsePath { get; set; } = string.Empty;
     public string SourcePath { get; init; } = sourcePath;
@@ -32,6 +31,8 @@ public class ParseStats(Guid executionId, IParseLogger parseLogger, string sourc
     public double LineSpeed => Duration.TotalSeconds > 0 ? LinesRead / Duration.TotalSeconds : 0;
     public double Accuracy => RecordsRead <= 0 ? 0 : Math.Max(0, (double)(RecordsRead - MalformedRead) / RecordsRead * 100);
 
+    
+    
     public BsonDocument ToBsonDocument()
     {
         return new BsonDocument
