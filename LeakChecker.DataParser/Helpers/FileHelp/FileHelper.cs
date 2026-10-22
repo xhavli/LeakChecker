@@ -88,17 +88,13 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
         }
     }
 
-    private List<string> SelectAccessiblePaths(IEnumerable<string> filePaths)
+    private IEnumerable<string> SelectAccessiblePaths( IEnumerable<string> paths)
     {
-        List<string> parsePaths = new();
-        
-        foreach (var filePath in filePaths)
+        foreach (var path in paths)
         {
-            if (IsAccessible(filePath))
-                parsePaths.Add(filePath);
+            if (IsAccessible(path))
+                yield return path;
         }
-
-        return parsePaths;
     }
 
     private bool IsTextual(string filePath, int reliableThreshold = 4000)
@@ -191,11 +187,12 @@ public class FileHelper(ISettings settings, ArchiveExtractor archiveExtractor, E
 
     private async Task<IEnumerable<string>> GetPathsFromInputDirectory()
     {
-        IEnumerable<string> inputPaths = Directory.EnumerateFiles(settings.InputDirectory, "*", SearchOption.AllDirectories);
-        IEnumerable<string> allowedPaths = ApplySizeLimit(inputPaths);
-        IEnumerable<string> allPaths = await archiveExtractor.ExtractArchives(allowedPaths);
-        
-        var result = SelectAccessiblePaths(allPaths);
+        IEnumerable<string> paths = Directory.EnumerateFiles(settings.InputDirectory, "*", SearchOption.AllDirectories);
+        paths = SelectAccessiblePaths(paths);
+        paths = paths.OrderBy(p => p, StringComparer.Ordinal);
+        paths = ApplySizeLimit(paths);
+        IEnumerable<string> allPaths = await archiveExtractor.ExtractArchives(paths);
+        var result = SelectAccessiblePaths(allPaths).ToList();
         result.Sort((a, b) => new FileInfo(b).Length.CompareTo(new FileInfo(a).Length));
         
         logger.Log($"Loaded {result.Count} paths from {nameof(settings.InputDirectory)}: {settings.InputDirectory}.");
