@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Channels;
 using LeakChecker.Common.Enums;
-using LeakChecker.DataParser.Content.Detection.RecognitionService;
 using LeakChecker.DataParser.Helpers.FileHelp;
 using LeakChecker.DataParser.Helpers.Settings;
 using LeakChecker.DataParser.Interfaces;
@@ -15,31 +14,18 @@ using LeakChecker.DataParser.Stats.Parse;
 namespace LeakChecker.DataParser.Orchestration.Execution;
 
 public sealed class ExecutionOrchestrator(
-    ISettings settings,
+    ExecutionSettings settings,
     FileHelper fileHelper,
-    PythonNerService pythonNerService,
     ExecutionLogger logger,
     IParseLoggerFactory parseLoggerFactory,
     IParsingOrchestratorFactory parsingOrchestratorFactory,
-    IDatabase database
-    )
+    IDatabase database)
 {
     private static readonly Guid ExecutionId = Guid.NewGuid();
     private readonly ExecutionStats _stats = new(ExecutionId, logger.ExecutionStart);
     
     public async Task<int> RunAsync()
     {
-        try
-        {
-            await pythonNerService.Start();
-            await pythonNerService.WaitStart();
-        }
-        catch (Exception e)
-        {
-            logger.Log(e.Message, LogLevel.Failure, LogContext.PythonNerService);
-            return 1;
-        }
-
         try
         {
             IEnumerable<string> paths = await fileHelper.GetAllPaths();
@@ -88,10 +74,7 @@ public sealed class ExecutionOrchestrator(
             logger.Log($"Execution finished successfully. Parsed {paths.Count()} files. Current DateTime is " + 
                        $"{DateTime.Now.ToString("F", CultureInfo.InvariantCulture)}", LogLevel.Success, LogContext.Execution);
 
-            logger.Log("Creating MongoDB indexes.");
-            Stopwatch sw = Stopwatch.StartNew();
-            await database.CreateIndexes();
-            logger.Log($"MongoDB indexes created in {sw.Elapsed}.", LogLevel.Success, LogContext.Execution);
+            await CreateIndexes();
             
             logger.Log("Program will exit with exit code 0");
             return 0;
@@ -103,8 +86,15 @@ public sealed class ExecutionOrchestrator(
         }
         finally
         {
-            await pythonNerService.Stop();
             fileHelper.RemoveEmptyDirectories();
         }
+    }
+
+    private async Task CreateIndexes()
+    {
+        logger.Log("Creating indexes.");
+        Stopwatch sw = Stopwatch.StartNew();
+        await database.CreateIndexes();
+        logger.Log($"MongoDB indexes created in {sw.Elapsed}.", LogLevel.Success, LogContext.Execution);
     }
 }

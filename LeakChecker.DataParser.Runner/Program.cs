@@ -55,8 +55,19 @@ public static class Program
         try
         {
             using var host = CreateHostBuilder(args).Build();
+            
+            var nerService = host.Services.GetRequiredService<PythonNerService>();
             var orchestrator = host.Services.GetRequiredService<ExecutionOrchestrator>();
-            return await orchestrator.RunAsync();
+            
+            try
+            {
+                await RunNerSubprocess(nerService);
+                return await orchestrator.RunAsync();
+            }
+            finally
+            {
+                await nerService.Stop();
+            }
         }
         catch (Exception e)
         {
@@ -67,6 +78,12 @@ public static class Program
             Console.ResetColor();
             return 1;
         }
+    }
+    
+    private static async Task RunNerSubprocess(PythonNerService pythonNerService)
+    {
+        await pythonNerService.Start();
+        await pythonNerService.WaitStart();
     }
     
     private static void ResolveDatabase(string? dbProvider, IServiceCollection services)
