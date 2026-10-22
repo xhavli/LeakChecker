@@ -9,7 +9,7 @@ public class Settings : ISettings
     public required string InputDirectory { get; init; }
     public required string LogDirectory { get; init; }
     public required string TmpDirectory { get; init; }
-    public required string ProjectDirectory { get; init; }
+    public required string SolutionDirectory { get; init; }
     public required double? ParseSizeLimitGb { get; init; }
     public required string? ResumeFromPath { get; init; }
     public required string PythonVenvPath { get; init; }
@@ -38,7 +38,7 @@ public class Settings : ISettings
             InputDirectory = Path.GetFullPath(jsonSettings.InputDirectory!),
             LogDirectory = Path.GetFullPath(jsonSettings.LogDirectory!),
             TmpDirectory = Path.GetFullPath(jsonSettings.TmpDirectory!),
-            ProjectDirectory = Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.Parent?.Parent?.FullName!,
+            SolutionDirectory = Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.Parent?.Parent?.FullName!,
             ParseSizeLimitGb = jsonSettings.ParseSizeLimitGb,
             ResumeFromPath = jsonSettings.ResumeFromPath is null 
                 ? null 

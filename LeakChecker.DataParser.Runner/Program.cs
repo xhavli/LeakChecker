@@ -1,4 +1,5 @@
-﻿using LeakChecker.Common.Enums;
+﻿using System.Text;
+using LeakChecker.Common.Enums;
 using LeakChecker.Db;
 using LeakChecker.Db.Facade;
 using LeakChecker.DataParser.Content.Detection.RecognitionService;
@@ -24,14 +25,17 @@ public static class Program
             {
                 JsonSettings jsonSettings = new();
 
-                IConfiguration configSource = overrideConfig ?? context.Configuration;
-                configSource.GetSection("DataParser").Bind(jsonSettings);
+                IConfiguration configSrc = overrideConfig ?? context.Configuration;
+                configSrc.GetSection("DataParser").Bind(jsonSettings);  //todo will be replaced soon
 
-                ISettings settings = Settings.FromJson(jsonSettings, services);
-                settings.ApplyGlobalSettings();
+                ISettings settings = Settings.FromJson(jsonSettings, services); //todo will be replaced soon
+                settings.ApplyGlobalSettings(); //todo will be replaced soon
 
                 // Settings
-                services.AddSingleton(settings);
+                services.AddSingleton(settings);    //todo will be replaced soon
+
+                LoadSettings(configSrc, services);
+                ApplyGlobalEncodingSettings();
                 
                 ResolveDatabase(jsonSettings.DbProvider, services);
 
@@ -84,6 +88,38 @@ public static class Program
     {
         await pythonNerService.Start();
         await pythonNerService.WaitStart();
+    }
+    
+    private static void ApplyGlobalEncodingSettings()
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+        Encoding defaultUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+        Console.InputEncoding = defaultUtf8;
+        Console.OutputEncoding = defaultUtf8;
+    }
+
+    private static void LoadSettings(IConfiguration config, IServiceCollection services)
+    {
+        LoggingSettings loggingSettings = new();
+        config.GetSection("Logging").Bind(loggingSettings);
+        services.AddSingleton(loggingSettings);
+
+        ExecutionSettings executionSettings = new();
+        config.GetSection("Execution").Bind(executionSettings);
+        services.AddSingleton(executionSettings);
+        
+        NerSubprocessSettings nerSubprocessSettings = new();
+        config.GetSection("NerSubprocess").Bind(nerSubprocessSettings);
+        services.AddSingleton(nerSubprocessSettings);
+        
+        SamplingSettings samplingSettings = new();
+        config.GetSection("Sampling").Bind(samplingSettings);
+        services.AddSingleton(samplingSettings);
+        
+        DbSettings dbSettings = new();
+        config.GetSection("Database").Bind(dbSettings);
+        services.AddSingleton(dbSettings);
     }
     
     private static void ResolveDatabase(string? dbProvider, IServiceCollection services)

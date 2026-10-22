@@ -1,6 +1,5 @@
 using System.Text;
 using LeakChecker.Common.Enums;
-using LeakChecker.DataParser.Interfaces;
 
 namespace LeakChecker.DataParser.Helpers.Settings;
 
@@ -9,7 +8,7 @@ public interface ISettings
     public string InputDirectory { get; init; }
     public string LogDirectory { get; init; }
     public string TmpDirectory { get; init; }
-    public string ProjectDirectory { get; init; }
+    public string SolutionDirectory { get; init; }
     public double? ParseSizeLimitGb { get; init; }
     public long? ParseSizeLimitBytes => ParseSizeLimitGb is null 
         ? null 
@@ -32,20 +31,10 @@ public interface ISettings
     
     public void ApplyGlobalSettings()
     {
-        ApplyEncodingSettings();
-        
         if (Environment == EnvironmentType.Test)
             System.Environment.SetEnvironmentVariable("LeakCheckerRunningTest", "true");
         else
             System.Environment.SetEnvironmentVariable("LeakCheckerRunningTest", null);
             
-    }
-
-    private void ApplyEncodingSettings()
-    {
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-        Console.InputEncoding = DefaultUtf8;
-        Console.OutputEncoding = DefaultUtf8;
     }
 }
